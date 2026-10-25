@@ -1,0 +1,15 @@
+# Requires an ingress controller (ingress-nginx). In k8s the Ingress acts as the API gateway,
+# so the frontend's nginx /api routes are only used by docker compose.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: sarvaikam
+spec:
+  ingressClassName: nginx
+  rules:
+    - http:
+        paths:
+          - { path: /api/content, pathType: Prefix, backend: { service: { name: content-service, port: { number: 8081 } } } }
+          - { path: /api/auth, pathType: Prefix, backend: { service: { name: auth-service, port: { number: 8082 } } } }
+          - { path: /api/progress, pathType: Prefix, backend: { service: { name: progress-service, port: { number: 8083 } } } }
+          - { path: /, pathType: Prefix, backend: { service: { name: frontend, port: { number: 80 } } } }

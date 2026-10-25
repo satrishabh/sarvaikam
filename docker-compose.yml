@@ -1,0 +1,50 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-sarvaikam}
+      POSTGRES_USER: ${POSTGRES_USER:-sarvaikam}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sarvaikam}
+    ports: ["5432:5432"]
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-sarvaikam}"]
+      interval: 5s
+      retries: 10
+
+  content-service:
+    build: ./services/content-service
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-sarvaikam}
+      DB_USER: ${POSTGRES_USER:-sarvaikam}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-sarvaikam}
+      JWT_SECRET: ${JWT_SECRET:-change-me-to-a-long-random-secret-of-32-bytes-min}
+    depends_on: { postgres: { condition: service_healthy } }
+
+  auth-service:
+    build: ./services/auth-service
+    environment:
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_NAME: ${POSTGRES_DB:-sarvaikam}
+      DB_USER: ${POSTGRES_USER:-sarvaikam}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-sarvaikam}
+      JWT_SECRET: ${JWT_SECRET:-change-me-to-a-long-random-secret-of-32-bytes-min}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@sarvaikam.dev}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin12345}
+    depends_on: { postgres: { condition: service_healthy } }
+
+  progress-service:
+    build: ./services/progress-service
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-sarvaikam}:${POSTGRES_PASSWORD:-sarvaikam}@postgres:5432/${POSTGRES_DB:-sarvaikam}?sslmode=disable
+      JWT_SECRET: ${JWT_SECRET:-change-me-to-a-long-random-secret-of-32-bytes-min}
+    depends_on: { postgres: { condition: service_healthy } }
+
+  frontend:
+    build: ./frontend
+    ports: ["80:80"]
+    depends_on: [content-service, auth-service, progress-service]
+
+volumes:
+  pgdata:

@@ -1,0 +1,12 @@
+node_modules/
+dist/
+target/
+.env
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+*.exe
+.cortex/
+.idea/
+.vscode/

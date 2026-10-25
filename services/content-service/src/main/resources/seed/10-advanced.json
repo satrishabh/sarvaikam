@@ -1,0 +1,349 @@
+[
+  {
+    "slug": "infrastructure-as-code",
+    "name": "Infrastructure as Code",
+    "topics": [
+      {
+        "slug": "terraform",
+        "lessons": [
+          {
+            "slug": "advanced-hcl",
+            "title": "Advanced HCL: dynamic blocks, expressions and validation",
+            "content": "Real modules need logic. HCL gives you expressions without becoming a full programming language.\n\n**Input validation** fails fast with a clear message:\n\n```hcl\nvariable \"env\" {\n  type = string\n  validation {\n    condition     = contains([\"dev\", \"staging\", \"prod\"], var.env)\n    error_message = \"env must be dev, staging or prod.\"\n  }\n}\n```\n\n**Dynamic blocks** generate repeated nested blocks:\n\n```hcl\nvariable \"ports\" { default = [80, 443] }\n\nresource \"aws_security_group\" \"web\" {\n  name = \"web\"\n  dynamic \"ingress\" {\n    for_each = var.ports\n    content {\n      from_port   = ingress.value\n      to_port     = ingress.value\n      protocol    = \"tcp\"\n      cidr_blocks = [\"0.0.0.0/0\"]\n    }\n  }\n}\n```\n\n**Useful expressions:**\n\n| Need | Expression |\n|---|---|\n| Conditional | `var.env == \"prod\" ? 3 : 1` |\n| Transform a list | `[for s in var.names : upper(s)]` |\n| Build a map | `{ for s in var.names : s => length(s) }` |\n| Safe lookup | `lookup(var.sizes, var.env, \"small\")` |\n| Fallback | `coalesce(var.override, local.default)` |\n\n**Lifecycle rules** protect critical resources:\n\n```hcl\nlifecycle {\n  prevent_destroy       = true\n  create_before_destroy = true\n  ignore_changes        = [tags[\"LastModified\"]]\n}\n```\n\n**Practice:** Write a module that takes a list of bucket names and creates encrypted buckets with `for_each`, rejecting names longer than 40 characters."
+          },
+          {
+            "slug": "testing-and-policy",
+            "title": "Testing Terraform and policy as code",
+            "content": "Treat infrastructure like application code: test it before it reaches production.\n\n**1. Static checks (seconds)**\n\n```bash\nterraform fmt -check -recursive\nterraform validate\ntflint --recursive\ncheckov -d .          # or: trivy config .\n```\n\n**2. Native tests (Terraform 1.6+)** live in `*.tftest.hcl`:\n\n```hcl\nrun \"bucket_is_encrypted\" {\n  command = plan\n  variables { env = \"dev\" }\n\n  assert {\n    condition     = aws_s3_bucket.notes.bucket != \"\"\n    error_message = \"bucket name must be set\"\n  }\n}\n```\n\nRun with `terraform test`. Use `command = apply` for real integration tests in a sandbox account.\n\n**3. Policy as code** blocks unsafe changes in CI:\n\n- **OPA / Conftest**: write Rego policies against `terraform show -json plan.out`\n- **Sentinel**: built into HCP Terraform / Terraform Enterprise\n\n```bash\nterraform plan -out plan.out\nterraform show -json plan.out > plan.json\nconftest test plan.json\n```\n\n**4. Drift detection:** schedule `terraform plan -detailed-exitcode` nightly. Exit code 2 means something changed outside Terraform.\n\n**OpenTofu** is an open-source fork of Terraform with the same workflow; most of this lesson applies to both."
+          },
+          {
+            "slug": "project-multi-env",
+            "title": "Project: multi-environment infrastructure",
+            "content": "Put it all together with a layout that scales to many teams.\n\n```text\ninfra/\n  modules/\n    network/      # VPC, subnets, NAT\n    cluster/      # EKS / AKS / GKE\n    database/     # managed Postgres\n  envs/\n    dev/main.tf       # calls modules with small sizes\n    staging/main.tf\n    prod/main.tf      # multi-AZ, deletion protection\n```\n\nEach environment has its **own state file**, so a bad apply in dev cannot touch prod.\n\n```hcl\n# envs/prod/main.tf\nmodule \"network\" {\n  source = \"../../modules/network\"\n  cidr   = \"10.0.0.0/16\"\n}\n\nmodule \"database\" {\n  source     = \"../../modules/database\"\n  subnet_ids = module.network.private_subnet_ids\n  multi_az   = true\n}\n```\n\n**CI/CD pipeline:**\n\n1. PR opened: fmt, validate, tflint, checkov, `plan` for every changed env, plan posted as a PR comment\n2. Merge to main: `apply` dev automatically\n3. Manual approval: `apply` staging, then prod\n4. Authenticate CI with **OIDC** to the cloud; never store long-lived keys\n\n**Checklist:** remote state with locking, pinned provider and module versions, tags on everything, outputs for anything other stacks need.\n\nThis repo's `infra/terraform/{aws,azure,gcp}` folders are single-environment versions of this design you can extend."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "compute-and-orchestration",
+    "name": "Compute: VMs, Containers & Kubernetes",
+    "topics": [
+      {
+        "slug": "docker",
+        "lessons": [
+          {
+            "slug": "networking-volumes",
+            "title": "Networking and volumes",
+            "content": "**Networks:** containers on the same user-defined network reach each other by name.\n\n```bash\ndocker network create appnet\ndocker run -d --name db --network appnet -e POSTGRES_PASSWORD=secret postgres:16\ndocker run --rm --network appnet postgres:16 psql -h db -U postgres -c 'select 1'\n```\n\n| Driver | Use |\n|---|---|\n| bridge | default, single host |\n| host | share the host network stack (Linux) |\n| overlay | multi-host (Swarm) |\n| none | no networking |\n\n**Storage:** the container filesystem disappears with the container. Persist data with:\n\n- **Named volumes** (managed by Docker): `-v pgdata:/var/lib/postgresql/data`\n- **Bind mounts** (a host folder, good for dev): `-v ./src:/app/src`\n- **tmpfs** (in-memory)\n\n```bash\ndocker volume ls\ndocker volume inspect pgdata\n```\n\n**Practice:** Run Postgres with a named volume, insert a row, delete the container, start a new one with the same volume and confirm the row survives."
+          },
+          {
+            "slug": "security-best-practices",
+            "title": "Image security and production best practices",
+            "content": "Containers are only as safe as their images and runtime flags.\n\n**Build time**\n\n- Use small, trusted base images (`-alpine`, `distroless`, Chainguard)\n- Pin versions or digests: `FROM node:20.17-alpine@sha256:...`\n- Never bake secrets into layers; use BuildKit secrets: `RUN --mount=type=secret,id=npm npm ci`\n- Add a `.dockerignore` (node_modules, .git, .env)\n- Scan: `trivy image myapp:1.0` or `docker scout cves myapp:1.0`\n- Generate an SBOM and sign images (`cosign sign`)\n\n**Run time**\n\n```dockerfile\nRUN addgroup -S app && adduser -S app -G app\nUSER app\nHEALTHCHECK CMD wget -qO- http://localhost:3000/health || exit 1\n```\n\n```bash\ndocker run --read-only --cap-drop ALL --security-opt no-new-privileges \\\n  --memory 256m --cpus 0.5 myapp:1.0\n```\n\n**Operations:** log to stdout/stderr, handle `SIGTERM` for graceful shutdown, keep one process per container, and tag images immutably (git SHA) rather than reusing `latest`."
+          }
+        ]
+      },
+      {
+        "slug": "kubernetes",
+        "lessons": [
+          {
+            "slug": "storage",
+            "title": "Persistent storage: PV, PVC and StatefulSets",
+            "content": "Pods are disposable, but databases are not. Kubernetes separates **what you need** from **how it is provided**.\n\n- **StorageClass**: a type of disk (gp3 on AWS, managed-csi on Azure, pd-balanced on GCP)\n- **PersistentVolumeClaim (PVC)**: a request, e.g. 10Gi ReadWriteOnce\n- **PersistentVolume (PV)**: the actual disk, created dynamically by the CSI driver\n\n```yaml\napiVersion: v1\nkind: PersistentVolumeClaim\nmetadata: { name: data }\nspec:\n  accessModes: [ReadWriteOnce]\n  storageClassName: standard\n  resources: { requests: { storage: 10Gi } }\n```\n\n**StatefulSets** give each replica a stable name (`postgres-0`, `postgres-1`) and its own PVC through `volumeClaimTemplates`. See `deploy/k8s/postgres.yaml` in this repo.\n\n**Production advice:** run databases on managed services (RDS, Azure PostgreSQL, Cloud SQL) unless you have a strong reason not to, or use an operator such as CloudNativePG."
+          },
+          {
+            "slug": "rbac-security",
+            "title": "RBAC, network policies and pod security",
+            "content": "**RBAC** controls who can do what with the Kubernetes API:\n\n```yaml\napiVersion: rbac.authorization.k8s.io/v1\nkind: Role\nmetadata: { name: pod-reader, namespace: sarvaikam }\nrules:\n  - apiGroups: [\"\"]\n    resources: [pods, pods/log]\n    verbs: [get, list, watch]\n---\napiVersion: rbac.authorization.k8s.io/v1\nkind: RoleBinding\nmetadata: { name: dev-read, namespace: sarvaikam }\nsubjects: [{ kind: Group, name: developers, apiGroup: rbac.authorization.k8s.io }]\nroleRef: { kind: Role, name: pod-reader, apiGroup: rbac.authorization.k8s.io }\n```\n\nCheck permissions with `kubectl auth can-i delete pods --as jane`.\n\n**NetworkPolicy:** by default every pod can talk to every pod. Lock it down:\n\n```yaml\napiVersion: networking.k8s.io/v1\nkind: NetworkPolicy\nmetadata: { name: db-only-from-backends }\nspec:\n  podSelector: { matchLabels: { app: postgres } }\n  ingress:\n    - from:\n        - podSelector: { matchExpressions: [{ key: app, operator: In, values: [content-service, auth-service, progress-service] }] }\n      ports: [{ port: 5432 }]\n```\n\n**Pod security:** label namespaces with `pod-security.kubernetes.io/enforce: restricted`, and set `runAsNonRoot`, `readOnlyRootFilesystem` and `allowPrivilegeEscalation: false` in `securityContext`."
+          },
+          {
+            "slug": "troubleshooting",
+            "title": "Troubleshooting a broken deployment",
+            "content": "A systematic flow beats guessing.\n\n```bash\nkubectl get pods -n sarvaikam                # what state?\nkubectl describe pod <pod> -n sarvaikam      # events at the bottom\nkubectl logs <pod> -n sarvaikam --previous   # logs of the crashed container\nkubectl get events -n sarvaikam --sort-by=.lastTimestamp\n```\n\n| Symptom | Usual cause | Fix |\n|---|---|---|\n| `ImagePullBackOff` | wrong image name/tag or missing registry auth | check image, imagePullSecrets, node IAM |\n| `CrashLoopBackOff` | app exits on start (bad config, DB unreachable) | read `logs --previous` |\n| `Pending` | no node has enough CPU/memory, or PVC unbound | `describe pod`, scale nodes, check StorageClass |\n| `OOMKilled` | memory limit too low | raise limit or fix the leak |\n| Running but 503 | readiness probe failing / Service selector mismatch | `kubectl get endpoints`, check labels |\n\n**Debug from inside the cluster:**\n\n```bash\nkubectl run tmp --rm -it --image=busybox -- sh\nwget -qO- http://content-service:8081/api/content/actuator/health\nkubectl port-forward svc/content-service 8081:8081\n```"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "cloud",
+    "name": "Cloud Platforms",
+    "topics": [
+      {
+        "slug": "aws",
+        "lessons": [
+          {
+            "slug": "serverless",
+            "title": "Serverless with Lambda, API Gateway and DynamoDB",
+            "content": "Serverless means no servers to patch and paying per request.\n\n```python\n# handler.py\nimport json, boto3\n\ntable = boto3.resource('dynamodb').Table('lessons')\n\ndef handler(event, context):\n    item = table.get_item(Key={'id': event['pathParameters']['id']}).get('Item')\n    return {'statusCode': 200 if item else 404, 'body': json.dumps(item or {})}\n```\n\nA typical event-driven architecture:\n\n- **API Gateway** to **Lambda** for HTTP\n- **S3 upload** to **Lambda** for file processing\n- **SQS / EventBridge** to decouple producers and consumers\n- **Step Functions** to orchestrate multi-step workflows\n\nWatch for cold starts (use provisioned concurrency or SnapStart for Java), 15-minute execution limits, and per-account concurrency limits. Deploy with Terraform, AWS SAM or CDK."
+          },
+          {
+            "slug": "well-architected",
+            "title": "Well-Architected design and cost control",
+            "content": "The **AWS Well-Architected Framework** has six pillars:\n\n1. **Operational excellence**: IaC, runbooks, small reversible changes\n2. **Security**: least-privilege IAM, encryption everywhere, GuardDuty, Security Hub\n3. **Reliability**: multi-AZ, backups, health checks, tested restores\n4. **Performance efficiency**: right instance families (Graviton), caching, CDNs\n5. **Cost optimization**: right-sizing, Savings Plans, Spot for batch, S3 lifecycle rules\n6. **Sustainability**: use managed services and efficient hardware\n\n**Cost guardrails to set on day one:**\n\n```bash\naws budgets create-budget --account-id 123456789012 \\\n  --budget 'BudgetName=monthly,BudgetLimit={Amount=50,Unit=USD},TimeUnit=MONTHLY,BudgetType=COST'\n```\n\nTag every resource (`project`, `env`, `owner`) and enable cost allocation tags. NAT Gateways and idle load balancers are common surprise costs."
+          }
+        ]
+      },
+      {
+        "slug": "azure",
+        "lessons": [
+          {
+            "slug": "serverless-integration",
+            "title": "Azure Functions, Service Bus and Event Grid",
+            "content": "```python\n# function_app.py (Python v2 model)\nimport azure.functions as func\n\napp = func.FunctionApp()\n\n@app.route(route='hello', auth_level=func.AuthLevel.ANONYMOUS)\ndef hello(req: func.HttpRequest) -> func.HttpResponse:\n    return func.HttpResponse('Hello from Azure Functions')\n```\n\nIntegration services:\n\n| Service | Use |\n|---|---|\n| **Service Bus** | reliable queues and topics with ordering and dead-lettering |\n| **Event Grid** | lightweight event routing (blob created, resource changed) |\n| **Event Hubs** | high-throughput streaming, Kafka-compatible |\n| **Logic Apps** | low-code workflows |\n\nUse **Key Vault** for secrets and managed identities so code never handles credentials."
+          },
+          {
+            "slug": "governance",
+            "title": "Governance: Policy, landing zones and cost",
+            "content": "- **Azure Policy** enforces rules, e.g. allowed regions or required tags, and can auto-remediate\n- **Landing zones** (Cloud Adoption Framework) give a standard hub-and-spoke network, identity and logging baseline\n- **Defender for Cloud** gives a security posture score\n- **Cost Management + Budgets** alerts on spend\n\n```bash\naz policy assignment create --name require-env-tag \\\n  --policy '/providers/Microsoft.Authorization/policyDefinitions/<id>' \\\n  --scope /subscriptions/<sub-id>\n```\n\nUse Reserved Instances or Savings Plans for steady workloads, and auto-shutdown for dev VMs."
+          }
+        ]
+      },
+      {
+        "slug": "gcp",
+        "lessons": [
+          {
+            "slug": "bigquery",
+            "title": "BigQuery hands-on",
+            "content": "BigQuery is serverless: no clusters, you pay per data scanned or with reserved slots.\n\n```sql\nSELECT repo_name, COUNT(*) AS commits\nFROM `bigquery-public-data.github_repos.sample_commits`\nGROUP BY repo_name\nORDER BY commits DESC\nLIMIT 10;\n```\n\nCost and performance tips:\n\n- Never `SELECT *`; BigQuery is columnar, so you pay for the columns you read\n- **Partition** by date and **cluster** by frequently filtered columns\n- Preview the bytes processed before running a query\n- Use **materialized views** for repeated aggregations\n\nBigQuery ML trains models in SQL: `CREATE MODEL ... OPTIONS(model_type='logistic_reg')`."
+          },
+          {
+            "slug": "security-ops",
+            "title": "Security and operations on GCP",
+            "content": "- **Organization policies** restrict, for example, external IPs or service-account key creation\n- **Workload Identity Federation** lets GitHub Actions or AWS authenticate without keys\n- **Secret Manager** stores secrets, and **Cloud KMS** manages encryption keys\n- **VPC Service Controls** create data-exfiltration perimeters\n- **Cloud Logging / Monitoring / Trace** give observability\n\n```bash\ngcloud iam workload-identity-pools create github --location=global\n```\n\nUse budgets with Pub/Sub notifications to automatically act on cost overruns."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "languages",
+    "name": "Programming Languages",
+    "topics": [
+      {
+        "slug": "java",
+        "lessons": [
+          {
+            "slug": "jvm-internals",
+            "title": "JVM internals: memory, GC and performance",
+            "content": "Understanding the JVM explains most production performance issues.\n\n**Memory areas**\n\n- **Heap**: objects; split into young (Eden + Survivor) and old generations\n- **Stack**: one per thread; local variables and call frames\n- **Metaspace**: class metadata\n\n**Garbage collectors**\n\n| GC | Best for |\n|---|---|\n| G1 (default) | balanced throughput and latency |\n| ZGC | very low pause times on large heaps |\n| Parallel | batch throughput |\n\n```bash\njava -XX:+UseZGC -Xmx2g -XX:MaxRAMPercentage=75 -jar app.jar\n```\n\nIn containers, prefer `MaxRAMPercentage` over a fixed `-Xmx` so the heap tracks the memory limit.\n\n**Diagnose**\n\n```bash\njcmd <pid> GC.heap_info\njcmd <pid> Thread.print        # thread dump for deadlocks\njcmd <pid> JFR.start duration=60s filename=rec.jfr\n```\n\nOpen `.jfr` recordings in JDK Mission Control. Benchmark micro-optimizations with **JMH**, never with ad-hoc timing loops."
+          },
+          {
+            "slug": "modern-patterns",
+            "title": "Modern Java patterns and clean code",
+            "content": "- Prefer **immutability**: records, `List.of`, final fields\n- Return `Optional` from lookups instead of `null`, but do not use it for fields or parameters\n- Use **pattern matching** to replace instanceof chains and visitor boilerplate\n- **Text blocks** for SQL and JSON:\n\n```java\nString sql = \"\"\"\n    SELECT id, title\n    FROM lessons\n    WHERE topic_id = ?\n    \"\"\";\n```\n\n- **Structured concurrency** (preview) treats related tasks as one unit:\n\n```java\ntry (var scope = new StructuredTaskScope.ShutdownOnFailure()) {\n    var user = scope.fork(() -> fetchUser(id));\n    var progress = scope.fork(() -> fetchProgress(id));\n    scope.join().throwIfFailed();\n    return new Dashboard(user.get(), progress.get());\n}\n```\n\n**Practice:** Refactor a class hierarchy into a sealed interface plus records, and replace its if/else chain with a switch expression."
+          }
+        ]
+      },
+      {
+        "slug": "nodejs",
+        "lessons": [
+          {
+            "slug": "streams-performance",
+            "title": "Streams, worker threads and performance",
+            "content": "**Streams** process data piece by piece with constant memory:\n\n```js\nimport { createReadStream, createWriteStream } from 'node:fs';\nimport { createGzip } from 'node:zlib';\nimport { pipeline } from 'node:stream/promises';\n\nawait pipeline(createReadStream('big.log'), createGzip(), createWriteStream('big.log.gz'));\n```\n\n**Worker threads** move CPU work off the event loop:\n\n```js\nimport { Worker } from 'node:worker_threads';\nconst worker = new Worker(new URL('./hash-worker.js', import.meta.url), { workerData: input });\nworker.on('message', (result) => console.log(result));\n```\n\n**Profiling**\n\n- `node --inspect` with Chrome DevTools\n- `node --prof` or clinic.js to find event-loop blocking\n- Monitor event-loop lag with `perf_hooks.monitorEventLoopDelay()`\n\nScale across cores with multiple processes (Kubernetes replicas or the cluster module)."
+          },
+          {
+            "slug": "testing-security",
+            "title": "Testing and securing Node.js apps",
+            "content": "Node 20+ ships a built-in test runner:\n\n```js\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\n\ntest('adds numbers', () => {\n  assert.equal(1 + 1, 2);\n});\n```\n\nRun with `node --test`. Vitest and Jest are popular alternatives.\n\n**Security checklist (OWASP)**\n\n- Validate input with zod or class-validator\n- Use parameterized queries; never concatenate SQL\n- Set security headers with helmet, and rate-limit auth endpoints\n- Hash passwords with bcrypt or argon2\n- Keep dependencies patched (`npm audit`, Dependabot or Renovate)\n- Never `eval` user input"
+          }
+        ]
+      },
+      {
+        "slug": "python",
+        "lessons": [
+          {
+            "slug": "data-stack",
+            "title": "The Python data stack: NumPy, pandas, Polars",
+            "content": "```python\nimport pandas as pd\n\ndf = pd.read_csv('events.csv', parse_dates=['ts'])\ndaily = (df[df.event == 'lesson_complete']\n         .groupby([df.ts.dt.date, 'topic'])\n         .size()\n         .unstack(fill_value=0))\nprint(daily.tail())\n```\n\n- **NumPy**: fast n-dimensional arrays; vectorize instead of looping\n- **pandas**: tabular analysis, the lingua franca of data science\n- **Polars**: Rust-powered DataFrames, multi-threaded and lazy, often much faster\n- **Matplotlib / Plotly**: visualization\n- **Jupyter**: interactive notebooks\n\nThese are the foundation for the Machine Learning roadmap."
+          },
+          {
+            "slug": "advanced-python",
+            "title": "Advanced Python: decorators, generators, async",
+            "content": "**Generators** produce values lazily:\n\n```python\ndef read_chunks(path, size=1024):\n    with open(path, 'rb') as f:\n        while chunk := f.read(size):\n            yield chunk\n```\n\n**Decorators** wrap behaviour:\n\n```python\nimport functools, time\n\ndef timed(fn):\n    @functools.wraps(fn)\n    def wrapper(*args, **kwargs):\n        start = time.perf_counter()\n        try:\n            return fn(*args, **kwargs)\n        finally:\n            print(f'{fn.__name__}: {time.perf_counter() - start:.3f}s')\n    return wrapper\n```\n\n**asyncio** runs many I/O tasks concurrently:\n\n```python\nimport asyncio, httpx\n\nasync def main(urls):\n    async with httpx.AsyncClient() as client:\n        return await asyncio.gather(*(client.get(u) for u in urls))\n```\n\nThe GIL limits CPU-bound threads; use `multiprocessing` or `concurrent.futures.ProcessPoolExecutor` for CPU work."
+          }
+        ]
+      },
+      {
+        "slug": "golang",
+        "lessons": [
+          {
+            "slug": "generics-testing",
+            "title": "Generics, testing and benchmarks",
+            "content": "**Generics** (Go 1.18+):\n\n```go\nfunc Map[T, U any](in []T, f func(T) U) []U {\n    out := make([]U, 0, len(in))\n    for _, v := range in {\n        out = append(out, f(v))\n    }\n    return out\n}\n```\n\n**Table-driven tests** are idiomatic:\n\n```go\nfunc TestSlug(t *testing.T) {\n    cases := []struct{ in, want string }{\n        {\"Hello World\", \"hello-world\"},\n        {\"Go  Lang\", \"go-lang\"},\n    }\n    for _, c := range cases {\n        t.Run(c.in, func(t *testing.T) {\n            if got := Slug(c.in); got != c.want {\n                t.Errorf(\"Slug(%q) = %q, want %q\", c.in, got, c.want)\n            }\n        })\n    }\n}\n\nfunc BenchmarkSlug(b *testing.B) {\n    for i := 0; i < b.N; i++ { Slug(\"Hello World\") }\n}\n```\n\n```bash\ngo test ./... -race -cover\ngo test -bench=. -benchmem\n```"
+          },
+          {
+            "slug": "production-go",
+            "title": "Production Go: context, shutdown and profiling",
+            "content": "**Graceful shutdown** drains in-flight requests:\n\n```go\nctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)\ndefer stop()\n\ngo func() { _ = srv.ListenAndServe() }()\n<-ctx.Done()\n\nshutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)\ndefer cancel()\n_ = srv.Shutdown(shutdownCtx)\n```\n\n**Structured logging** with the standard `log/slog`:\n\n```go\nslog.Info(\"lesson completed\", \"user\", userID, \"lesson\", lessonID)\n```\n\n**Profiling** with pprof:\n\n```go\nimport _ \"net/http/pprof\"\n```\n\n```bash\ngo tool pprof http://localhost:6060/debug/pprof/profile?seconds=30\n```\n\nAlso: pass `context.Context` as the first argument everywhere, set timeouts on every HTTP client and server, and lint with `golangci-lint`."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "ai",
+    "name": "AI: ML, Deep Learning & LLMs",
+    "topics": [
+      {
+        "slug": "machine-learning",
+        "lessons": [
+          {
+            "slug": "unsupervised",
+            "title": "Unsupervised learning: clustering and PCA",
+            "content": "No labels? Find structure.\n\n```python\nfrom sklearn.cluster import KMeans\nfrom sklearn.decomposition import PCA\nfrom sklearn.preprocessing import StandardScaler\n\nX_scaled = StandardScaler().fit_transform(X)\nlabels = KMeans(n_clusters=4, n_init='auto', random_state=0).fit_predict(X_scaled)\nX_2d = PCA(n_components=2).fit_transform(X_scaled)\n```\n\n- **K-Means**: fast, spherical clusters; choose k with the elbow method or silhouette score\n- **DBSCAN**: density-based, finds arbitrary shapes and outliers\n- **PCA**: compress features while keeping variance, also useful for visualization\n- **Isolation Forest**: anomaly detection\n\nUse cases: customer segmentation, fraud detection, topic grouping."
+          },
+          {
+            "slug": "project-churn",
+            "title": "Project: end-to-end churn prediction",
+            "content": "Build a complete supervised ML project.\n\n1. **Frame the problem**: predict which learners will stop in the next 30 days (binary classification)\n2. **Features**: lessons completed per week, days since last activity, topics started vs finished\n3. **Split by time**, not randomly, to avoid leaking the future\n4. **Baseline**: logistic regression\n5. **Improve**: gradient boosting\n\n```python\nfrom sklearn.ensemble import HistGradientBoostingClassifier\nfrom sklearn.metrics import classification_report, roc_auc_score\n\nmodel = HistGradientBoostingClassifier(max_iter=300, learning_rate=0.05)\nmodel.fit(X_train, y_train)\nproba = model.predict_proba(X_test)[:, 1]\nprint('AUC', roc_auc_score(y_test, proba))\nprint(classification_report(y_test, proba > 0.5))\n```\n\n6. **Explain** with SHAP values\n7. **Choose a threshold** based on business cost, not 0.5 by default\n8. **Deploy and monitor** (see the MLOps roadmap)"
+          }
+        ]
+      },
+      {
+        "slug": "deep-learning",
+        "lessons": [
+          {
+            "slug": "computer-vision-project",
+            "title": "Project: image classifier with transfer learning",
+            "content": "```python\nimport torch, torchvision\nfrom torchvision import transforms\n\nweights = torchvision.models.ResNet18_Weights.DEFAULT\nmodel = torchvision.models.resnet18(weights=weights)\nfor p in model.parameters():\n    p.requires_grad = False                      # freeze the backbone\nmodel.fc = torch.nn.Linear(model.fc.in_features, 5)  # new head for 5 classes\n\ntrain_tf = transforms.Compose([\n    transforms.RandomResizedCrop(224),\n    transforms.RandomHorizontalFlip(),\n    weights.transforms(),\n])\n\ndevice = 'cuda' if torch.cuda.is_available() else 'cpu'\nmodel.to(device)\nopt = torch.optim.AdamW(model.fc.parameters(), lr=1e-3)\n```\n\nSteps:\n\n1. Organize images as `data/train/<class>/*.jpg` and load with `ImageFolder`\n2. Train only the head for a few epochs\n3. Unfreeze the last block and fine-tune with a lower learning rate\n4. Evaluate with a confusion matrix\n5. Export with `torch.onnx.export` or TorchScript for serving"
+          },
+          {
+            "slug": "generative-models",
+            "title": "Generative models: autoencoders, GANs, diffusion",
+            "content": "- **Autoencoders** compress input into a latent vector and reconstruct it; **VAEs** make that latent space smooth enough to sample from\n- **GANs** pit a generator against a discriminator; sharp results but unstable training\n- **Diffusion models** learn to reverse a gradual noising process. They power Stable Diffusion, DALL-E and many video models\n\n```python\nfrom diffusers import StableDiffusionPipeline\npipe = StableDiffusionPipeline.from_pretrained('stabilityai/stable-diffusion-2-1').to('cuda')\npipe('a robot teaching kubernetes, watercolor').images[0].save('out.png')\n```\n\nModern multimodal models combine transformers with diffusion for text, image, audio and video generation."
+          }
+        ]
+      },
+      {
+        "slug": "transformers",
+        "lessons": [
+          {
+            "slug": "build-from-scratch",
+            "title": "Build a mini transformer block from scratch",
+            "content": "Writing it once makes the architecture click.\n\n```python\nimport torch, torch.nn as nn, torch.nn.functional as F\n\nclass CausalSelfAttention(nn.Module):\n    def __init__(self, d, heads):\n        super().__init__()\n        self.heads = heads\n        self.qkv = nn.Linear(d, 3 * d)\n        self.proj = nn.Linear(d, d)\n\n    def forward(self, x):\n        B, T, D = x.shape\n        q, k, v = self.qkv(x).split(D, dim=2)\n        q, k, v = (t.view(B, T, self.heads, -1).transpose(1, 2) for t in (q, k, v))\n        y = F.scaled_dot_product_attention(q, k, v, is_causal=True)\n        return self.proj(y.transpose(1, 2).reshape(B, T, D))\n\nclass Block(nn.Module):\n    def __init__(self, d, heads):\n        super().__init__()\n        self.ln1, self.ln2 = nn.LayerNorm(d), nn.LayerNorm(d)\n        self.attn = CausalSelfAttention(d, heads)\n        self.mlp = nn.Sequential(nn.Linear(d, 4 * d), nn.GELU(), nn.Linear(4 * d, d))\n\n    def forward(self, x):\n        x = x + self.attn(self.ln1(x))   # residual connections\n        return x + self.mlp(self.ln2(x))\n```\n\nStack N blocks, add token and position embeddings at the input and a linear layer to vocabulary logits at the output, and you have a GPT. Train it on a small text corpus (e.g. nanoGPT)."
+          },
+          {
+            "slug": "efficiency",
+            "title": "Efficient transformers: KV cache, quantization, MoE",
+            "content": "Serving large models is expensive. Key techniques:\n\n| Technique | Idea |\n|---|---|\n| **KV cache** | reuse keys/values of previous tokens during generation |\n| **FlashAttention** | IO-aware attention kernel, faster with less memory |\n| **Quantization** | 8-bit / 4-bit weights (GPTQ, AWQ, GGUF) cut memory 2-4x |\n| **Mixture of Experts** | route each token to a few expert MLPs (Mixtral, DeepSeek) |\n| **Speculative decoding** | a small draft model proposes tokens and the big one verifies them |\n| **Distillation** | train a small student to mimic a large teacher |\n\n```python\nfrom transformers import AutoModelForCausalLM, BitsAndBytesConfig\nmodel = AutoModelForCausalLM.from_pretrained(\n    'mistralai/Mistral-7B-Instruct-v0.3',\n    quantization_config=BitsAndBytesConfig(load_in_4bit=True),\n    device_map='auto')\n```"
+          }
+        ]
+      },
+      {
+        "slug": "llms",
+        "lessons": [
+          {
+            "slug": "build-rag-app",
+            "title": "Project: build a RAG chatbot over your docs",
+            "content": "A minimal but real RAG pipeline in Python with PostgreSQL + pgvector.\n\n```sql\nCREATE EXTENSION IF NOT EXISTS vector;\nCREATE TABLE chunks (id BIGSERIAL PRIMARY KEY, doc TEXT, body TEXT, embedding vector(384));\nCREATE INDEX ON chunks USING hnsw (embedding vector_cosine_ops);\n```\n\n```python\nfrom sentence_transformers import SentenceTransformer\nimport psycopg\n\nembedder = SentenceTransformer('all-MiniLM-L6-v2')\n\ndef ingest(conn, doc, text, size=800, overlap=100):\n    for i in range(0, len(text), size - overlap):\n        body = text[i:i + size]\n        conn.execute('INSERT INTO chunks (doc, body, embedding) VALUES (%s, %s, %s)',\n                     (doc, body, str(embedder.encode(body).tolist())))\n\ndef retrieve(conn, question, k=4):\n    q = str(embedder.encode(question).tolist())\n    return conn.execute('SELECT body FROM chunks ORDER BY embedding <=> %s LIMIT %s', (q, k)).fetchall()\n```\n\nThen build the prompt:\n\n```text\nAnswer using only the context below. If the answer is not there, say you don't know.\nContext:\n{chunks}\nQuestion: {question}\n```\n\n**Improve it:** hybrid search (BM25 + vectors), a re-ranker, citations back to source docs, and an evaluation set of question/answer pairs scored with RAGAS or an LLM judge."
+          },
+          {
+            "slug": "agents-mcp",
+            "title": "Tool calling, agents and MCP",
+            "content": "**Tool calling**: you describe functions with a JSON schema, the model returns a structured call, your code executes it and feeds the result back.\n\n```python\ntools = [{\n  'name': 'get_progress',\n  'description': 'Get a learner progress percentage for a topic',\n  'input_schema': {\n    'type': 'object',\n    'properties': {'topic': {'type': 'string'}},\n    'required': ['topic']\n  }\n}]\n```\n\n**The agent loop**: model thinks, calls a tool, observes the result, repeats until done. Always cap iterations and validate tool arguments.\n\n**Model Context Protocol (MCP)** is an open standard for exposing tools, resources and prompts to any LLM client through an MCP server, so one integration works across many assistants.\n\n**Multi-agent patterns**: planner + workers, reviewer/critic, router. Start with one agent and add more only if evaluation shows a gain.\n\n**Safety:** least-privilege tools, human approval for destructive actions, and treat tool output as untrusted input (prompt injection)."
+          },
+          {
+            "slug": "llmops",
+            "title": "LLMOps: evaluation, serving and cost",
+            "content": "**Evaluate continuously**\n\n- Build a golden dataset of inputs with expected properties\n- Score with exact checks, embeddings similarity or an LLM-as-judge rubric\n- Run evals in CI whenever prompts or models change\n\n**Serve open models**\n\n```bash\n# local\nollama run llama3.1\n# production GPU serving with an OpenAI-compatible API\nvllm serve meta-llama/Llama-3.1-8B-Instruct --max-model-len 8192\n```\n\n**Control cost and latency**\n\n- Route easy requests to small models\n- Cache responses and use prompt caching for long system prompts\n- Stream tokens to users\n- Track tokens, latency and cost per feature\n\n**Observe**: trace every call (Langfuse, OpenTelemetry), log prompts and outputs with PII redaction, and collect user feedback."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "backend",
+    "name": "Backend Frameworks",
+    "topics": [
+      {
+        "slug": "spring-boot",
+        "lessons": [
+          {
+            "slug": "exception-handling",
+            "title": "Global error handling and API design",
+            "content": "Return consistent errors using RFC 7807 Problem Details:\n\n```java\n@RestControllerAdvice\nclass ApiErrors {\n    @ExceptionHandler(MethodArgumentNotValidException.class)\n    ProblemDetail invalid(MethodArgumentNotValidException ex) {\n        var pd = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);\n        pd.setTitle(\"Validation failed\");\n        pd.setProperty(\"errors\", ex.getFieldErrors().stream()\n            .map(e -> e.getField() + \": \" + e.getDefaultMessage()).toList());\n        return pd;\n    }\n}\n```\n\n**REST design rules**\n\n- Nouns for resources: `/topics/{slug}/lessons`\n- Correct status codes: 201 created, 204 no content, 404, 409 conflict, 422\n- Paginate lists: `Pageable` with `?page=0&size=20&sort=title`\n- Version when breaking: `/v2/...`\n- Document with springdoc-openapi (`/swagger-ui.html`)"
+          },
+          {
+            "slug": "caching-messaging",
+            "title": "Caching, async messaging and resilience",
+            "content": "**Caching** with Redis:\n\n```java\n@EnableCaching\n@Cacheable(cacheNames = \"topics\", key = \"#slug\")\npublic TopicView getTopic(String slug) { ... }\n\n@CacheEvict(cacheNames = \"topics\", key = \"#r.topicSlug()\")\npublic LessonSummary upsertLesson(LessonRequest r) { ... }\n```\n\n**Messaging** with Spring Kafka:\n\n```java\n@KafkaListener(topics = \"lesson-completed\")\nvoid onCompleted(LessonCompleted event) { stats.increment(event.topic()); }\n```\n\n**Resilience4j** protects calls to other services:\n\n```java\n@CircuitBreaker(name = \"progress\", fallbackMethod = \"noProgress\")\n@Retry(name = \"progress\")\nProgress fetch(String user) { return client.get(user); }\n```\n\nCombine with timeouts on every HTTP client (`RestClient` + `JdkClientHttpRequestFactory`)."
+          },
+          {
+            "slug": "native-and-deploy",
+            "title": "Production: Docker, native images and Kubernetes",
+            "content": "- Build OCI images without a Dockerfile: `./mvnw spring-boot:build-image`\n- **GraalVM native image** starts in milliseconds with low memory: `./mvnw -Pnative native:compile`\n- **Virtual threads**: `spring.threads.virtual.enabled=true` (Boot 3.2+ on Java 21)\n- **Graceful shutdown**: `server.shutdown=graceful`\n- **Probes**: `management.endpoint.health.probes.enabled=true` exposes `/actuator/health/liveness` and `/readiness`\n- **Metrics**: Micrometer + Prometheus registry, tracing with OpenTelemetry\n\nSee `deploy/k8s/content-service.yaml` for startup, readiness and liveness probes on a Spring Boot app."
+          }
+        ]
+      },
+      {
+        "slug": "typescript-nestjs",
+        "lessons": [
+          {
+            "slug": "advanced-types",
+            "title": "Advanced TypeScript types",
+            "content": "```ts\n// Discriminated unions + exhaustive checks\ntype Event =\n  | { type: 'completed'; lessonId: number }\n  | { type: 'enrolled'; topic: string };\n\nfunction handle(e: Event) {\n  switch (e.type) {\n    case 'completed': return e.lessonId;\n    case 'enrolled': return e.topic;\n    default: { const never: never = e; return never; }\n  }\n}\n\n// Mapped and template literal types\ntype Getters<T> = { [K in keyof T as `get${Capitalize<string & K>}`]: () => T[K] };\n\n// Infer types from runtime schemas\nimport { z } from 'zod';\nconst Lesson = z.object({ title: z.string(), step: z.number().int().positive() });\ntype Lesson = z.infer<typeof Lesson>;\n```\n\nAlso learn `satisfies`, conditional types and `infer`."
+          },
+          {
+            "slug": "microservices-nest",
+            "title": "NestJS microservices, queues and GraphQL",
+            "content": "- **Microservices transport**: `@nestjs/microservices` supports TCP, Redis, NATS, Kafka and gRPC with `@MessagePattern` handlers\n- **Background jobs**: BullMQ queues with `@nestjs/bullmq` for emails and heavy work\n- **GraphQL**: code-first resolvers with `@nestjs/graphql`; use DataLoader to avoid N+1 queries\n- **Config**: `@nestjs/config` with schema validation of env vars\n- **Health**: `@nestjs/terminus`\n\n```ts\n@Processor('emails')\nexport class EmailProcessor extends WorkerHost {\n  async process(job: Job<{ to: string }>) {\n    await this.mailer.send(job.data.to);\n  }\n}\n```"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "data",
+    "name": "Data Platforms",
+    "topics": [
+      {
+        "slug": "databases-sql",
+        "lessons": [
+          {
+            "slug": "postgres-deep-dive",
+            "title": "PostgreSQL deep dive",
+            "content": "PostgreSQL is the most popular choice for new applications.\n\n- **JSONB** with GIN indexes for semi-structured data\n- **Full-text search**: `to_tsvector` / `to_tsquery`\n- **CTEs and recursive queries** for hierarchies\n- **Partitioning** for very large tables\n- **Extensions**: pgvector (AI embeddings), PostGIS (geo), pg_stat_statements (query stats)\n\n```sql\nSELECT query, calls, mean_exec_time\nFROM pg_stat_statements\nORDER BY mean_exec_time DESC\nLIMIT 10;\n```\n\n**Operations**: connection pooling (PgBouncer), autovacuum tuning, point-in-time recovery backups, read replicas."
+          },
+          {
+            "slug": "data-modeling-warehouse",
+            "title": "Dimensional modelling for analytics",
+            "content": "Analytical databases use **star schemas**:\n\n- **Fact tables**: events and measures (`fact_lesson_completion`)\n- **Dimension tables**: descriptive context (`dim_user`, `dim_topic`, `dim_date`)\n\n```sql\nSELECT d.month, t.category, COUNT(*) AS completions\nFROM fact_lesson_completion f\nJOIN dim_date d  ON f.date_key = d.date_key\nJOIN dim_topic t ON f.topic_key = t.topic_key\nGROUP BY d.month, t.category;\n```\n\nHandle changing attributes with **Slowly Changing Dimensions** (Type 2 keeps history). Build these transformations with **dbt** on Snowflake, Databricks or BigQuery."
+          }
+        ]
+      },
+      {
+        "slug": "databricks",
+        "lessons": [
+          {
+            "slug": "structured-streaming",
+            "title": "Structured Streaming and Auto Loader",
+            "content": "Process data incrementally as it arrives.\n\n```python\n(spark.readStream\n   .format('cloudFiles')                      # Auto Loader\n   .option('cloudFiles.format', 'json')\n   .option('cloudFiles.schemaLocation', '/Volumes/main/meta/schemas/events')\n   .load('/Volumes/main/raw/events')\n   .writeStream\n   .option('checkpointLocation', '/Volumes/main/meta/checkpoints/events')\n   .trigger(availableNow=True)\n   .toTable('main.bronze.events'))\n```\n\nCheckpoints give exactly-once processing. **Lakeflow Declarative Pipelines** (formerly Delta Live Tables) let you declare tables with data-quality expectations:\n\n```python\nimport dlt\n\n@dlt.table\n@dlt.expect_or_drop('valid_user', 'user_id IS NOT NULL')\ndef silver_events():\n    return dlt.read_stream('bronze_events')\n```"
+          },
+          {
+            "slug": "performance-cost",
+            "title": "Spark performance and cost tuning",
+            "content": "- Read the **Spark UI**: look for skewed tasks, spills and huge shuffles\n- Enable **Adaptive Query Execution** (default) to handle skew and coalesce partitions\n- **Broadcast** small tables in joins: `df.join(broadcast(small), 'id')`\n- Use **liquid clustering** or Z-ordering on filter columns, and `OPTIMIZE` regularly\n- Prefer **Photon** and serverless compute for SQL workloads\n- Avoid Python UDFs where built-in functions exist\n- **Cost**: auto-terminate clusters, use job clusters (not all-purpose) for pipelines, Spot instances for workers, and cluster policies to cap sizes"
+          }
+        ]
+      },
+      {
+        "slug": "snowflake",
+        "lessons": [
+          {
+            "slug": "security-governance",
+            "title": "Security and governance in Snowflake",
+            "content": "**Role-based access control** with a role hierarchy:\n\n```sql\nCREATE ROLE analyst;\nGRANT USAGE ON WAREHOUSE learn_wh TO ROLE analyst;\nGRANT USAGE ON DATABASE learn TO ROLE analyst;\nGRANT SELECT ON ALL TABLES IN SCHEMA learn.public TO ROLE analyst;\nGRANT ROLE analyst TO USER jane;\n```\n\n**Protect sensitive data**\n\n```sql\nCREATE MASKING POLICY email_mask AS (v STRING) RETURNS STRING ->\n  CASE WHEN CURRENT_ROLE() IN ('ADMIN') THEN v ELSE REGEXP_REPLACE(v, '.+@', '***@') END;\nALTER TABLE users MODIFY COLUMN email SET MASKING POLICY email_mask;\n```\n\n- **Row access policies** filter rows per role\n- **Object tagging** and automatic **classification** find PII\n- **Access history** shows who read what\n- **Secure data sharing** shares live data with other accounts without copying"
+          },
+          {
+            "slug": "performance-cost",
+            "title": "Performance tuning and cost management",
+            "content": "**Performance**\n\n- Check the **Query Profile** for spilling and poor pruning\n- Add **clustering keys** to very large tables filtered on the same columns\n- Use **Search Optimization** for point lookups, and the **Query Acceleration Service** for outlier queries\n- Results are cached for 24 hours, so identical queries cost nothing\n\n**Cost**\n\n```sql\nALTER WAREHOUSE learn_wh SET AUTO_SUSPEND = 60 AUTO_RESUME = TRUE;\n\nCREATE RESOURCE MONITOR monthly_cap WITH CREDIT_QUOTA = 100\n  TRIGGERS ON 80 PERCENT DO NOTIFY ON 100 PERCENT DO SUSPEND;\n\nSELECT warehouse_name, SUM(credits_used) AS credits\nFROM snowflake.account_usage.warehouse_metering_history\nWHERE start_time > DATEADD(day, -30, CURRENT_TIMESTAMP())\nGROUP BY 1 ORDER BY 2 DESC;\n```\n\nRight-size warehouses: scale **up** for complex queries and **out** (multi-cluster) for concurrency."
+          }
+        ]
+      }
+    ]
+  }
+]

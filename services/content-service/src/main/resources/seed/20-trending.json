@@ -1,0 +1,246 @@
+[
+  {
+    "slug": "devops",
+    "name": "DevOps & Platform Engineering",
+    "description": "Ship safely and often: pipelines, GitOps, observability and reliability.",
+    "topics": [
+      {
+        "slug": "ci-cd",
+        "name": "CI/CD with GitHub Actions",
+        "summary": "Automate build, test, security scanning and deployment on every commit.",
+        "level": "BEGINNER",
+        "lessons": [
+          {
+            "slug": "concepts",
+            "title": "CI/CD concepts",
+            "content": "- **Continuous Integration**: every push is built and tested automatically, so bugs surface within minutes\n- **Continuous Delivery**: every green build is deployable; release is a button click\n- **Continuous Deployment**: every green build goes to production automatically\n\nKey metrics (DORA): deployment frequency, lead time for changes, change failure rate, time to restore.\n\nPipeline stages: **lint > unit test > build image > scan > integration test > deploy staging > smoke test > deploy prod**."
+          },
+          {
+            "slug": "first-workflow",
+            "title": "Your first GitHub Actions workflow",
+            "content": "Create `.github/workflows/ci.yml`:\n\n```yaml\nname: ci\non:\n  pull_request:\n  push:\n    branches: [main]\n\njobs:\n  test:\n    runs-on: ubuntu-latest\n    strategy:\n      matrix:\n        service: [auth-service]\n    steps:\n      - uses: actions/checkout@v4\n      - uses: actions/setup-node@v4\n        with: { node-version: 20, cache: npm, cache-dependency-path: services/${{ matrix.service }}/package-lock.json }\n      - run: npm ci && npm run build\n        working-directory: services/${{ matrix.service }}\n\n  go:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n      - uses: actions/setup-go@v5\n        with: { go-version: '1.22' }\n      - run: go test ./... -race\n        working-directory: services/progress-service\n```\n\nKey concepts: **workflows** contain **jobs**, jobs run **steps** on **runners**; jobs run in parallel unless linked with `needs`."
+          },
+          {
+            "slug": "build-push-images",
+            "title": "Build, scan and push container images",
+            "content": "```yaml\n  image:\n    runs-on: ubuntu-latest\n    permissions: { contents: read, id-token: write }\n    steps:\n      - uses: actions/checkout@v4\n      - uses: aws-actions/configure-aws-credentials@v4\n        with:\n          role-to-assume: arn:aws:iam::123456789012:role/gha-deploy\n          aws-region: us-east-1\n      - uses: aws-actions/amazon-ecr-login@v2\n        id: ecr\n      - uses: docker/build-push-action@v6\n        with:\n          context: services/content-service\n          push: true\n          tags: ${{ steps.ecr.outputs.registry }}/sarvaikam/content-service:${{ github.sha }}\n      - uses: aquasecurity/trivy-action@0.24.0\n        with:\n          image-ref: ${{ steps.ecr.outputs.registry }}/sarvaikam/content-service:${{ github.sha }}\n          exit-code: '1'\n          severity: CRITICAL,HIGH\n```\n\n`id-token: write` enables **OIDC**: GitHub exchanges a short-lived token for cloud credentials, so no access keys are stored as secrets. Azure (`azure/login`) and GCP (`google-github-actions/auth`) support the same pattern."
+          },
+          {
+            "slug": "deploy-strategies",
+            "title": "Deployment strategies and environments",
+            "content": "| Strategy | How | Trade-off |\n|---|---|---|\n| Rolling | replace pods gradually (Kubernetes default) | simple; mixed versions briefly |\n| Blue/green | run new version alongside, switch traffic | instant rollback; double capacity |\n| Canary | send 5% > 25% > 100% of traffic | catches issues early; needs metrics |\n| Feature flags | deploy dark, enable per user | decouples deploy from release |\n\nUse GitHub **environments** with required reviewers for production, and keep deployments declarative: CI updates the image tag in Git and GitOps (next roadmap) applies it.\n\n**Always** have an automated rollback path and run smoke tests after every deploy."
+          }
+        ]
+      },
+      {
+        "slug": "helm-gitops",
+        "name": "Helm & GitOps (Argo CD)",
+        "summary": "Package Kubernetes apps with Helm and continuously deploy them from Git.",
+        "level": "INTERMEDIATE",
+        "lessons": [
+          {
+            "slug": "helm-basics",
+            "title": "Helm charts",
+            "content": "Helm is the package manager for Kubernetes.\n\n```bash\nhelm repo add bitnami https://charts.bitnami.com/bitnami\nhelm install cache bitnami/redis --set auth.enabled=false -n sarvaikam\nhelm list -n sarvaikam\nhelm upgrade cache bitnami/redis --set replica.replicaCount=2\nhelm rollback cache 1\n```\n\nCreate your own with `helm create mychart`:\n\n```text\nmychart/\n  Chart.yaml        # name, version, appVersion\n  values.yaml       # defaults\n  templates/        # Go-templated manifests\n```\n\n```yaml\n# templates/deployment.yaml\nreplicas: {{ .Values.replicas }}\nimage: \"{{ .Values.image.repository }}:{{ .Values.image.tag }}\"\n```\n\nRender locally with `helm template` and lint with `helm lint`."
+          },
+          {
+            "slug": "helm-vs-kustomize",
+            "title": "Helm vs Kustomize",
+            "content": "- **Helm**: templating + packaging + release history. Great for distributing apps to others\n- **Kustomize**: template-free overlays built into `kubectl`. Great for your own apps across environments\n\n```text\ndeploy/k8s/            # base (this repo)\noverlays/\n  dev/kustomization.yaml    # replicas: 1, small resources\n  prod/kustomization.yaml   # replicas: 3, HPA, real image tags\n```\n\n```yaml\n# overlays/prod/kustomization.yaml\nresources: [../../deploy/k8s]\nreplicas:\n  - { name: content-service, count: 3 }\nimages:\n  - { name: sarvaikam/content-service, newName: 123.dkr.ecr.us-east-1.amazonaws.com/sarvaikam/content-service, newTag: 1a2b3c }\n```\n\nMany teams use both: Helm for third-party charts, Kustomize for their own services."
+          },
+          {
+            "slug": "argocd",
+            "title": "GitOps with Argo CD",
+            "content": "**GitOps**: Git is the single source of truth; an in-cluster agent continuously makes the cluster match Git.\n\n```bash\nkubectl create namespace argocd\nkubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml\n```\n\n```yaml\napiVersion: argoproj.io/v1alpha1\nkind: Application\nmetadata: { name: sarvaikam, namespace: argocd }\nspec:\n  project: default\n  source:\n    repoURL: https://github.com/you/sarvaikam\n    path: overlays/prod\n    targetRevision: main\n  destination: { server: https://kubernetes.default.svc, namespace: sarvaikam }\n  syncPolicy:\n    automated: { prune: true, selfHeal: true }\n```\n\nBenefits: full audit trail in Git, easy rollback (`git revert`), drift is auto-corrected, and CI never needs cluster credentials. **Flux** is the main alternative."
+          },
+          {
+            "slug": "progressive-delivery",
+            "title": "Progressive delivery with Argo Rollouts",
+            "content": "Argo Rollouts replaces a Deployment with a **Rollout** that supports canary and blue/green with automated analysis.\n\n```yaml\nstrategy:\n  canary:\n    steps:\n      - setWeight: 10\n      - pause: { duration: 5m }\n      - analysis:\n          templates: [{ templateName: success-rate }]\n      - setWeight: 50\n      - pause: { duration: 10m }\n```\n\nThe analysis template queries Prometheus; if the error rate rises, the rollout aborts and traffic returns to the stable version automatically."
+          }
+        ]
+      },
+      {
+        "slug": "observability",
+        "name": "Observability: Prometheus, Grafana & OpenTelemetry",
+        "summary": "Metrics, logs and traces to understand and debug distributed systems.",
+        "level": "INTERMEDIATE",
+        "lessons": [
+          {
+            "slug": "three-pillars",
+            "title": "Metrics, logs and traces",
+            "content": "- **Metrics**: numbers over time (request rate, latency, CPU). Cheap; great for alerts\n- **Logs**: discrete events with context. Use structured JSON\n- **Traces**: one request's path across services, made of spans\n\nWhat to measure:\n\n- **RED** for services: Rate, Errors, Duration\n- **USE** for resources: Utilization, Saturation, Errors\n- **Golden signals**: latency, traffic, errors, saturation\n\nCorrelate everything with a **trace ID** included in every log line."
+          },
+          {
+            "slug": "prometheus-grafana",
+            "title": "Prometheus and Grafana",
+            "content": "Install the full stack into Kubernetes:\n\n```bash\nhelm repo add prometheus-community https://prometheus-community.github.io/helm-charts\nhelm install monitoring prometheus-community/kube-prometheus-stack -n monitoring --create-namespace\n```\n\nPrometheus **scrapes** `/metrics` endpoints. Useful PromQL:\n\n```promql\n# requests per second by service\nsum by (service) (rate(http_requests_total[5m]))\n\n# 95th percentile latency\nhistogram_quantile(0.95, sum by (le) (rate(http_request_duration_seconds_bucket[5m])))\n\n# error ratio\nsum(rate(http_requests_total{status=~\"5..\"}[5m])) / sum(rate(http_requests_total[5m]))\n```\n\nExpose metrics: Spring Boot via `micrometer-registry-prometheus`, Node via `prom-client`, Go via `prometheus/client_golang`. Build dashboards in **Grafana**."
+          },
+          {
+            "slug": "opentelemetry",
+            "title": "Distributed tracing with OpenTelemetry",
+            "content": "**OpenTelemetry (OTel)** is the vendor-neutral standard for traces, metrics and logs.\n\n- **Java**: attach the agent with zero code changes: `java -javaagent:opentelemetry-javaagent.jar -jar app.jar`\n- **Node**: `@opentelemetry/sdk-node` with auto-instrumentations\n- **Go**: `go.opentelemetry.io/otel` with `otelhttp` middleware\n\n```bash\nOTEL_SERVICE_NAME=content-service\nOTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317\n```\n\nThe **OTel Collector** receives data and exports it to backends: Jaeger or Tempo (traces), Prometheus (metrics), Loki or Elasticsearch (logs), or commercial tools like Datadog and Grafana Cloud.\n\nTrace context propagates automatically through HTTP headers (`traceparent`)."
+          },
+          {
+            "slug": "slos-alerting",
+            "title": "SLOs, alerting and incident response",
+            "content": "- **SLI**: a measured indicator, e.g. % of requests under 300 ms\n- **SLO**: the target, e.g. 99.9% over 30 days\n- **Error budget**: 0.1% = about 43 minutes per month you may fail\n\nAlert on **symptoms users feel** and on fast error-budget burn, not on every CPU spike:\n\n```yaml\n- alert: HighErrorRate\n  expr: sum(rate(http_requests_total{status=~\"5..\"}[5m])) / sum(rate(http_requests_total[5m])) > 0.02\n  for: 10m\n  labels: { severity: page }\n  annotations: { summary: 'Error rate above 2% for 10 minutes' }\n```\n\nIncidents: a clear on-call rotation, runbooks linked from alerts, an incident commander role, and blameless postmortems with action items."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "ai",
+    "name": "AI: ML, Deep Learning & LLMs",
+    "topics": [
+      {
+        "slug": "mlops",
+        "name": "MLOps",
+        "summary": "Take models from notebook to production: tracking, registry, serving and monitoring.",
+        "level": "ADVANCED",
+        "lessons": [
+          {
+            "slug": "lifecycle",
+            "title": "The ML lifecycle and why MLOps",
+            "content": "Most ML projects fail after the notebook. MLOps applies DevOps discipline to models:\n\n1. **Data versioning**: DVC, lakeFS, Delta time travel\n2. **Experiment tracking**: parameters, metrics, artifacts\n3. **Model registry**: versioned, approved models with stages\n4. **Automated training pipelines**: reproducible, scheduled\n5. **Serving**: batch or real-time\n6. **Monitoring**: data drift, prediction drift, performance\n\nMaturity goes from manual notebooks, to automated pipelines, to full CI/CD for models with automatic retraining."
+          },
+          {
+            "slug": "mlflow",
+            "title": "Experiment tracking and registry with MLflow",
+            "content": "```python\nimport mlflow, mlflow.sklearn\nfrom sklearn.ensemble import RandomForestClassifier\nfrom sklearn.metrics import f1_score\n\nmlflow.set_experiment('churn')\nwith mlflow.start_run():\n    params = {'n_estimators': 300, 'max_depth': 8}\n    model = RandomForestClassifier(**params).fit(X_train, y_train)\n    mlflow.log_params(params)\n    mlflow.log_metric('f1', f1_score(y_test, model.predict(X_test)))\n    mlflow.sklearn.log_model(model, 'model', registered_model_name='churn-model')\n```\n\n```bash\nmlflow ui   # compare runs at http://localhost:5000\n```\n\nPromote a version with an alias (e.g. `champion`) and load it anywhere with `mlflow.pyfunc.load_model('models:/churn-model@champion')`."
+          },
+          {
+            "slug": "serving",
+            "title": "Model serving patterns",
+            "content": "| Pattern | When |\n|---|---|\n| Batch scoring | nightly predictions written to a table |\n| REST API | low-latency per-request predictions |\n| Streaming | score events from Kafka in real time |\n| Embedded / edge | model ships inside the app or device |\n\nA simple REST service:\n\n```python\nfrom fastapi import FastAPI\nimport mlflow.pyfunc, pandas as pd\n\napp = FastAPI()\nmodel = mlflow.pyfunc.load_model('models:/churn-model@champion')\n\n@app.post('/predict')\ndef predict(rows: list[dict]):\n    return {'scores': model.predict(pd.DataFrame(rows)).tolist()}\n```\n\nAt scale use KServe, Seldon, BentoML, Ray Serve, SageMaker, Vertex AI, Azure ML or Snowflake Model Registry. Use shadow deployments and A/B tests before full rollout."
+          },
+          {
+            "slug": "monitoring",
+            "title": "Monitoring models in production",
+            "content": "Models decay as the world changes.\n\n- **Data drift**: input distributions shift (compare with PSI or KS tests)\n- **Concept drift**: the relationship between inputs and labels changes\n- **Performance**: once ground-truth labels arrive, track accuracy/AUC over time\n- **Operational**: latency, error rate, throughput\n\n```python\nfrom evidently import Report\nfrom evidently.presets import DataDriftPreset\n\nreport = Report([DataDriftPreset()])\nreport.run(reference_data=train_df, current_data=last_week_df).save_html('drift.html')\n```\n\nAutomate: when drift crosses a threshold, trigger the retraining pipeline, evaluate against the champion, and promote only if better."
+          }
+        ]
+      },
+      {
+        "slug": "vector-databases",
+        "name": "Vector Databases & Semantic Search",
+        "summary": "Store embeddings and search by meaning: the backbone of RAG and recommendations.",
+        "level": "INTERMEDIATE",
+        "lessons": [
+          {
+            "slug": "embeddings",
+            "title": "Embeddings and similarity",
+            "content": "An **embedding** maps text, images or audio to a vector where similar meanings are close together.\n\n```python\nfrom sentence_transformers import SentenceTransformer, util\n\nm = SentenceTransformer('all-MiniLM-L6-v2')\na, b, c = m.encode(['deploy a container', 'run a docker image', 'bake a cake'])\nprint(util.cos_sim(a, b), util.cos_sim(a, c))   # high vs low\n```\n\nDistance metrics: **cosine** (most common for text), dot product, Euclidean. Normalize vectors to make cosine and dot product equivalent."
+          },
+          {
+            "slug": "ann-indexes",
+            "title": "Approximate nearest neighbour indexes",
+            "content": "Exact search compares against every vector, which is too slow at millions of rows. ANN indexes trade a little recall for huge speed-ups.\n\n| Index | Idea | Notes |\n|---|---|---|\n| **HNSW** | layered proximity graph | high recall, more memory |\n| **IVF** | cluster vectors, search nearest clusters | tune `nprobe` |\n| **PQ** | compress vectors | lower memory, lower accuracy |\n\nTune for your recall/latency target and always measure **recall@k** against exact search on a sample."
+          },
+          {
+            "slug": "choosing",
+            "title": "Choosing a vector store",
+            "content": "- **pgvector**: vectors inside PostgreSQL. Simplest if you already run Postgres; joins with relational data\n- **Dedicated**: Pinecone, Weaviate, Qdrant, Milvus. Scale to billions, built-in hybrid search and filtering\n- **Search engines**: Elasticsearch / OpenSearch with kNN\n- **Platform-native**: Snowflake Cortex Search, Databricks Vector Search, Azure AI Search, Vertex AI Vector Search\n\nKey features to compare: metadata filtering, hybrid (keyword + vector) search, multi-tenancy, managed vs self-hosted, and cost per million vectors."
+          },
+          {
+            "slug": "hybrid-search",
+            "title": "Hybrid search and re-ranking",
+            "content": "Vectors miss exact terms (error codes, product names); keywords miss synonyms. Combine both.\n\n**Reciprocal Rank Fusion (RRF)** merges ranked lists:\n\n```python\ndef rrf(*rankings, k=60):\n    scores = {}\n    for ranking in rankings:\n        for rank, doc in enumerate(ranking):\n            scores[doc] = scores.get(doc, 0) + 1 / (k + rank + 1)\n    return sorted(scores, key=scores.get, reverse=True)\n\nresults = rrf(bm25_results, vector_results)\n```\n\nThen apply a **cross-encoder re-ranker** (e.g. `cross-encoder/ms-marco-MiniLM-L-6-v2`) to the top 50 for the best precision."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "backend",
+    "name": "Backend Frameworks",
+    "topics": [
+      {
+        "slug": "microservices",
+        "name": "Microservices Architecture",
+        "summary": "Service boundaries, communication, data ownership and resilience patterns.",
+        "level": "ADVANCED",
+        "lessons": [
+          {
+            "slug": "when-and-why",
+            "title": "Monolith vs microservices",
+            "content": "Microservices trade code complexity for operational complexity.\n\n**Benefits**: independent deploys, independent scaling, team autonomy, technology choice per service.\n\n**Costs**: network failures, distributed data, harder debugging, more infrastructure.\n\nStart with a **modular monolith** and split when team size or scaling needs demand it. Split along **business capabilities** (bounded contexts in DDD), not technical layers.\n\nThis project is a small example: content (Spring Boot), auth (NestJS) and progress (Go) each own their own tables."
+          },
+          {
+            "slug": "communication",
+            "title": "Sync vs async communication",
+            "content": "| Style | Tech | Use when |\n|---|---|---|\n| Sync request/response | REST, gRPC | caller needs the answer now |\n| Async events | Kafka, RabbitMQ, SNS/SQS | notify others something happened |\n| Async commands | queues | hand off work to be done later |\n\nRules of thumb:\n\n- Avoid long synchronous chains (A > B > C > D); availability multiplies down\n- Publish **events** about facts (`LessonCompleted`) rather than calling every interested service\n- Use an **API gateway** for external clients (routing, auth, rate limiting); see `frontend/nginx.conf` and `deploy/k8s/ingress.yaml`\n- Define contracts with OpenAPI or Protobuf and version them"
+          },
+          {
+            "slug": "data-patterns",
+            "title": "Data ownership, sagas and the outbox",
+            "content": "**Database per service**: no other service reads your tables directly; they use your API or events.\n\n**Sagas** replace distributed transactions with a sequence of local transactions plus compensating actions:\n\n```text\nOrderCreated -> ReservePayment -> ReserveStock\n                       \\-- on failure: RefundPayment, CancelOrder\n```\n\n**Transactional outbox** avoids the dual-write problem (DB updated but event lost):\n\n1. In the same DB transaction, write the business row and an `outbox` row\n2. A relay (or Debezium CDC) publishes outbox rows to Kafka\n3. Consumers are **idempotent** (dedupe by event ID)\n\n**CQRS** separates write models from read-optimized views built from events."
+          },
+          {
+            "slug": "resilience",
+            "title": "Resilience patterns",
+            "content": "Assume every network call can fail or hang.\n\n- **Timeouts** on every call (never infinite)\n- **Retries** with exponential backoff and jitter, only for idempotent operations\n- **Circuit breakers** stop hammering a failing dependency\n- **Bulkheads** isolate resource pools so one slow dependency cannot exhaust all threads\n- **Fallbacks** degrade gracefully (cached data, default response)\n- **Rate limiting** protects services from overload\n\nImplementations: Resilience4j (Java), cockatiel / opossum (Node), `failsafe-go` (Go), or a **service mesh** (Istio, Linkerd) that adds retries, mTLS and traffic splitting without code changes.\n\nVerify it all with chaos experiments: kill pods and inject latency in staging."
+          }
+        ]
+      },
+      {
+        "slug": "redis",
+        "name": "Redis & Caching",
+        "summary": "In-memory data structures for caching, sessions, rate limiting and queues.",
+        "level": "BEGINNER",
+        "lessons": [
+          {
+            "slug": "data-structures",
+            "title": "Redis data structures",
+            "content": "```bash\ndocker run -d -p 6379:6379 redis:7\nredis-cli\n```\n\n```text\nSET lesson:42 '{\"title\":\"Intro\"}' EX 300   # string with 5-minute TTL\nINCR views:lesson:42                        # atomic counter\nHSET user:7 name Asha plan pro              # hash\nLPUSH jobs email:7                          # list as a queue\nSADD tags:42 docker k8s                     # set\nZINCRBY leaderboard 10 user:7               # sorted set\nZREVRANGE leaderboard 0 9 WITHSCORES        # top 10\n```\n\nAlso: streams (event log), pub/sub, geospatial indexes, HyperLogLog and JSON/vector search modules."
+          },
+          {
+            "slug": "caching-patterns",
+            "title": "Caching patterns",
+            "content": "**Cache-aside** (most common):\n\n```python\ndef get_topic(slug):\n    cached = r.get(f'topic:{slug}')\n    if cached:\n        return json.loads(cached)\n    topic = db.load_topic(slug)\n    r.set(f'topic:{slug}', json.dumps(topic), ex=600)\n    return topic\n```\n\nOther patterns: **write-through** (update cache on write), **write-behind** (async writes to DB).\n\nPitfalls:\n\n- **Invalidation**: delete the key on update and keep TTLs as a safety net\n- **Stampede**: many misses at once; use locks or early refresh\n- **Hot keys**: replicate or add a local in-process cache\n- **Never** treat the cache as the source of truth"
+          },
+          {
+            "slug": "rate-limiting-sessions",
+            "title": "Rate limiting, sessions and locks",
+            "content": "**Fixed-window rate limiter:**\n\n```python\ndef allow(user, limit=100, window=60):\n    key = f'rl:{user}:{int(time.time() // window)}'\n    count = r.incr(key)\n    if count == 1:\n        r.expire(key, window)\n    return count <= limit\n```\n\n- **Sessions**: store session data with a TTL and share it across stateless app replicas\n- **Distributed locks**: `SET lock:job NX EX 30` (and release only if you still own it)\n- **High availability**: Redis Sentinel or Redis Cluster; managed options are ElastiCache, Azure Cache for Redis and Memorystore\n- **Persistence**: RDB snapshots and/or AOF logs"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "data",
+    "name": "Data Platforms",
+    "topics": [
+      {
+        "slug": "kafka",
+        "name": "Apache Kafka & Event Streaming",
+        "summary": "Durable, scalable event streams for microservices and real-time data pipelines.",
+        "level": "INTERMEDIATE",
+        "lessons": [
+          {
+            "slug": "core-concepts",
+            "title": "Topics, partitions and consumer groups",
+            "content": "- **Topic**: a named, append-only log of events\n- **Partition**: a topic is split into partitions for parallelism; order is guaranteed only within a partition\n- **Key**: events with the same key go to the same partition (e.g. key by `userId`)\n- **Consumer group**: partitions are divided among consumers in a group; add consumers to scale\n- **Offset**: each consumer's position; events are kept based on retention, not deleted on read\n- **Replication factor**: copies across brokers for durability\n\nModern Kafka runs without ZooKeeper (**KRaft** mode)."
+          },
+          {
+            "slug": "produce-consume",
+            "title": "Produce and consume events",
+            "content": "```bash\ndocker run -d --name kafka -p 9092:9092 apache/kafka:3.8.0\ndocker exec kafka /opt/kafka/bin/kafka-topics.sh --create --topic lesson-completed --partitions 3 --bootstrap-server localhost:9092\n```\n\n```python\nfrom confluent_kafka import Producer, Consumer\nimport json\n\np = Producer({'bootstrap.servers': 'localhost:9092', 'enable.idempotence': True})\np.produce('lesson-completed', key='user-7', value=json.dumps({'lessonId': 42}))\np.flush()\n\nc = Consumer({'bootstrap.servers': 'localhost:9092', 'group.id': 'stats', 'auto.offset.reset': 'earliest'})\nc.subscribe(['lesson-completed'])\nwhile True:\n    msg = c.poll(1.0)\n    if msg and not msg.error():\n        print(msg.key(), json.loads(msg.value()))\n```"
+          },
+          {
+            "slug": "reliability",
+            "title": "Delivery guarantees and schemas",
+            "content": "- **At-most-once**: commit before processing (may lose)\n- **At-least-once**: commit after processing (may duplicate). Make consumers **idempotent**\n- **Exactly-once**: idempotent producer + transactions, within Kafka\n\nProducer settings for durability: `acks=all`, `enable.idempotence=true`, `min.insync.replicas=2` on the topic.\n\nUse a **Schema Registry** with Avro, Protobuf or JSON Schema so producers cannot break consumers, and evolve schemas compatibly (add optional fields, never rename).\n\nSend poison messages to a **dead-letter topic** instead of blocking the partition."
+          },
+          {
+            "slug": "ecosystem",
+            "title": "Kafka Connect, stream processing and managed Kafka",
+            "content": "- **Kafka Connect**: move data in and out with connectors, e.g. Debezium CDC from PostgreSQL and sinks to S3, Snowflake or Elasticsearch\n- **Stream processing**: Kafka Streams (Java), Apache Flink, ksqlDB, Spark Structured Streaming\n- **Managed**: Confluent Cloud, Amazon MSK, Azure Event Hubs (Kafka API), Google Managed Service for Apache Kafka; Redpanda is a Kafka-compatible alternative\n\n**Project idea:** publish `LessonCompleted` events from the progress service, consume them in a stats service and stream them into Snowflake with the Snowflake Kafka connector for analytics dashboards."
+          }
+        ]
+      }
+    ]
+  }
+]

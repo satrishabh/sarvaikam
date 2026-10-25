@@ -1,0 +1,626 @@
+[
+  {
+    "slug": "infrastructure-as-code",
+    "name": "Infrastructure as Code",
+    "description": "Provision and manage cloud infrastructure declaratively and repeatably.",
+    "topics": [
+      {
+        "slug": "terraform",
+        "name": "Terraform",
+        "summary": "HashiCorp's declarative IaC tool for provisioning infrastructure across AWS, Azure, GCP and more.",
+        "level": "BEGINNER",
+        "lessons": [
+          {
+            "slug": "what-is-terraform",
+            "title": "What is Terraform and why IaC?",
+            "content": "Infrastructure as Code (IaC) means describing servers, networks and databases in versioned files instead of clicking in a console.\n\n**Terraform** reads `.tf` files written in HCL, compares them with the real world, and makes a plan to reconcile the two.\n\nKey ideas:\n\n- **Providers** talk to APIs (aws, azurerm, google, kubernetes...)\n- **Resources** are the things you create\n- **State** records what Terraform manages\n- **Plan / Apply** previews changes, then executes them\n\nInstall it from the HashiCorp website and check the version:\n\n```bash\nterraform -version\n```\n\n**Practice:** Install Terraform and run `terraform -help`."
+          },
+          {
+            "slug": "first-configuration",
+            "title": "Your first configuration",
+            "content": "Create `main.tf`:\n\n```hcl\nterraform {\n  required_providers {\n    aws = { source = \"hashicorp/aws\", version = \"~> 5.0\" }\n  }\n}\n\nprovider \"aws\" {\n  region = \"us-east-1\"\n}\n\nresource \"aws_s3_bucket\" \"notes\" {\n  bucket = \"my-unique-notes-bucket-12345\"\n}\n```\n\nThen run the core workflow:\n\n```bash\nterraform init     # download providers\nterraform plan     # preview\nterraform apply    # create\nterraform destroy  # clean up\n```\n\n**Practice:** Create and destroy a bucket, then read the generated `terraform.tfstate`."
+          },
+          {
+            "slug": "variables-outputs",
+            "title": "Variables, outputs and locals",
+            "content": "Hard-coded values do not scale. Use inputs and outputs:\n\n```hcl\nvariable \"env\" {\n  type    = string\n  default = \"dev\"\n}\n\nlocals {\n  name = \"app-${var.env}\"\n}\n\noutput \"bucket_arn\" {\n  value = aws_s3_bucket.notes.arn\n}\n```\n\nSet values with `-var env=prod`, a `terraform.tfvars` file, or `TF_VAR_env` environment variables.\n\nUse `count` and `for_each` to create many similar resources:\n\n```hcl\nresource \"aws_s3_bucket\" \"logs\" {\n  for_each = toset([\"web\", \"api\"])\n  bucket   = \"${local.name}-${each.key}-logs\"\n}\n```"
+          },
+          {
+            "slug": "state-and-backends",
+            "title": "Remote state and backends",
+            "content": "Local state breaks as soon as a team shares infrastructure. Store it remotely with locking:\n\n```hcl\nterraform {\n  backend \"s3\" {\n    bucket         = \"my-tf-state\"\n    key            = \"prod/network.tfstate\"\n    region         = \"us-east-1\"\n    dynamodb_table = \"tf-locks\"\n    encrypt        = true\n  }\n}\n```\n\nEquivalent backends exist for Azure (`azurerm` storage account) and GCP (`gcs` bucket).\n\nUseful commands: `terraform state list`, `terraform import`, `terraform state mv`.\n\nNever commit state files: they can contain secrets."
+          },
+          {
+            "slug": "modules-and-workflows",
+            "title": "Modules and team workflows",
+            "content": "A **module** is a folder of `.tf` files you call with inputs:\n\n```hcl\nmodule \"vpc\" {\n  source  = \"terraform-aws-modules/vpc/aws\"\n  version = \"5.8.1\"\n  name    = \"main\"\n  cidr    = \"10.0.0.0/16\"\n}\n```\n\nProduction workflow:\n\n1. `terraform fmt` and `terraform validate` in CI\n2. Post `terraform plan` output on pull requests\n3. Apply only from the main branch\n4. Scan with `tflint` / `checkov`\n\nSee `infra/terraform` in this repo for real AWS, Azure and GCP examples."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "compute-and-orchestration",
+    "name": "Compute: VMs, Containers & Kubernetes",
+    "description": "From virtual machines to containers to orchestrating them at scale.",
+    "topics": [
+      {
+        "slug": "virtual-machines",
+        "name": "Virtual Machines",
+        "summary": "Understand hypervisors, VM images, networking and when VMs still beat containers.",
+        "level": "BEGINNER",
+        "lessons": [
+          {
+            "slug": "hypervisors",
+            "title": "How virtualization works",
+            "content": "A **hypervisor** lets one physical host run many isolated operating systems.\n\n- **Type 1** (bare metal): KVM, VMware ESXi, Hyper-V, AWS Nitro\n- **Type 2** (hosted): VirtualBox, VMware Workstation\n\nEach VM has its own kernel, so isolation is strong but boot time and memory overhead are higher than containers."
+          },
+          {
+            "slug": "launch-a-vm",
+            "title": "Launch and connect to a cloud VM",
+            "content": "Every cloud offers VMs: AWS EC2, Azure Virtual Machines, GCP Compute Engine.\n\n```bash\n# GCP example\ngcloud compute instances create web-1 --machine-type=e2-small --image-family=debian-12 --image-project=debian-cloud\ngcloud compute ssh web-1\n```\n\nAlways use SSH keys, never passwords, and restrict port 22 to your IP."
+          },
+          {
+            "slug": "images-and-provisioning",
+            "title": "Images, cloud-init and Packer",
+            "content": "Do not configure VMs by hand. Options:\n\n- **cloud-init** runs a script on first boot\n- **Packer** bakes a golden image with everything installed\n- **Ansible** configures fleets over SSH\n\n```yaml\n#cloud-config\npackages: [nginx]\nruncmd:\n  - systemctl enable --now nginx\n```"
+          },
+          {
+            "slug": "scaling-vms",
+            "title": "Scaling VMs and when to choose them",
+            "content": "Use auto scaling groups (AWS ASG, Azure VM Scale Sets, GCP Managed Instance Groups) behind a load balancer.\n\nChoose VMs when you need: a custom kernel, legacy software, GPUs with special drivers, or strict tenant isolation. Otherwise containers are usually cheaper and faster to ship."
+          }
+        ]
+      },
+      {
+        "slug": "docker",
+        "name": "Docker",
+        "summary": "Package applications into portable container images and run them anywhere.",
+        "level": "BEGINNER",
+        "lessons": [
+          {
+            "slug": "containers-vs-vms",
+            "title": "Containers vs VMs",
+            "content": "Containers share the host kernel and isolate processes using Linux **namespaces** and **cgroups**. They start in milliseconds and are much lighter than VMs.\n\n```bash\ndocker run --rm -p 8080:80 nginx\n```\n\nOpen http://localhost:8080 and you have a web server running in a container."
+          },
+          {
+            "slug": "dockerfile",
+            "title": "Writing a Dockerfile",
+            "content": "```dockerfile\nFROM node:20-alpine\nWORKDIR /app\nCOPY package*.json ./\nRUN npm ci\nCOPY . .\nEXPOSE 3000\nCMD [\"node\", \"server.js\"]\n```\n\nOrder instructions from least to most frequently changing so the layer cache works.\n\n```bash\ndocker build -t myapp:1.0 .\ndocker run -p 3000:3000 myapp:1.0\n```"
+          },
+          {
+            "slug": "multi-stage-builds",
+            "title": "Multi-stage builds and small images",
+            "content": "Build in one stage, ship only the output:\n\n```dockerfile\nFROM golang:1.22 AS build\nWORKDIR /src\nCOPY . .\nRUN CGO_ENABLED=0 go build -o /app\n\nFROM gcr.io/distroless/static\nCOPY --from=build /app /app\nUSER nonroot\nENTRYPOINT [\"/app\"]\n```\n\nSmaller images mean faster pulls and a smaller attack surface. Scan with `docker scout` or `trivy`."
+          },
+          {
+            "slug": "compose",
+            "title": "Docker Compose for multi-service apps",
+            "content": "Compose defines a whole stack in one file:\n\n```yaml\nservices:\n  db:\n    image: postgres:16\n    environment: { POSTGRES_PASSWORD: secret }\n  api:\n    build: .\n    depends_on: [db]\n    ports: [\"8080:8080\"]\n```\n\n```bash\ndocker compose up --build\n```\n\nThis project's root `docker-compose.yml` runs Postgres, three backends and the frontend together."
+          }
+        ]
+      },
+      {
+        "slug": "kubernetes",
+        "name": "Kubernetes",
+        "summary": "Orchestrate containers: scheduling, self-healing, scaling and service discovery.",
+        "level": "INTERMEDIATE",
+        "lessons": [
+          {
+            "slug": "architecture",
+            "title": "Kubernetes architecture",
+            "content": "A cluster has a **control plane** (API server, etcd, scheduler, controller manager) and **worker nodes** (kubelet, kube-proxy, container runtime).\n\nYou declare desired state in YAML; controllers continuously reconcile reality toward it.\n\nRun one locally with `kind`, `minikube` or Docker Desktop:\n\n```bash\nkind create cluster\nkubectl get nodes\n```"
+          },
+          {
+            "slug": "pods-deployments",
+            "title": "Pods, Deployments and ReplicaSets",
+            "content": "```yaml\napiVersion: apps/v1\nkind: Deployment\nmetadata: { name: web }\nspec:\n  replicas: 3\n  selector: { matchLabels: { app: web } }\n  template:\n    metadata: { labels: { app: web } }\n    spec:\n      containers:\n        - name: web\n          image: nginx:1.27\n          ports: [{ containerPort: 80 }]\n```\n\n```bash\nkubectl apply -f web.yaml\nkubectl rollout status deploy/web\nkubectl delete pod -l app=web   # watch them come back\n```"
+          },
+          {
+            "slug": "services-ingress",
+            "title": "Services and Ingress",
+            "content": "Pods are ephemeral; a **Service** gives them a stable DNS name and load balancing.\n\n```yaml\napiVersion: v1\nkind: Service\nmetadata: { name: web }\nspec:\n  selector: { app: web }\n  ports: [{ port: 80, targetPort: 80 }]\n```\n\nAn **Ingress** routes external HTTP traffic by host/path to services. See `deploy/k8s/ingress.yaml` in this project."
+          },
+          {
+            "slug": "config-secrets",
+            "title": "ConfigMaps, Secrets and probes",
+            "content": "Keep config out of images:\n\n```yaml\nenvFrom:\n  - configMapRef: { name: app-config }\n  - secretRef: { name: app-secrets }\nreadinessProbe:\n  httpGet: { path: /health, port: 8080 }\nlivenessProbe:\n  httpGet: { path: /health, port: 8080 }\n```\n\nReadiness controls traffic; liveness restarts stuck containers. For production secrets use External Secrets with a cloud secret manager."
+          },
+          {
+            "slug": "scaling-helm",
+            "title": "Autoscaling, Helm and GitOps",
+            "content": "- **HPA** scales replicas by CPU/memory or custom metrics: `kubectl autoscale deploy web --min=2 --max=10 --cpu-percent=70`\n- **Helm** packages manifests as reusable charts\n- **Kustomize** overlays per environment (used in `deploy/k8s`)\n- **Argo CD / Flux** sync the cluster from Git (GitOps)\n\nManaged options: EKS (AWS), AKS (Azure), GKE (GCP)."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "cloud",
+    "name": "Cloud Platforms",
+    "description": "Core services of the three major public clouds.",
+    "topics": [
+      {
+        "slug": "aws",
+        "name": "AWS",
+        "summary": "Amazon Web Services: IAM, networking, compute, storage and managed databases.",
+        "level": "BEGINNER",
+        "lessons": [
+          {
+            "slug": "accounts-iam",
+            "title": "Accounts, regions and IAM",
+            "content": "AWS is organized into **regions** and **availability zones**. Access is controlled by **IAM**: users, groups, roles and JSON policies.\n\nRules: enable MFA on root, never use root daily, prefer IAM Identity Center (SSO) and roles over long-lived keys.\n\n```bash\naws configure sso\naws sts get-caller-identity\n```"
+          },
+          {
+            "slug": "vpc-networking",
+            "title": "VPC networking",
+            "content": "A **VPC** is your private network. Split it into public subnets (with an Internet Gateway) and private subnets (outbound through a NAT Gateway). Control traffic with **security groups** (stateful, per resource) and NACLs (stateless, per subnet)."
+          },
+          {
+            "slug": "compute-storage",
+            "title": "Compute and storage",
+            "content": "- **EC2** virtual machines, **Lambda** functions, **ECS/Fargate** and **EKS** for containers\n- **S3** object storage, **EBS** block volumes, **EFS** shared file systems\n\n```bash\naws s3 mb s3://my-bucket-12345\naws s3 cp report.pdf s3://my-bucket-12345/\n```"
+          },
+          {
+            "slug": "databases-and-ops",
+            "title": "Databases, monitoring and cost",
+            "content": "Managed data: **RDS/Aurora** (relational), **DynamoDB** (key-value), **ElastiCache** (Redis).\n\nOperate with **CloudWatch** (metrics, logs, alarms), **CloudTrail** (audit) and **Cost Explorer** + Budgets.\n\nNext: deploy this project with `infra/terraform/aws` (VPC + EKS + RDS + ECR)."
+          }
+        ]
+      },
+      {
+        "slug": "azure",
+        "name": "Microsoft Azure",
+        "summary": "Azure resource groups, Entra ID, VNets, AKS and managed PostgreSQL.",
+        "level": "BEGINNER",
+        "lessons": [
+          {
+            "slug": "hierarchy-identity",
+            "title": "Resource hierarchy and Entra ID",
+            "content": "Azure organizes resources as: Management groups > Subscriptions > **Resource groups** > Resources.\n\nIdentity is **Microsoft Entra ID** (formerly Azure AD). Grant access with **RBAC** role assignments, and let apps authenticate with **managed identities** instead of secrets.\n\n```bash\naz login\naz group create -n rg-demo -l eastus\n```"
+          },
+          {
+            "slug": "networking",
+            "title": "VNets and network security",
+            "content": "A **Virtual Network** contains subnets; **Network Security Groups** filter traffic. Use **Private Endpoints** to reach PaaS services (Storage, PostgreSQL) without public IPs, and **Application Gateway** or **Front Door** for HTTP load balancing."
+          },
+          {
+            "slug": "compute-containers",
+            "title": "Compute and containers",
+            "content": "- **Virtual Machines** and **VM Scale Sets**\n- **App Service** for web apps, **Functions** for serverless\n- **Container Apps** for simple containers, **AKS** for full Kubernetes\n- **ACR** stores container images\n\n```bash\naz aks get-credentials -g rg-demo -n aks-demo\nkubectl get nodes\n```"
+          },
+          {
+            "slug": "data-and-monitoring",
+            "title": "Data services and monitoring",
+            "content": "Data: **Azure Database for PostgreSQL Flexible Server**, **Cosmos DB**, **Blob Storage**, **Azure Databricks** and **Synapse/Fabric**.\n\nObserve with **Azure Monitor**, Log Analytics and Application Insights.\n\nNext: `infra/terraform/azure` provisions AKS + PostgreSQL + ACR for this project."
+          }
+        ]
+      },
+      {
+        "slug": "gcp",
+        "name": "Google Cloud (GCP)",
+        "summary": "Projects, IAM, VPC, GKE, Cloud Run, Cloud SQL and BigQuery.",
+        "level": "BEGINNER",
+        "lessons": [
+          {
+            "slug": "projects-iam",
+            "title": "Projects and IAM",
+            "content": "Everything in GCP lives in a **project** (inside folders and an organization). IAM binds **principals** to **roles** on resources. Workloads use **service accounts**; on GKE use Workload Identity instead of key files.\n\n```bash\ngcloud init\ngcloud config set project my-project\n```"
+          },
+          {
+            "slug": "vpc",
+            "title": "Global VPC networking",
+            "content": "GCP VPCs are **global**, while subnets are regional. Firewall rules target network tags or service accounts. **Cloud NAT** gives private VMs outbound access, and **Private Service Access** connects to Cloud SQL privately."
+          },
+          {
+            "slug": "compute",
+            "title": "Compute Engine, Cloud Run and GKE",
+            "content": "- **Compute Engine** VMs\n- **Cloud Run**: deploy a container, get an HTTPS URL, scale to zero\n- **GKE** (Standard or Autopilot) for Kubernetes\n\n```bash\ngcloud run deploy hello --image=us-docker.pkg.dev/cloudrun/container/hello --region=us-central1 --allow-unauthenticated\n```"
+          },
+          {
+            "slug": "data-ai",
+            "title": "Data and AI services",
+            "content": "- **Cloud SQL** (PostgreSQL/MySQL), **Spanner**, **Firestore**\n- **BigQuery**: serverless data warehouse\n- **Vertex AI**: training, deploying and calling models such as Gemini\n\nNext: `infra/terraform/gcp` provisions GKE + Cloud SQL + Artifact Registry."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "languages",
+    "name": "Programming Languages",
+    "description": "The languages powering modern backends, tooling and AI.",
+    "topics": [
+      {
+        "slug": "java",
+        "name": "Java",
+        "summary": "Modern Java 21: records, streams, virtual threads and the JVM ecosystem.",
+        "level": "BEGINNER",
+        "lessons": [
+          {
+            "slug": "setup-basics",
+            "title": "JDK setup and basics",
+            "content": "Install a JDK 21 (Temurin) and verify with `java -version`. Java 21 runs single files directly:\n\n```java\n// Hello.java\nvoid main() {\n    System.out.println(\"Hello, Java 21\");\n}\n```\n\n```bash\njava --enable-preview --source 21 Hello.java\n```\n\nJava is statically typed, compiled to bytecode and runs on the JVM."
+          },
+          {
+            "slug": "oop-records",
+            "title": "Classes, interfaces and records",
+            "content": "```java\npublic sealed interface Shape permits Circle, Square {}\npublic record Circle(double r) implements Shape {}\npublic record Square(double side) implements Shape {}\n\nstatic double area(Shape s) {\n    return switch (s) {\n        case Circle c -> Math.PI * c.r() * c.r();\n        case Square q -> q.side() * q.side();\n    };\n}\n```\n\nRecords are immutable data carriers; sealed types plus pattern matching give exhaustive switches."
+          },
+          {
+            "slug": "collections-streams",
+            "title": "Collections and streams",
+            "content": "```java\nvar words = List.of(\"kubernetes\", \"java\", \"terraform\", \"go\");\nMap<Integer, List<String>> byLength = words.stream()\n    .filter(w -> w.length() > 2)\n    .collect(Collectors.groupingBy(String::length));\n```\n\nKnow when to use `ArrayList`, `HashMap`, `TreeMap` and `ArrayDeque`."
+          },
+          {
+            "slug": "concurrency",
+            "title": "Concurrency and virtual threads",
+            "content": "Java 21 virtual threads make blocking I/O cheap:\n\n```java\ntry (var executor = Executors.newVirtualThreadPerTaskExecutor()) {\n    IntStream.range(0, 10_000).forEach(i ->\n        executor.submit(() -> { Thread.sleep(Duration.ofSeconds(1)); return i; }));\n}\n```\n\nTen thousand concurrent tasks without a reactive framework."
+          },
+          {
+            "slug": "build-tools",
+            "title": "Maven, Gradle and testing",
+            "content": "Use **Maven** or **Gradle** for dependencies and builds, **JUnit 5** + **AssertJ** for tests, and **Testcontainers** for real databases in tests.\n\n```bash\nmvn package\n```\n\nNext step: the Spring Boot roadmap. This project's `content-service` is a working example."
+          }
+        ]
+      },
+      {
+        "slug": "nodejs",
+        "name": "Node.js",
+        "summary": "JavaScript on the server: the event loop, async I/O, npm and HTTP services.",
+        "level": "BEGINNER",
+        "lessons": [
+          {
+            "slug": "event-loop",
+            "title": "The event loop",
+            "content": "Node runs JavaScript on a single thread with a non-blocking **event loop**. I/O is handed to libuv, and callbacks or promises resume when it completes. Never block the loop with heavy CPU work; use worker threads for that."
+          },
+          {
+            "slug": "async-await",
+            "title": "Promises and async/await",
+            "content": "```js\nimport { readFile } from 'node:fs/promises';\n\nasync function main() {\n  const [a, b] = await Promise.all([\n    readFile('a.txt', 'utf8'),\n    readFile('b.txt', 'utf8'),\n  ]);\n  console.log(a.length + b.length);\n}\nmain().catch(console.error);\n```"
+          },
+          {
+            "slug": "http-server",
+            "title": "Building an HTTP API",
+            "content": "```js\nimport express from 'express';\nconst app = express();\napp.use(express.json());\napp.get('/health', (_req, res) => res.json({ status: 'UP' }));\napp.listen(3000);\n```\n\nFor larger apps use a structured framework such as NestJS (see the TypeScript backend roadmap)."
+          },
+          {
+            "slug": "npm-production",
+            "title": "npm and production readiness",
+            "content": "- Pin dependencies with a lockfile and `npm ci`\n- Run `npm audit` regularly\n- Validate all input, set timeouts, handle `SIGTERM` for graceful shutdown\n- Use structured logging (pino) and run behind a reverse proxy"
+          }
+        ]
+      },
+      {
+        "slug": "python",
+        "name": "Python",
+        "summary": "The language of data and AI: syntax, packaging, typing and async.",
+        "level": "BEGINNER",
+        "lessons": [
+          {
+            "slug": "basics",
+            "title": "Syntax and data structures",
+            "content": "```python\nskills = {\"python\": 3, \"go\": 1}\nskills[\"rust\"] = 0\nadvanced = [name for name, lvl in skills.items() if lvl >= 2]\nprint(advanced)\n```\n\nMaster lists, dicts, sets, tuples, comprehensions and f-strings."
+          },
+          {
+            "slug": "environments",
+            "title": "Virtual environments and packaging",
+            "content": "Isolate each project:\n\n```bash\npython -m venv .venv\n.venv/bin/activate        # Windows: .venv\\Scripts\\activate\npip install requests\n```\n\nModern tooling: `uv` or `poetry` with `pyproject.toml`."
+          },
+          {
+            "slug": "typing-testing",
+            "title": "Type hints, dataclasses and pytest",
+            "content": "```python\nfrom dataclasses import dataclass\n\n@dataclass(frozen=True)\nclass Lesson:\n    title: str\n    step: int\n\ndef test_lesson():\n    assert Lesson(\"Intro\", 1).step == 1\n```\n\nCheck types with `mypy`, lint with `ruff`, test with `pytest`."
+          },
+          {
+            "slug": "apis-async",
+            "title": "APIs with FastAPI and asyncio",
+            "content": "```python\nfrom fastapi import FastAPI\napp = FastAPI()\n\n@app.get(\"/health\")\nasync def health():\n    return {\"status\": \"UP\"}\n```\n\n```bash\nuvicorn main:app --reload\n```\n\nPython is the gateway to the ML, Deep Learning and LLM roadmaps."
+          }
+        ]
+      },
+      {
+        "slug": "golang",
+        "name": "Go (Golang)",
+        "summary": "Simple, fast, compiled: goroutines, channels and cloud-native tooling.",
+        "level": "BEGINNER",
+        "lessons": [
+          {
+            "slug": "basics",
+            "title": "Go basics and modules",
+            "content": "```bash\ngo mod init example.com/hello\n```\n\n```go\npackage main\n\nimport \"fmt\"\n\nfunc main() {\n    fmt.Println(\"Hello, Go\")\n}\n```\n\n```bash\ngo run .\n```\n\nGo compiles to a single static binary, which is why Docker, Kubernetes and Terraform are written in it."
+          },
+          {
+            "slug": "structs-interfaces",
+            "title": "Structs, interfaces and errors",
+            "content": "```go\ntype Store interface {\n    Get(id string) (string, error)\n}\n\nvar ErrNotFound = errors.New(\"not found\")\n\nfunc load(s Store, id string) error {\n    if _, err := s.Get(id); err != nil {\n        return fmt.Errorf(\"load %s: %w\", id, err)\n    }\n    return nil\n}\n```\n\nInterfaces are satisfied implicitly; errors are values, wrapped with `%w`."
+          },
+          {
+            "slug": "concurrency",
+            "title": "Goroutines and channels",
+            "content": "```go\nresults := make(chan int)\nvar wg sync.WaitGroup\nfor i := 1; i <= 3; i++ {\n    wg.Add(1)\n    go func(n int) { defer wg.Done(); results <- n * n }(i)\n}\ngo func() { wg.Wait(); close(results) }()\nfor r := range results {\n    fmt.Println(r)\n}\n```\n\nUse `context.Context` for cancellation and timeouts."
+          },
+          {
+            "slug": "http-services",
+            "title": "HTTP services in Go",
+            "content": "The standard library is production-grade; routers like chi add ergonomics.\n\nThis project's `progress-service` is a complete example with JWT auth, pgx for PostgreSQL and a distroless Docker image. Test with `go test ./...` and table-driven tests."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "ai",
+    "name": "AI: ML, Deep Learning & LLMs",
+    "description": "From classical machine learning to transformers and large language models.",
+    "topics": [
+      {
+        "slug": "machine-learning",
+        "name": "Machine Learning",
+        "summary": "Supervised and unsupervised learning, evaluation and scikit-learn workflows.",
+        "level": "INTERMEDIATE",
+        "lessons": [
+          {
+            "slug": "ml-fundamentals",
+            "title": "What is machine learning?",
+            "content": "ML learns patterns from data instead of hand-written rules.\n\n- **Supervised**: labelled data, e.g. regression and classification\n- **Unsupervised**: find structure, e.g. clustering and dimensionality reduction\n- **Reinforcement**: learn by reward\n\nThe workflow: collect data > clean > split > train > evaluate > deploy > monitor."
+          },
+          {
+            "slug": "first-model",
+            "title": "Train your first model",
+            "content": "```python\nfrom sklearn.datasets import load_iris\nfrom sklearn.model_selection import train_test_split\nfrom sklearn.ensemble import RandomForestClassifier\n\nX, y = load_iris(return_X_y=True)\nX_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.2, random_state=42)\nmodel = RandomForestClassifier().fit(X_tr, y_tr)\nprint(model.score(X_te, y_te))\n```"
+          },
+          {
+            "slug": "evaluation",
+            "title": "Evaluation and overfitting",
+            "content": "Accuracy alone misleads on imbalanced data. Use precision, recall, F1 and ROC-AUC for classification, and MAE/RMSE for regression.\n\nUse **cross-validation** and keep a held-out test set. If training is much better than validation, you are overfitting: add data, regularize or simplify."
+          },
+          {
+            "slug": "features-pipelines",
+            "title": "Feature engineering and pipelines",
+            "content": "```python\nfrom sklearn.pipeline import make_pipeline\nfrom sklearn.preprocessing import StandardScaler\nfrom sklearn.linear_model import LogisticRegression\n\npipe = make_pipeline(StandardScaler(), LogisticRegression())\n```\n\nPipelines prevent data leakage. Track experiments with MLflow, and try gradient boosting (XGBoost/LightGBM) for tabular data."
+          }
+        ]
+      },
+      {
+        "slug": "deep-learning",
+        "name": "Deep Learning",
+        "summary": "Neural networks, backpropagation, CNNs and training with PyTorch.",
+        "level": "INTERMEDIATE",
+        "lessons": [
+          {
+            "slug": "neural-networks",
+            "title": "Neurons, layers and activations",
+            "content": "A neural network stacks layers of `y = activation(Wx + b)`. Non-linear activations (ReLU, GELU) let it model complex functions. Training minimizes a **loss** using **gradient descent**, and **backpropagation** computes gradients with the chain rule."
+          },
+          {
+            "slug": "pytorch-basics",
+            "title": "PyTorch training loop",
+            "content": "```python\nimport torch, torch.nn as nn\n\nmodel = nn.Sequential(nn.Linear(4, 32), nn.ReLU(), nn.Linear(32, 3))\nopt = torch.optim.Adam(model.parameters(), lr=1e-3)\nloss_fn = nn.CrossEntropyLoss()\n\nfor epoch in range(100):\n    opt.zero_grad()\n    loss = loss_fn(model(X), y)\n    loss.backward()\n    opt.step()\n```"
+          },
+          {
+            "slug": "cnns-rnns",
+            "title": "CNNs and sequence models",
+            "content": "- **CNNs** use convolutions for images (ResNet, EfficientNet)\n- **RNNs/LSTMs** process sequences step by step but struggle with long context\n\nTransformers replaced RNNs for most sequence tasks (next roadmap)."
+          },
+          {
+            "slug": "training-tips",
+            "title": "Training at scale",
+            "content": "Regularize with dropout, weight decay and data augmentation. Use learning-rate schedules, mixed precision (`torch.autocast`) and GPUs. Scale out with DDP/FSDP, and use **transfer learning**: fine-tune a pretrained model instead of training from scratch."
+          }
+        ]
+      },
+      {
+        "slug": "transformers",
+        "name": "Transformers",
+        "summary": "Attention, encoder/decoder architectures and the Hugging Face ecosystem.",
+        "level": "ADVANCED",
+        "lessons": [
+          {
+            "slug": "attention",
+            "title": "Self-attention explained",
+            "content": "Each token creates a **query**, **key** and **value**. Attention weights are `softmax(QK^T / sqrt(d))`, used to mix the values, so every token can look at every other token in parallel.\n\n**Multi-head** attention runs several of these side by side, letting the model learn different relationships."
+          },
+          {
+            "slug": "architecture",
+            "title": "Encoder, decoder and positional encoding",
+            "content": "- **Encoder-only** (BERT): understanding tasks like classification and embeddings\n- **Decoder-only** (GPT, Llama): text generation\n- **Encoder-decoder** (T5): translation and summarization\n\nBecause attention ignores order, positions are injected with positional encodings (e.g. RoPE)."
+          },
+          {
+            "slug": "hugging-face",
+            "title": "Using Hugging Face Transformers",
+            "content": "```python\nfrom transformers import pipeline\n\nclassifier = pipeline(\"sentiment-analysis\")\nprint(classifier(\"Learning transformers step by step is great!\"))\n```\n\nExplore models on the Hub, and the `tokenizers` and `datasets` libraries."
+          },
+          {
+            "slug": "fine-tuning",
+            "title": "Fine-tuning and LoRA",
+            "content": "Full fine-tuning updates every weight, which is expensive. **LoRA/QLoRA** (via the `peft` library) trains small adapter matrices instead, often on a single GPU. Always evaluate against a held-out set and a baseline."
+          }
+        ]
+      },
+      {
+        "slug": "llms",
+        "name": "Large Language Models (LLMs)",
+        "summary": "Prompting, embeddings, RAG, agents and running LLMs in production.",
+        "level": "ADVANCED",
+        "lessons": [
+          {
+            "slug": "how-llms-work",
+            "title": "How LLMs work",
+            "content": "LLMs are decoder-only transformers trained to predict the next token on huge corpora, then aligned with instruction tuning and RLHF.\n\nKey terms: **tokens**, **context window**, **temperature**, **hallucination**. Popular families include GPT, Claude, Gemini, Llama, Mistral and Qwen."
+          },
+          {
+            "slug": "prompting",
+            "title": "Prompt engineering",
+            "content": "- Give a clear role, task and output format\n- Provide examples (few-shot)\n- Ask for structured output (JSON) and validate it\n- Separate instructions from untrusted input to reduce prompt injection\n\nTreat prompts like code: version them and test them."
+          },
+          {
+            "slug": "embeddings-rag",
+            "title": "Embeddings and RAG",
+            "content": "**Retrieval-Augmented Generation** grounds answers in your data:\n\n1. Split documents into chunks\n2. Embed the chunks and store them in a vector DB (pgvector, Pinecone, Cortex Search)\n3. Embed the question and retrieve the top-k chunks\n4. Put them in the prompt and generate\n\nEvaluate retrieval quality separately from answer quality."
+          },
+          {
+            "slug": "agents-production",
+            "title": "Agents, tools and production",
+            "content": "Agents let an LLM call **tools** (APIs, SQL, search) in a loop. In production, also handle:\n\n- Guardrails and output validation\n- Cost and latency (caching, smaller models)\n- Observability: trace prompts and responses\n- Evaluation sets that run in CI\n\nRun open models locally with Ollama or vLLM, or use managed APIs."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "backend",
+    "name": "Backend Frameworks",
+    "description": "Build production APIs with Spring Boot and TypeScript.",
+    "topics": [
+      {
+        "slug": "spring-boot",
+        "name": "Spring Boot",
+        "summary": "Build REST APIs in Java with Spring Boot 3, JPA, security and testing.",
+        "level": "INTERMEDIATE",
+        "lessons": [
+          {
+            "slug": "getting-started",
+            "title": "Bootstrap a project",
+            "content": "Generate a project at start.spring.io with the **Web**, **Data JPA**, **Validation** and **PostgreSQL** dependencies.\n\nSpring Boot auto-configures beans from what is on the classpath, plus `application.yml`.\n\n```bash\n./mvnw spring-boot:run\n```"
+          },
+          {
+            "slug": "rest-controllers",
+            "title": "REST controllers and validation",
+            "content": "```java\n@RestController\n@RequestMapping(\"/books\")\nclass BookController {\n    record BookRequest(@NotBlank String title) {}\n\n    @PostMapping\n    @ResponseStatus(HttpStatus.CREATED)\n    Book create(@Valid @RequestBody BookRequest r) { return service.create(r); }\n}\n```\n\nPut business logic in `@Service` classes and keep controllers thin."
+          },
+          {
+            "slug": "data-jpa",
+            "title": "Spring Data JPA and Flyway",
+            "content": "```java\npublic interface BookRepository extends JpaRepository<Book, Long> {\n    List<Book> findByTitleContainingIgnoreCase(String q);\n}\n```\n\nManage the schema with **Flyway** migrations (`db/migration/V1__init.sql`) rather than `ddl-auto`. Watch for N+1 queries and use `@Transactional(readOnly = true)` for reads."
+          },
+          {
+            "slug": "security-testing",
+            "title": "Security, testing and observability",
+            "content": "- **Spring Security**: stateless JWT filter + `hasRole` rules (see `content-service/security`)\n- **Tests**: `@WebMvcTest`, `@DataJpaTest`, Testcontainers\n- **Actuator**: `/actuator/health` for Kubernetes probes, Micrometer for metrics"
+          }
+        ]
+      },
+      {
+        "slug": "typescript-nestjs",
+        "name": "TypeScript & NestJS",
+        "summary": "Type-safe backends with TypeScript and the NestJS framework.",
+        "level": "INTERMEDIATE",
+        "lessons": [
+          {
+            "slug": "typescript-essentials",
+            "title": "TypeScript essentials",
+            "content": "```ts\ninterface Lesson { id: number; title: string; tags?: string[] }\ntype Level = 'BEGINNER' | 'ADVANCED';\n\nfunction first<T>(items: T[]): T | undefined {\n  return items[0];\n}\n```\n\nEnable `strict` mode. Learn unions, generics, narrowing and utility types (`Partial`, `Pick`, `Record`)."
+          },
+          {
+            "slug": "nest-architecture",
+            "title": "NestJS modules, controllers and providers",
+            "content": "NestJS uses decorators and dependency injection:\n\n```ts\n@Controller('lessons')\nexport class LessonsController {\n  constructor(private readonly service: LessonsService) {}\n\n  @Get(':id')\n  find(@Param('id', ParseIntPipe) id: number) {\n    return this.service.find(id);\n  }\n}\n```\n\nGroup features into `@Module`s."
+          },
+          {
+            "slug": "validation-persistence",
+            "title": "DTO validation and persistence",
+            "content": "Validate input with `class-validator` DTOs and a global `ValidationPipe({ whitelist: true })`. Persist with TypeORM or Prisma. This project's `auth-service` shows a TypeORM entity, bcrypt password hashing and JWT issuing."
+          },
+          {
+            "slug": "auth-testing",
+            "title": "Auth, guards and testing",
+            "content": "Protect routes with **Guards** (e.g. a JWT guard), transform responses with **Interceptors**, and centralize errors with **Exception Filters**. Test with Jest and `@nestjs/testing`, and end-to-end with supertest."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "data",
+    "name": "Data Platforms",
+    "description": "Databases, lakehouses and cloud data warehouses.",
+    "topics": [
+      {
+        "slug": "databases-sql",
+        "name": "Databases & SQL",
+        "summary": "Relational modelling, SQL, indexing and choosing the right database.",
+        "level": "BEGINNER",
+        "lessons": [
+          {
+            "slug": "relational-model",
+            "title": "Relational modelling",
+            "content": "Tables, rows, primary keys and foreign keys. Normalize to remove duplication, and denormalize deliberately for read performance.\n\n```sql\nCREATE TABLE topics (\n  id BIGSERIAL PRIMARY KEY,\n  name TEXT NOT NULL\n);\nCREATE TABLE lessons (\n  id BIGSERIAL PRIMARY KEY,\n  topic_id BIGINT REFERENCES topics(id),\n  title TEXT NOT NULL\n);\n```"
+          },
+          {
+            "slug": "sql-queries",
+            "title": "Joins, aggregates and window functions",
+            "content": "```sql\nSELECT t.name,\n       COUNT(l.id) AS lessons,\n       RANK() OVER (ORDER BY COUNT(l.id) DESC) AS rnk\nFROM topics t\nLEFT JOIN lessons l ON l.topic_id = t.id\nGROUP BY t.name;\n```"
+          },
+          {
+            "slug": "indexes-transactions",
+            "title": "Indexes and transactions",
+            "content": "B-tree indexes speed up lookups and sorts; read plans with `EXPLAIN ANALYZE`. Transactions give **ACID** guarantees; understand isolation levels and avoid long-running transactions."
+          },
+          {
+            "slug": "choosing",
+            "title": "OLTP vs OLAP vs NoSQL",
+            "content": "- **OLTP** (PostgreSQL, MySQL): many small transactional writes\n- **OLAP** (Snowflake, BigQuery, Databricks SQL): large analytical scans\n- **NoSQL**: key-value (Redis, DynamoDB), document (MongoDB), vector (pgvector)\n\nMost systems use more than one."
+          }
+        ]
+      },
+      {
+        "slug": "databricks",
+        "name": "Databricks",
+        "summary": "The lakehouse: Spark, Delta Lake, Unity Catalog and ML on Databricks.",
+        "level": "INTERMEDIATE",
+        "lessons": [
+          {
+            "slug": "lakehouse",
+            "title": "The lakehouse concept",
+            "content": "A **lakehouse** combines cheap data-lake storage (Parquet files in S3/ADLS/GCS) with warehouse features such as ACID transactions and schemas, through **Delta Lake**. Databricks runs on AWS, Azure and GCP."
+          },
+          {
+            "slug": "spark-basics",
+            "title": "Apache Spark DataFrames",
+            "content": "```python\ndf = spark.read.json(\"/Volumes/main/raw/events\")\n(df.filter(\"event = 'lesson_complete'\")\n   .groupBy(\"topic\")\n   .count()\n   .orderBy(\"count\", ascending=False)\n   .show())\n```\n\nSpark is lazy: transformations build a plan, and actions such as `show` and `write` execute it across the cluster."
+          },
+          {
+            "slug": "delta-medallion",
+            "title": "Delta Lake and the medallion architecture",
+            "content": "Organize data as **Bronze** (raw) > **Silver** (cleaned) > **Gold** (business aggregates).\n\n```sql\nCREATE TABLE silver.events AS SELECT * FROM bronze.events WHERE user_id IS NOT NULL;\nOPTIMIZE silver.events ZORDER BY (user_id);\nSELECT * FROM silver.events VERSION AS OF 3;  -- time travel\n```"
+          },
+          {
+            "slug": "governance-ml",
+            "title": "Unity Catalog, workflows and ML",
+            "content": "- **Unity Catalog**: catalog.schema.table governance, lineage and permissions\n- **Workflows / Lakeflow**: schedule jobs and declarative pipelines\n- **MLflow**: track experiments and serve models\n- **Databricks SQL**: warehouses for BI"
+          }
+        ]
+      },
+      {
+        "slug": "snowflake",
+        "name": "Snowflake",
+        "summary": "The AI Data Cloud: warehouses, loading data, Snowpark and Cortex AI.",
+        "level": "INTERMEDIATE",
+        "lessons": [
+          {
+            "slug": "architecture",
+            "title": "Snowflake architecture",
+            "content": "Snowflake separates **storage** (compressed micro-partitions) from **compute** (virtual warehouses) and **cloud services** (metadata, security, optimization). Warehouses scale independently, auto-suspend when idle, and many can query the same data without contention."
+          },
+          {
+            "slug": "loading-data",
+            "title": "Databases, stages and loading data",
+            "content": "```sql\nCREATE WAREHOUSE learn_wh WAREHOUSE_SIZE = XSMALL AUTO_SUSPEND = 60;\nCREATE DATABASE learn;\nCREATE STAGE learn.public.raw;\n-- upload files with PUT, then:\nCOPY INTO learn.public.events FROM @learn.public.raw FILE_FORMAT = (TYPE = JSON);\n```\n\nFor continuous loading, use **Snowpipe** or Snowpipe Streaming."
+          },
+          {
+            "slug": "pipelines",
+            "title": "Transformations: Dynamic Tables, Streams and Tasks",
+            "content": "```sql\nCREATE DYNAMIC TABLE topic_stats\n  TARGET_LAG = '5 minutes'\n  WAREHOUSE = learn_wh\nAS\nSELECT topic, COUNT(*) AS completions\nFROM events\nGROUP BY topic;\n```\n\nUse Time Travel and zero-copy cloning for safe experimentation: `CREATE TABLE events_dev CLONE events;`"
+          },
+          {
+            "slug": "snowpark-cortex",
+            "title": "Snowpark and Cortex AI",
+            "content": "**Snowpark** runs Python, Java and Scala next to the data. **Cortex AI** brings LLMs to SQL:\n\n```sql\nSELECT AI_COMPLETE('claude-3-5-sonnet', 'Summarize: ' || review) FROM reviews;\nSELECT AI_SENTIMENT(review) FROM reviews;\n```\n\nCortex Search powers RAG, and Cortex Analyst answers questions in natural language over semantic views."
+          }
+        ]
+      }
+    ]
+  }
+]
