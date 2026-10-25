@@ -16,7 +16,13 @@ COPY services/auth-service/package*.json ./
 RUN npm ci --no-audit --no-fund
 COPY services/auth-service/tsconfig.json ./
 COPY services/auth-service/src ./src
-RUN npm run build && npm prune --omit=dev
+RUN npm run build
+
+# Fresh production-only install: "npm prune" can leave build tools behind (e.g. TypeScript 7's native tsc binary).
+FROM node:24-alpine3.24 AS auth-deps
+WORKDIR /src
+COPY services/auth-service/package*.json ./
+RUN npm ci --omit=dev --no-audit --no-fund
 
 # ---------- progress-service (Go) ----------
 FROM golang:1.27.3-alpine3.24 AS progress
@@ -42,7 +48,7 @@ RUN apk upgrade --no-cache \
     && chown -R postgres:postgres /run/postgresql /var/lib/postgresql
 
 COPY --from=content  /src/target/content-service-1.0.0.jar /app/content/app.jar
-COPY --from=auth     /src/node_modules /app/auth/node_modules
+COPY --from=auth-deps /src/node_modules /app/auth/node_modules
 COPY --from=auth     /src/dist /app/auth/dist
 COPY --from=auth     /src/package.json /app/auth/package.json
 COPY --from=progress /out/progress-service /app/progress/progress-service
