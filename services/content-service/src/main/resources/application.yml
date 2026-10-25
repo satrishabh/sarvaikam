@@ -2,14 +2,25 @@ server:
   port: 8081
   servlet:
     context-path: /api/content
+  # Trust X-Forwarded-* from nginx / the ingress (TLS is terminated there in staging/prod).
+  forward-headers-strategy: framework
+  shutdown: graceful
+  error:
+    include-stacktrace: never
+    include-message: never
 
 spring:
   application:
     name: content-service
+  # dev | staging | prod - set from APP_ENV by the container entrypoint.
+  profiles:
+    active: ${APP_ENV:dev}
   datasource:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/sarvaikam}
     username: ${DB_USER:sarvaikam}
     password: ${DB_PASSWORD:sarvaikam}
+    hikari:
+      maximum-pool-size: ${DB_POOL_SIZE:5}
   jpa:
     hibernate:
       ddl-auto: none
@@ -17,13 +28,47 @@ spring:
   flyway:
     table: content_flyway_history
     baseline-on-migrate: true
+  lifecycle:
+    timeout-per-shutdown-phase: 20s
 
 app:
   jwt-secret: ${JWT_SECRET:change-me-to-a-long-random-secret-of-32-bytes-min}
   seed-pattern: ${SEED_PATTERN:classpath*:seed/*.json}
+
+logging:
+  level:
+    root: info
+    com.sarvaikam: ${LOG_LEVEL:info}
 
 management:
   endpoints:
     web:
       exposure:
         include: health
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never
+
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+server:
+  error:
+    include-message: always
+management:
+  endpoint:
+    health:
+      show-details: always
+
+---
+spring:
+  config:
+    activate:
+      on-profile: staging,prod
+  datasource:
+    hikari:
+      maximum-pool-size: ${DB_POOL_SIZE:10}
