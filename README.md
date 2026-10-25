@@ -148,13 +148,31 @@ These stacks create billable resources - run `terraform destroy` when done.
 
 ## Building
 
-Every service builds inside its own multi-stage Dockerfile, so Docker is the only tool you need:
+### Single image (CI/CD, Kaniko)
+
+The root `Dockerfile` builds everything into **one image**: the React frontend, Spring Boot, NestJS and Go
+services, run by supervisord behind nginx on port **8080**, plus an embedded PostgreSQL.
 
 ```bash
-docker compose build        # builds all 4 images
+docker build -t sarvaikam .
+docker run -p 8080:8080 -v sarvaikam-data:/var/lib/postgresql/data sarvaikam
+# Kaniko: default --context (repo root) and --dockerfile=Dockerfile work as-is
 ```
 
-Plug `docker compose build` (or the individual `docker build` commands) into your existing CI/CD pipeline.
+| Env var | Default | Notes |
+|---|---|---|
+| `PORT` | `8080` | Port nginx listens on |
+| `EMBEDDED_DB` | `true` | `false` to use an external PostgreSQL |
+| `DB_HOST` / `DB_PORT` / `DB_SSLMODE` | `127.0.0.1` / `5432` / `disable` | Set for an external DB (e.g. RDS, `DB_SSLMODE=require`) |
+| `POSTGRES_DB` / `POSTGRES_USER` / `POSTGRES_PASSWORD` | `sarvaikam` | DB credentials |
+| `JWT_SECRET` | demo value | **Override in every real environment** (>= 32 chars) |
+| `ADMIN_EMAIL` / `ADMIN_PASSWORD` | `admin@sarvaikam.dev` / `admin12345` | Bootstrap admin |
+
+Health check: `GET /api/content/actuator/health`.
+
+### Per-service images (docker compose)
+
+`docker compose build` builds the four services as separate images (used by `deploy/k8s`).
 
 ## Project layout
 
