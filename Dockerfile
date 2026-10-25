@@ -10,16 +10,16 @@ COPY services/content-service/src ./src
 RUN mvn -q -B -DskipTests package
 
 # ---------- auth-service (NestJS / TypeScript) ----------
-FROM node:20-alpine AS auth
+FROM node:24-alpine3.24 AS auth
 WORKDIR /src
 COPY services/auth-service/package*.json ./
-RUN npm install --no-audit --no-fund
+RUN npm ci --no-audit --no-fund
 COPY services/auth-service/tsconfig.json ./
 COPY services/auth-service/src ./src
 RUN npm run build && npm prune --omit=dev
 
 # ---------- progress-service (Go) ----------
-FROM golang:1.22-alpine AS progress
+FROM golang:1.27.3-alpine3.24 AS progress
 WORKDIR /src
 COPY services/progress-service/go.mod services/progress-service/go.sum ./
 RUN go mod download
@@ -27,16 +27,17 @@ COPY services/progress-service/*.go ./
 RUN CGO_ENABLED=0 go build -ldflags="-s -w" -o /out/progress-service .
 
 # ---------- frontend (React / Vite) ----------
-FROM node:20-alpine AS web
+FROM node:24-alpine3.24 AS web
 WORKDIR /src
 COPY frontend/package*.json ./
-RUN npm install --no-audit --no-fund
+RUN npm ci --no-audit --no-fund
 COPY frontend/ ./
 RUN npm run build
 
 # ---------- runtime ----------
-FROM alpine:3.20
-RUN apk add --no-cache openjdk21-jre-headless nodejs nginx supervisor postgresql16 postgresql16-contrib su-exec tzdata \
+FROM alpine:3.24
+RUN apk upgrade --no-cache \
+    && apk add --no-cache openjdk21-jre-headless nodejs nginx supervisor postgresql17 postgresql17-contrib su-exec tzdata \
     && mkdir -p /run/nginx /run/postgresql /var/lib/postgresql/data \
     && chown -R postgres:postgres /run/postgresql /var/lib/postgresql
 

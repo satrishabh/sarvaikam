@@ -1,6 +1,5 @@
 package com.sarvaikam.content.seed;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sarvaikam.content.api.Dtos.*;
 import com.sarvaikam.content.domain.CategoryRepository;
 import com.sarvaikam.content.domain.LessonRepository;
@@ -14,6 +13,7 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.stereotype.Component;
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.InputStream;
 import java.util.*;
