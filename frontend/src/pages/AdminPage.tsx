@@ -26,7 +26,7 @@ export default function AdminPage() {
     else setTopic(null);
   };
 
-  if (user?.role !== 'ADMIN') return <p>Admin access required.</p>;
+  if (user?.role !== 'ADMIN') return <p className="py-20 text-center text-muted">Only admins can edit lessons. Sign in with an admin account.</p>;
 
   const edit = async (lessonSlug: string) => {
     const l = await api.lesson(topicSlug, lessonSlug);
@@ -37,7 +37,7 @@ export default function AdminPage() {
     e.preventDefault();
     try {
       await api.upsertLesson({ topicSlug, ...form });
-      setStatus('Saved.');
+      setStatus('Lesson saved.');
       loadTopic(topicSlug);
     } catch (err) {
       setStatus((err as Error).message);
@@ -51,10 +51,10 @@ export default function AdminPage() {
   };
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
+    <div className="space-y-8"><h1 className="text-[40px] font-semibold tracking-tightest">Edit lessons</h1><div className="grid gap-8 lg:grid-cols-[280px_1fr]">
       <aside className="space-y-3">
         <select className="input" value={topicSlug} onChange={(e) => loadTopic(e.target.value)}>
-          <option value="">Select a topic...</option>
+          <option value="">Choose a topic</option>
           {categories.map((c) => (
             <optgroup key={c.id} label={c.name}>
               {c.topics.map((t) => <option key={t.id} value={t.slug}>{t.name}</option>)}
@@ -63,13 +63,13 @@ export default function AdminPage() {
         </select>
         {topic?.lessons.map((l) => (
           <div key={l.id} className="flex items-center gap-2 text-sm">
-            <button className="flex-1 text-left hover:text-indigo-400" onClick={() => edit(l.slug)}>
+            <button className="flex-1 rounded-lg px-2 py-1.5 text-left hover:bg-track hover:text-accent" onClick={() => edit(l.slug)}>
               {l.stepNumber}. {l.title}
             </button>
-            <button className="text-rose-400" onClick={() => remove(l.id)}>delete</button>
+            <button className="rounded-lg px-2 py-1.5 text-danger hover:bg-track" onClick={() => remove(l.id)}>Delete</button>
           </div>
         ))}
-        {topic && <button className="btn-ghost w-full" onClick={() => setForm({ ...empty, stepNumber: topic.lessons.length + 1 })}>+ New lesson</button>}
+        {topic && <button className="btn-quiet w-full border border-line" onClick={() => setForm({ ...empty, stepNumber: topic.lessons.length + 1 })}>Add a step</button>}
       </aside>
 
       {topic ? (
@@ -85,18 +85,18 @@ export default function AdminPage() {
           <div className="grid gap-3 lg:grid-cols-2">
             <textarea className="input h-[60vh] font-mono text-sm" placeholder="Markdown content" value={form.contentMd} required
                       onChange={(e) => setForm({ ...form, contentMd: e.target.value })} />
-            <div className="prose prose-invert h-[60vh] max-w-none overflow-auto rounded-lg border border-slate-800 p-4">
+            <div className="surface prose h-[60vh] max-w-none overflow-auto p-5">
               <ReactMarkdown remarkPlugins={[remarkGfm]}>{form.contentMd}</ReactMarkdown>
             </div>
           </div>
           <div className="flex items-center gap-3">
             <button className="btn">Save lesson</button>
-            <span className="text-sm text-slate-400">{status}</span>
+            <span role="status" className="text-[15px] text-muted">{status}</span>
           </div>
         </form>
       ) : (
-        <p className="text-slate-400">Choose a topic to manage its lessons.</p>
+        <p className="text-muted">Choose a topic to edit its steps.</p>
       )}
-    </div>
+    </div></div>
   );
 }

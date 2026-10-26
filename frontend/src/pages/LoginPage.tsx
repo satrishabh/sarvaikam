@@ -28,20 +28,36 @@ export default function LoginPage() {
   };
 
   return (
-    <form onSubmit={submit} className="card mx-auto max-w-md space-y-4 hover:border-slate-800">
-      <h1 className="text-2xl font-bold">{mode === 'login' ? 'Welcome back' : 'Create your account'}</h1>
-      {mode === 'register' && (
-        <input className="input" placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} required />
-      )}
-      <input className="input" type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-      <input className="input" type="password" placeholder="Password (min 8 chars)" value={password}
-             onChange={(e) => setPassword(e.target.value)} required minLength={mode === 'register' ? 8 : undefined} />
-      {error && <p className="text-sm text-rose-400">{error}</p>}
-      <button className="btn w-full" disabled={busy}>{mode === 'login' ? 'Login' : 'Register'}</button>
-      <button type="button" className="w-full text-sm text-slate-400 underline"
-              onClick={() => setMode(mode === 'login' ? 'register' : 'login')}>
-        {mode === 'login' ? 'New here? Create an account' : 'Already have an account? Login'}
-      </button>
-    </form>
+    <div className="mx-auto max-w-sm pt-4">
+      <img src="/logo-mark.png" alt="" className="mx-auto h-14 w-14 rounded-2xl" />
+      <h1 className="mt-6 text-center text-[32px] font-semibold tracking-tight">
+        {mode === 'login' ? 'Sign in to Sarvaikam' : 'Create your account'}
+      </h1>
+      <p className="mt-2 text-center text-[15px] text-muted">
+        {mode === 'login' ? 'Pick up where you left off.' : 'Your progress is saved to your skill map.'}
+      </p>
+      <form onSubmit={submit} className="surface mt-8 space-y-3 p-6">
+        {mode === 'register' && (
+          <input className="input" aria-label="Name" placeholder="Name" autoComplete="name"
+                 value={name} onChange={(e) => setName(e.target.value)} required />
+        )}
+        <input className="input" type="email" aria-label="Email" placeholder="Email" autoComplete="email"
+               value={email} onChange={(e) => setEmail(e.target.value)} required />
+        <input className="input" type="password" aria-label="Password"
+               placeholder={mode === 'register' ? 'Password, at least 8 characters' : 'Password'}
+               autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+               value={password} onChange={(e) => setPassword(e.target.value)} required minLength={mode === 'register' ? 8 : undefined} />
+        {error && <p role="alert" className="text-[15px] text-danger">{error}</p>}
+        <button className="btn w-full" disabled={busy}>
+          {busy ? 'One moment…' : mode === 'login' ? 'Sign in' : 'Create account'}
+        </button>
+      </form>
+      <p className="mt-6 text-center text-[15px] text-muted">
+        {mode === 'login' ? 'New to Sarvaikam? ' : 'Already have an account? '}
+        <button type="button" className="link" onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setError(''); }}>
+          {mode === 'login' ? 'Create an account' : 'Sign in'}
+        </button>
+      </p>
+    </div>
   );
 }

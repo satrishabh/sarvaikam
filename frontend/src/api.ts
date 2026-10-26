@@ -45,6 +45,11 @@ export interface User {
   name: string;
   role: 'USER' | 'ADMIN';
 }
+export interface ProgressItem {
+  lessonId: number;
+  topicSlug: string;
+  completedAt: string;
+}
 
 const TOKEN_KEY = 'sarvaikam.token';
 export const tokenStore = {
@@ -87,6 +92,7 @@ export const api = {
     }),
   me: () => request<User>('/api/auth/me'),
 
+  myProgress: () => request<ProgressItem[]>('/api/progress/me'),
   topicProgress: (slug: string) =>
     request<{ completedLessonIds: number[] }>(`/api/progress/me/topics/${enc(slug)}`),
   complete: (lessonId: number, topicSlug: string) =>

@@ -2,15 +2,32 @@
 @tailwind components;
 @tailwind utilities;
 
-.card {
-  @apply rounded-xl border border-slate-800 bg-slate-900/60 p-5 transition hover:border-indigo-500;
+@layer base {
+  html { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+  body { @apply bg-canvas font-sans text-[17px] leading-relaxed text-ink; }
+  h1, h2, h3 { @apply font-display tracking-tight text-ink; }
+  :focus-visible { @apply rounded-md outline outline-2 outline-offset-2 outline-accent; }
+  ::selection { @apply bg-accent-soft; }
 }
-.btn {
-  @apply rounded-lg bg-indigo-600 px-4 py-2 font-medium text-white hover:bg-indigo-500 disabled:opacity-50;
+
+@layer components {
+  .surface { @apply rounded-2xl border border-line bg-surface; }
+  .btn {
+    @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full bg-accent px-5 text-[15px] font-medium text-white
+           transition-colors duration-200 hover:bg-accent-strong disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-quiet {
+    @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full px-4 text-[15px] font-medium text-ink
+           transition-colors duration-200 hover:bg-track;
+  }
+  .input {
+    @apply min-h-[44px] w-full rounded-xl border border-line bg-surface px-4 text-[16px] text-ink placeholder:text-muted/70
+           transition-shadow focus:border-accent focus:outline-none focus:ring-4 focus:ring-accent/15;
+  }
+  .link { @apply font-medium text-accent hover:text-accent-strong; }
+  .skeleton { @apply animate-pulse rounded-lg bg-track; }
 }
-.btn-ghost {
-  @apply rounded-lg border border-slate-700 px-4 py-2 hover:bg-slate-800;
-}
-.input {
-  @apply w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 outline-none focus:border-indigo-500;
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
