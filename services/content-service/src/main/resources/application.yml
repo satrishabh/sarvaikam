@@ -27,7 +27,10 @@ spring:
     open-in-view: false
   flyway:
     table: content_flyway_history
+    # The schema is shared with auth-service, which may create its tables first. Baseline below V1
+    # so our own migrations still run on a non-empty schema (the default baseline of 1 skips V1).
     baseline-on-migrate: true
+    baseline-version: 0
   lifecycle:
     timeout-per-shutdown-phase: 20s
 
