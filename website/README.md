@@ -8,7 +8,7 @@ Create the AIO project with:
 - Repository: `https://github.com/satrishabh/sarvaikam`
 - Project name: `sarvaikam-home`
 - Build context: `website`
-- Dockerfile: `./Dockerfile`
+- Dockerfile: `website/Dockerfile` (path relative to the repository root)
 - Test image and command: leave empty to skip the optional test step
 - GitHub webhook: enabled, so pushes start CI
 - Nginx serves `/health` for the platform's liveness and readiness probes.
