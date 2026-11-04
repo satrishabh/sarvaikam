@@ -52,9 +52,13 @@ export interface ProgressItem {
 }
 
 const TOKEN_KEY = 'sarvaikam.token';
+let currentToken: string | null = null;
 export const tokenStore = {
-  get: () => localStorage.getItem(TOKEN_KEY),
-  set: (t: string | null) => (t ? localStorage.setItem(TOKEN_KEY, t) : localStorage.removeItem(TOKEN_KEY)),
+  get: () => currentToken,
+  set: (t: string | null) => {
+    currentToken = t;
+    localStorage.removeItem(TOKEN_KEY);
+  },
 };
 
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
@@ -80,16 +84,17 @@ export const api = {
     request<Lesson>(`/api/content/topics/${enc(topic)}/lessons/${enc(lesson)}`),
   search: (q: string) => request<TopicSummary[]>(`/api/content/search?q=${enc(q)}`),
 
-  register: (email: string, name: string, password: string) =>
-    request<{ token: string; user: User }>('/api/auth/register', {
+  exchangeProfileToken: async (accessToken: string) => {
+    const res = await fetch('/api/auth/oidc/exchange', {
       method: 'POST',
-      body: JSON.stringify({ email, name, password }),
-    }),
-  login: (email: string, password: string) =>
-    request<{ token: string; user: User }>('/api/auth/login', {
-      method: 'POST',
-      body: JSON.stringify({ email, password }),
-    }),
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new Error(body.message ?? body.error ?? `Sign-in failed (${res.status})`);
+    }
+    return res.json() as Promise<{ token: string; user: User }>;
+  },
   me: () => request<User>('/api/auth/me'),
 
   myProgress: () => request<ProgressItem[]>('/api/progress/me'),

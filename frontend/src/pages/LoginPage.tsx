@@ -1,27 +1,18 @@
-import { FormEvent, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
 import { useAuth } from '../auth';
 
 export default function LoginPage() {
-  const { login, register } = useAuth();
-  const navigate = useNavigate();
-  const [mode, setMode] = useState<'login' | 'register'>('login');
-  const [email, setEmail] = useState('');
-  const [name, setName] = useState('');
-  const [password, setPassword] = useState('');
+  const { login, loginWith, register, ready, error: authError } = useAuth();
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
-  const submit = async (e: FormEvent) => {
-    e.preventDefault();
+  const startSignIn = async (action: () => Promise<void>) => {
     setBusy(true);
     setError('');
     try {
-      if (mode === 'login') await login(email, password);
-      else await register(email, name, password);
-      navigate('/');
-    } catch (err) {
-      setError((err as Error).message);
+      await action();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Could not start sign-in');
     } finally {
       setBusy(false);
     }
@@ -30,32 +21,27 @@ export default function LoginPage() {
   return (
     <div className="mx-auto max-w-sm pt-4">
       <img src="/logo-mark.png" alt="" className="mx-auto h-14 w-14 rounded-2xl" />
-      <h1 className="mt-6 text-center text-[32px] font-semibold tracking-tight">
-        {mode === 'login' ? 'Sign in to Sarvaikam' : 'Create your account'}
-      </h1>
+      <h1 className="mt-6 text-center text-[32px] font-semibold tracking-tight">Sign in to Sarvaikam</h1>
       <p className="mt-2 text-center text-[15px] text-muted">
-        {mode === 'login' ? 'Pick up where you left off.' : 'Your progress is saved to your skill map.'}
+        One secure account for learning and your saved progress.
       </p>
-      <form onSubmit={submit} className="surface mt-8 space-y-3 p-6">
-        {mode === 'register' && (
-          <input className="input" aria-label="Name" placeholder="Name" autoComplete="name"
-                 value={name} onChange={(e) => setName(e.target.value)} required />
-        )}
-        <input className="input" type="email" aria-label="Email" placeholder="Email" autoComplete="email"
-               value={email} onChange={(e) => setEmail(e.target.value)} required />
-        <input className="input" type="password" aria-label="Password"
-               placeholder={mode === 'register' ? 'Password, at least 8 characters' : 'Password'}
-               autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-               value={password} onChange={(e) => setPassword(e.target.value)} required minLength={mode === 'register' ? 8 : undefined} />
-        {error && <p role="alert" className="text-[15px] text-danger">{error}</p>}
-        <button className="btn w-full" disabled={busy}>
-          {busy ? 'One moment…' : mode === 'login' ? 'Sign in' : 'Create account'}
+      <div className="surface mt-8 space-y-3 p-6">
+        <button className="btn w-full" disabled={!ready || busy} onClick={() => void startSignIn(() => loginWith('google'))}>
+          Continue with Google
         </button>
-      </form>
+        <button className="btn w-full" disabled={!ready || busy} onClick={() => void startSignIn(() => loginWith('github'))}>
+          Continue with GitHub
+        </button>
+        <button className="btn-quiet w-full" disabled={!ready || busy} onClick={() => void startSignIn(login)}>
+          Continue with email
+        </button>
+        {(error || authError) && <p role="alert" className="text-[15px] text-danger">{error || authError}</p>}
+        {!ready && <p className="text-center text-[14px] text-muted">Connecting to secure sign-in…</p>}
+      </div>
       <p className="mt-6 text-center text-[15px] text-muted">
-        {mode === 'login' ? 'New to Sarvaikam? ' : 'Already have an account? '}
-        <button type="button" className="link" onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setError(''); }}>
-          {mode === 'login' ? 'Create an account' : 'Sign in'}
+        New to Sarvaikam?{' '}
+        <button type="button" className="link" disabled={!ready || busy} onClick={() => void startSignIn(register)}>
+          Create an account
         </button>
       </p>
     </div>

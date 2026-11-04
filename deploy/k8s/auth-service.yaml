@@ -19,8 +19,8 @@ spec:
             - { name: DB_USER, valueFrom: { secretKeyRef: { name: sarvaikam-secrets, key: POSTGRES_USER } } }
             - { name: DB_PASSWORD, valueFrom: { secretKeyRef: { name: sarvaikam-secrets, key: POSTGRES_PASSWORD } } }
             - { name: JWT_SECRET, valueFrom: { secretKeyRef: { name: sarvaikam-secrets, key: JWT_SECRET } } }
-            - { name: ADMIN_EMAIL, valueFrom: { secretKeyRef: { name: sarvaikam-secrets, key: ADMIN_EMAIL } } }
-            - { name: ADMIN_PASSWORD, valueFrom: { secretKeyRef: { name: sarvaikam-secrets, key: ADMIN_PASSWORD } } }
+            - { name: PROFILE_ISSUER, value: https://profile.sarvaikam.com/realms/sarvaikam }
+            - { name: PROFILE_CLIENT_ID, value: sarvaikam-learn }
           readinessProbe:
             httpGet: { path: /api/auth/health, port: 8082 }
           livenessProbe:

@@ -16,6 +16,9 @@ export class User {
   @Column({ name: 'password_hash' })
   passwordHash: string;
 
+  @Column({ name: 'oidc_sub', nullable: true })
+  oidcSub: string | null;
+
   @Column({ type: 'varchar', length: 10, default: 'USER' })
   role: Role;
 

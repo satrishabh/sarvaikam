@@ -1,21 +1,15 @@
-import { Body, Controller, Get, Headers, HttpCode, Post, UnauthorizedException } from '@nestjs/common';
+import { Controller, Get, Headers, Post, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { AuthService } from './auth.service';
-import { LoginDto, RegisterDto } from './dto';
 
 @Controller()
 export class AuthController {
   constructor(private readonly auth: AuthService, private readonly jwt: JwtService) {}
 
-  @Post('register')
-  register(@Body() dto: RegisterDto) {
-    return this.auth.register(dto);
-  }
-
-  @Post('login')
-  @HttpCode(200)
-  login(@Body() dto: LoginDto) {
-    return this.auth.login(dto);
+  @Post('oidc/exchange')
+  exchange(@Headers('authorization') header?: string) {
+    if (!header?.startsWith('Bearer ')) throw new UnauthorizedException();
+    return this.auth.exchangeProfileToken(header.slice(7));
   }
 
   @Get('me')
