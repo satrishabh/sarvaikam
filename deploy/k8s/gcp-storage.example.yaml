@@ -1,0 +1,20 @@
+# Optional GCP overlay: replace the examples with Terraform outputs before applying.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: content-service
+  namespace: sarvaikam
+  annotations:
+    iam.gke.io/gcp-service-account: REPLACE_WITH_TERRAFORM_SERVICE_ACCOUNT
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: content-storage
+  namespace: sarvaikam
+data:
+  bucket: REPLACE_WITH_TERRAFORM_BUCKET
+  signing-account: REPLACE_WITH_TERRAFORM_SERVICE_ACCOUNT
+---
+# Apply this Deployment as a strategic merge patch in your GCP overlay.
+# spec.template.spec.serviceAccountName: content-service

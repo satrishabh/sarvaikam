@@ -4,20 +4,26 @@ import { Link, useParams } from 'react-router-dom';
 import remarkGfm from 'remark-gfm';
 import { api, Lesson } from '../api';
 import { useAuth } from '../auth';
+import LessonAssets from '../components/LessonAssets';
 
 export default function LessonPage() {
   const { topicSlug = '', lessonSlug = '' } = useParams();
-  const { user } = useAuth();
+  const { user, ready } = useAuth();
   const [lesson, setLesson] = useState<Lesson | null>(null);
   const [completed, setCompleted] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [saveError, setSaveError] = useState('');
 
   useEffect(() => {
+    if (!ready) return;
+    let active = true;
     setLesson(null);
+    setError('');
     window.scrollTo(0, 0);
-    api.lesson(topicSlug, lessonSlug).then(setLesson).catch((e) => setError(e.message));
-  }, [topicSlug, lessonSlug]);
+    api.lesson(topicSlug, lessonSlug).then(l => { if (active) setLesson(l); }).catch((e) => { if (active) setError(e.message); });
+    return () => { active = false; };
+  }, [topicSlug, lessonSlug, ready, user?.id, user?.role, user?.permissions.join('|')]);
 
   useEffect(() => {
     if (!user || !lesson) return setCompleted(false);
@@ -29,10 +35,13 @@ export default function LessonPage() {
   const toggle = async () => {
     if (!lesson) return;
     setSaving(true);
+    setSaveError('');
     try {
       if (completed) await api.uncomplete(lesson.id);
       else await api.complete(lesson.id, topicSlug);
       setCompleted(!completed);
+    } catch (cause) {
+      setSaveError((cause as Error).message);
     } finally {
       setSaving(false);
     }
@@ -43,6 +52,7 @@ export default function LessonPage() {
       <h1 className="text-3xl font-semibold">This step couldn't be loaded</h1>
       <p className="mt-2 text-muted">{error}</p>
       <Link to={`/topics/${topicSlug}`} className="link mt-4 inline-block">Back to the topic</Link>
+      <p className="mt-4 text-base"><Link to={user ? '/profile' : '/login'} className="link">{user ? 'View your access or apply for business membership' : 'Sign in to check your access'}</Link></p>
     </div>
   );
   if (!lesson) return <div className="mx-auto max-w-read space-y-4"><div className="skeleton h-10 w-3/4" />{[0, 1, 2, 3, 4].map((i) => <div key={i} className="skeleton h-5" />)}</div>;
@@ -54,6 +64,8 @@ export default function LessonPage() {
       <Link to={`/topics/${topicSlug}`} className="link text-[15px]">{lesson.topicName}</Link>
       <p className="mt-6 text-[15px] tabular-nums text-muted">Step {lesson.stepNumber} of {lesson.totalSteps}</p>
       <h1 className="mt-1 text-[40px] font-semibold leading-tight tracking-tightest">{lesson.title}</h1>
+      {lesson.exclusive && <span className="badge mt-4">Exclusive content</span>}
+      {saveError && <p role="alert" className="mt-4 text-base text-danger">{saveError}</p>}
 
       {/* react-markdown does not render raw HTML, so lesson content cannot inject scripts */}
       <div className="prose prose-lg mt-8 max-w-none prose-headings:font-display prose-headings:tracking-tight prose-headings:text-ink
@@ -66,6 +78,7 @@ export default function LessonPage() {
         <ReactMarkdown remarkPlugins={[remarkGfm]}>{lesson.contentMd}</ReactMarkdown>
       </div>
 
+      <LessonAssets key={lesson.id} lessonId={lesson.id} />
       {/* Sticky step bar: the one persistent control on a reading page. */}
       <div className="fixed inset-x-0 bottom-0 z-20 border-t border-line/80 bg-canvas/85 backdrop-blur-xl">
         <div className="h-0.5 bg-track"><div className="h-full bg-accent transition-[width] duration-500" style={{ width: `${progress}%` }} /></div>

@@ -87,7 +87,7 @@ public class SeedLoader implements ApplicationRunner {
                 for (int i = 0; i < ls.size(); i++) {
                     SeedLesson l = ls.get(i);
                     if (lessons.findByTopicSlugAndSlug(t.slug(), l.slug()).isPresent()) continue;
-                    service.upsertLesson(new LessonRequest(t.slug(), l.slug(), l.title(), i + 1, l.content()));
+                    service.upsertLesson(new LessonRequest(t.slug(), l.slug(), l.title(), i + 1, l.content(), false));
                     added++;
                 }
             }

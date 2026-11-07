@@ -13,6 +13,8 @@ spec:
           image: sarvaikam/progress-service
           ports: [{ containerPort: 8083 }]
           env:
+            - { name: AUTH_SERVICE_URL, value: "http://auth-service:8082" }
+            - { name: CONTENT_SERVICE_URL, value: "http://content-service:8081" }
             - { name: DATABASE_URL, valueFrom: { secretKeyRef: { name: sarvaikam-secrets, key: PROGRESS_DATABASE_URL } } }
             - { name: JWT_SECRET, valueFrom: { secretKeyRef: { name: sarvaikam-secrets, key: JWT_SECRET } } }
           readinessProbe:

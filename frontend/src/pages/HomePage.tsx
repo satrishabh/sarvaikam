@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api, Category, TopicSummary } from '../api';
+import Momentum from '../components/Momentum';
 import SkillMap, { useSkills } from '../components/SkillMap';
 
 const levelLabel: Record<string, string> = { BEGINNER: 'Beginner', INTERMEDIATE: 'Intermediate', ADVANCED: 'Advanced' };
@@ -10,8 +11,8 @@ function TopicRow({ t }: { t: TopicSummary }) {
     <li>
       <Link to={`/topics/${t.slug}`} className="group flex items-baseline gap-4 rounded-xl px-3 py-3.5 transition-colors hover:bg-surface">
         <span className="min-w-0 flex-1">
-          <span className="block text-[17px] font-medium group-hover:text-accent">{t.name}</span>
-          <span className="mt-0.5 block truncate text-[15px] text-muted">{t.summary}</span>
+          <span className="block text-[18px] font-semibold group-hover:text-accent">{t.name}</span>
+          <span className="mt-0.5 block text-[16px] text-muted sm:truncate">{t.summary}</span>
         </span>
         <span className="hidden shrink-0 text-[14px] text-muted sm:block">{levelLabel[t.level] ?? t.level}</span>
         <span className="w-16 shrink-0 text-right tabular-nums text-[14px] text-muted">{t.lessonCount} steps</span>
@@ -33,7 +34,7 @@ export default function HomePage() {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<TopicSummary[] | null>(null);
   const [error, setError] = useState('');
-  const { skills, signedIn } = useSkills(categories ?? []);
+  const { skills, signedIn, items, user } = useSkills(categories ?? []);
 
   useEffect(() => {
     api.categories().then(setCategories).catch((e) => setError(e.message));
@@ -48,20 +49,24 @@ export default function HomePage() {
   const totalSteps = (categories ?? []).reduce((s, c) => s + c.topics.reduce((n, t) => n + t.lessonCount, 0), 0);
 
   return (
-    <div className="space-y-20">
-      <section className="mx-auto max-w-3xl pt-4 text-center">
-        <h1 className="text-[44px] font-semibold leading-[1.05] tracking-tightest sm:text-[60px]">
-          Learn the tools teams ship with, one step at a time.
+    <div className="space-y-14 sm:space-y-20">
+      <section className="mx-auto max-w-3xl text-center sm:pt-4">
+        <h1 className="text-[36px] font-semibold leading-[1.08] tracking-tightest sm:text-[60px]">
+          Get ready for your next interview, one step at a time.
         </h1>
-        <p className="mx-auto mt-5 max-w-xl text-[19px] text-muted">
-          Short, ordered steps for Kubernetes, Terraform, cloud, languages, AI and data. Mark each one done and watch your skill map fill in.
+        <p className="mx-auto mt-5 max-w-xl text-[18px] text-muted sm:text-[19px]">
+          Practise the stories, coding patterns, system design, SQL, and cloud skills that help you show your best work.
         </p>
-        <form onSubmit={search} role="search" className="mx-auto mt-9 flex max-w-xl gap-2">
+        <Link to="/interview-prep" className="btn mt-6">Explore interview prep <span aria-hidden>→</span></Link>
+        {!user && <p className="mt-4 text-base text-muted">Learning for your business? <Link className="link" to="/login?mode=register&account=business">Apply for free business access</Link></p>}
+        <form onSubmit={search} role="search" className="mx-auto mt-8 flex max-w-xl flex-col gap-2 sm:flex-row">
           <input className="input h-12 rounded-full px-5" aria-label="Search topics" placeholder="Search Kubernetes, LLMs, Snowflake"
                  value={query} onChange={(e) => setQuery(e.target.value)} />
           <button className="btn h-12">Search</button>
         </form>
       </section>
+
+      {user && <Momentum items={items} name={user.name} />}
 
       {error && (
         <div className="surface mx-auto max-w-xl p-5 text-center">
@@ -99,6 +104,7 @@ export default function HomePage() {
 
       {!categories && !error && <LoadingRows />}
 
+      <div id="topics" className="scroll-mt-24" />
       {categories?.map((c) => (
         <section key={c.id} id={c.slug} className="scroll-mt-24">
           <h2 className="flex items-center gap-3 text-[28px] font-semibold">

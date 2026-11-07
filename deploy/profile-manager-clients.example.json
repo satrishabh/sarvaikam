@@ -1,0 +1,33 @@
+{
+  "realm": "sarvaikam",
+  "clients": [
+    {
+      "clientId": "sarvaikam-learn-api",
+      "name": "Learn server-side email sign-in",
+      "protocol": "openid-connect",
+      "enabled": true,
+      "publicClient": false,
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": false,
+      "fullScopeAllowed": true,
+      "webOrigins": [],
+      "redirectUris": []
+    },
+    {
+      "clientId": "sarvaikam-learn-registration",
+      "name": "Learn server-side registration and verification",
+      "protocol": "openid-connect",
+      "enabled": true,
+      "publicClient": false,
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "fullScopeAllowed": false,
+      "webOrigins": [],
+      "redirectUris": []
+    }
+  ]
+}

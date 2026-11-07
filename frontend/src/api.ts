@@ -20,6 +20,7 @@ export interface LessonSummary {
   slug: string;
   title: string;
   stepNumber: number;
+  exclusive: boolean;
 }
 export interface Topic {
   id: number;
@@ -43,8 +44,24 @@ export interface User {
   id: string;
   email: string;
   name: string;
-  role: 'USER' | 'ADMIN';
+  role: Role;
+  permissions: Permission[];
+  businessStatus: 'NONE' | 'PENDING' | 'APPROVED' | 'REJECTED';
+  organization: string;
+  businessWebsite: string;
+  businessReason: string;
+  reviewNote: string;
+  reviewedAt: string | null;
+  disabled: boolean;
+  createdAt: string;
 }
+export type Role = 'ADMIN' | 'BUSINESS' | 'USER';
+export type Permission = 'content.exclusive' | 'content.manage' | 'assets.download' | 'candidates.view';
+export interface RolePolicy { role: Role; permissions: Permission[] }
+export interface AuditEntry { id: string; actor: string; action: string; target: string; details: Record<string, unknown>; createdAt: string }
+export interface Asset { id: string; filename: string; contentType: string; size: number }
+export interface Session { token: string; user: User }
+export const can = (user: User | null, permission: Permission) => user?.permissions.includes(permission) ?? false;
 export interface ProgressItem {
   lessonId: number;
   topicSlug: string;
@@ -63,6 +80,7 @@ export const tokenStore = {
 
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   const headers = new Headers(init.headers);
+  headers.set('X-Sarvaikam-Client', 'web');
   if (init.body) headers.set('Content-Type', 'application/json');
   const token = tokenStore.get();
   if (token) headers.set('Authorization', `Bearer ${token}`);
@@ -76,6 +94,7 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
 }
 
 const enc = encodeURIComponent;
+const fileType = (file: File) => ({ pdf: 'application/pdf', zip: 'application/zip', mp4: 'video/mp4', webm: 'video/webm', txt: 'text/plain' }[file.name.split('.').pop()?.toLowerCase() ?? ''] ?? 'application/octet-stream');
 
 export const api = {
   categories: () => request<Category[]>('/api/content/categories'),
@@ -96,8 +115,26 @@ export const api = {
     return res.json() as Promise<{ token: string; user: User }>;
   },
   me: () => request<User>('/api/auth/me'),
+  login: (email: string, password: string) => request<Session>('/api/auth/session/login', { method: 'POST', body: JSON.stringify({ email, password }) }),
+  register: (name: string, email: string, password: string) => request<{ message: string }>('/api/auth/session/register', { method: 'POST', body: JSON.stringify({ name, email, password }) }),
+  refresh: () => request<Session>('/api/auth/session/refresh', { method: 'POST' }),
+  logout: () => request<void>('/api/auth/session/logout', { method: 'POST' }),
+  emailAction: (action: 'recover' | 'verify-email', email: string) => request<{ message: string }>(`/api/auth/session/${action}`, { method: 'POST', body: JSON.stringify({ email }) }),
+  applyBusiness: (body: { organization: string; website: string; reason: string }) => request<User>('/api/auth/me/business-application', { method: 'POST', body: JSON.stringify(body) }),
+  users: (q: string, status: string, page: number) => request<{ items: User[]; total: number; page: number; pageSize: number }>(`/api/auth/admin/users?q=${enc(q)}&status=${enc(status)}&page=${page}`),
+  reviewBusiness: (id: string, decision: 'APPROVED' | 'REJECTED', note: string) => request<User>(`/api/auth/admin/users/${enc(id)}/business-review`, { method: 'POST', body: JSON.stringify({ decision, note }) }),
+  updateAccess: (id: string, body: { role?: Role; disabled?: boolean }) => request<User>(`/api/auth/admin/users/${enc(id)}`, { method: 'PATCH', body: JSON.stringify(body) }),
+  policies: () => request<RolePolicy[]>('/api/auth/admin/roles'),
+  savePolicy: (role: Role, permissions: Permission[]) => request<RolePolicy>(`/api/auth/admin/roles/${role}`, { method: 'PUT', body: JSON.stringify({ permissions }) }),
+  audit: () => request<AuditEntry[]>('/api/auth/admin/audit'),
+  assets: (lessonId: number) => request<Asset[]>(`/api/content/lessons/${lessonId}/assets`),
+  startUpload: (lessonId: number, file: File) => request<{ id: string; url: string; headers: Record<string, string> }>(`/api/content/admin/lessons/${lessonId}/assets/upload`, { method: 'POST', body: JSON.stringify({ filename: file.name, contentType: fileType(file), size: file.size }) }),
+  finishUpload: (id: string) => request<Asset>(`/api/content/admin/assets/${enc(id)}/complete`, { method: 'POST' }),
+  download: (id: string) => request<{ url: string }> (`/api/content/assets/${enc(id)}/download`),
+  deleteAsset: (id: string) => request<void>(`/api/content/admin/assets/${enc(id)}`, { method: 'DELETE' }),
 
   myProgress: () => request<ProgressItem[]>('/api/progress/me'),
+  userProgress: (id: string) => request<ProgressItem[]>(`/api/progress/users/${enc(id)}`),
   topicProgress: (slug: string) =>
     request<{ completedLessonIds: number[] }>(`/api/progress/me/topics/${enc(slug)}`),
   complete: (lessonId: number, topicSlug: string) =>
@@ -108,7 +145,7 @@ export const api = {
   uncomplete: (lessonId: number) =>
     request<void>(`/api/progress/lessons/${lessonId}/complete`, { method: 'DELETE' }),
 
-  upsertLesson: (l: { topicSlug: string; slug: string; title: string; stepNumber: number; contentMd: string }) =>
+  upsertLesson: (l: { topicSlug: string; slug: string; title: string; stepNumber: number; contentMd: string; exclusive: boolean }) =>
     request<LessonSummary>('/api/content/admin/lessons', { method: 'PUT', body: JSON.stringify(l) }),
   deleteLesson: (id: number) => request<void>(`/api/content/admin/lessons/${id}`, { method: 'DELETE' }),
 };

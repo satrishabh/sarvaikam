@@ -18,7 +18,11 @@ async function bootstrap() {
   // Behind nginx + the ingress: use X-Forwarded-For for the client IP.
   app.set('trust proxy', 'loopback, uniquelocal');
   app.setGlobalPrefix('api/auth');
-  app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }));
+  app.use((_req: unknown, res: { setHeader: (key: string, value: string) => void }, next: () => void) => {
+    res.setHeader('Cache-Control', 'no-store');
+    next();
+  });
+  app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true, forbidNonWhitelisted: true }));
   app.enableShutdownHooks();
   await app.listen(Number(process.env.PORT ?? 8082));
 }

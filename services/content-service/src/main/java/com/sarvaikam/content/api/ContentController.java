@@ -30,6 +30,11 @@ public class ContentController {
     @GetMapping("/search")
     public List<TopicSummary> search(@RequestParam String q) { return service.search(q.trim()); }
 
+    @GetMapping("/lessons/{id}/access")
+    public java.util.Map<String, Object> lessonAccess(@PathVariable long id, @RequestParam String topicSlug) {
+        return service.validateLessonAccess(id, topicSlug);
+    }
+
     // ---- admin (ROLE_ADMIN enforced in SecurityConfig) ----
 
     @PutMapping("/admin/categories")

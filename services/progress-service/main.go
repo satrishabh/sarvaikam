@@ -7,7 +7,9 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -29,6 +31,7 @@ CREATE TABLE IF NOT EXISTS lesson_progress (
 CREATE INDEX IF NOT EXISTS idx_progress_user_topic ON lesson_progress(user_id, topic_slug);`
 
 type ctxKey struct{}
+type permissionsKey struct{}
 
 type server struct {
 	db        *pgxpool.Pool
@@ -69,6 +72,7 @@ func main() {
 		r.Group(func(r chi.Router) {
 			r.Use(s.auth)
 			r.Get("/me", s.listMine)
+			r.Get("/users/{userId}", s.listUser)
 			r.Get("/me/topics/{topicSlug}", s.topicProgress)
 			r.Post("/lessons/{lessonId}/complete", s.complete)
 			r.Delete("/lessons/{lessonId}/complete", s.uncomplete)
@@ -116,16 +120,63 @@ func (s *server) auth(next http.Handler) http.Handler {
 			writeErr(w, http.StatusUnauthorized, "invalid token subject")
 			return
 		}
-		next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), ctxKey{}, sub)))
+		// Current profile permissions, not stale JWT role claims, govern every request.
+		req, err := http.NewRequestWithContext(r.Context(), http.MethodGet, env("AUTH_SERVICE_URL", "http://localhost:8082")+"/api/auth/me", nil)
+		if err != nil {
+			writeErr(w, 503, "session validation unavailable")
+			return
+		}
+		req.Header.Set("Authorization", r.Header.Get("Authorization"))
+		res, err := s.client.Do(req)
+		if err != nil {
+			writeErr(w, 503, "session validation unavailable")
+			return
+		}
+		defer res.Body.Close()
+		var profile struct {
+			ID          string   `json:"id"`
+			Permissions []string `json:"permissions"`
+		}
+		if res.StatusCode != http.StatusOK || json.NewDecoder(res.Body).Decode(&profile) != nil || profile.ID != sub {
+			writeErr(w, http.StatusUnauthorized, "account unavailable")
+			return
+		}
+		ctx := context.WithValue(r.Context(), ctxKey{}, sub)
+		ctx = context.WithValue(ctx, permissionsKey{}, profile.Permissions)
+		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
 func userID(r *http.Request) string { return r.Context().Value(ctxKey{}).(string) }
 
 func (s *server) listMine(w http.ResponseWriter, r *http.Request) {
+	s.listProgress(w, r, userID(r))
+}
+
+func (s *server) listUser(w http.ResponseWriter, r *http.Request) {
+	permissions, _ := r.Context().Value(permissionsKey{}).([]string)
+	allowed := false
+	for _, permission := range permissions {
+		if permission == "candidates.view" {
+			allowed = true
+		}
+	}
+	if !allowed {
+		writeErr(w, http.StatusForbidden, "candidate access is required")
+		return
+	}
+	id := chi.URLParam(r, "userId")
+	if !regexp.MustCompile(`^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$`).MatchString(id) {
+		writeErr(w, http.StatusBadRequest, "invalid user ID")
+		return
+	}
+	s.listProgress(w, r, id)
+}
+
+func (s *server) listProgress(w http.ResponseWriter, r *http.Request, id string) {
 	rows, err := s.db.Query(r.Context(),
 		`SELECT lesson_id, topic_slug, completed_at FROM lesson_progress WHERE user_id = $1 ORDER BY completed_at DESC`,
-		userID(r))
+		id)
 	if err != nil {
 		writeErr(w, 500, "query failed")
 		return
@@ -139,6 +190,10 @@ func (s *server) listMine(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		items = append(items, p)
+	}
+	if rows.Err() != nil {
+		writeErr(w, 500, "query failed")
+		return
 	}
 	writeJSON(w, 200, items)
 }
@@ -173,8 +228,29 @@ func (s *server) complete(w http.ResponseWriter, r *http.Request) {
 	var body struct {
 		TopicSlug string `json:"topicSlug"`
 	}
-	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 4096)).Decode(&body); err != nil || body.TopicSlug == "" {
+	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 4096)).Decode(&body); err != nil || len(body.TopicSlug) > 100 || !regexp.MustCompile(`^[a-z0-9]+(-[a-z0-9]+)*$`).MatchString(body.TopicSlug) {
 		writeErr(w, 400, "topicSlug is required")
+		return
+	}
+	checkURL := env("CONTENT_SERVICE_URL", "http://localhost:8081") + "/api/content/lessons/" + strconv.FormatInt(id, 10) + "/access?topicSlug=" + url.QueryEscape(body.TopicSlug)
+	check, err := http.NewRequestWithContext(r.Context(), http.MethodGet, checkURL, nil)
+	if err != nil {
+		writeErr(w, 503, "lesson validation unavailable")
+		return
+	}
+	check.Header.Set("Authorization", r.Header.Get("Authorization"))
+	result, err := s.client.Do(check)
+	if err != nil {
+		writeErr(w, 503, "lesson validation unavailable")
+		return
+	}
+	result.Body.Close()
+	if result.StatusCode != http.StatusOK {
+		status := result.StatusCode
+		if status != 400 && status != 401 && status != 403 && status != 404 {
+			status = 503
+		}
+		writeErr(w, status, "Check that the lesson belongs to this topic and your role has access")
 		return
 	}
 	_, err = s.db.Exec(r.Context(),

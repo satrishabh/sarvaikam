@@ -2,6 +2,7 @@ package com.sarvaikam.content.service;
 
 import com.sarvaikam.content.api.Dtos.*;
 import com.sarvaikam.content.domain.*;
+import com.sarvaikam.content.security.ContentAccess;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,11 +15,13 @@ public class ContentService {
     private final CategoryRepository categories;
     private final TopicRepository topics;
     private final LessonRepository lessons;
+    private final AssetService assets;
 
-    public ContentService(CategoryRepository categories, TopicRepository topics, LessonRepository lessons) {
+    public ContentService(CategoryRepository categories, TopicRepository topics, LessonRepository lessons, AssetService assets) {
         this.categories = categories;
         this.topics = topics;
         this.lessons = lessons;
+        this.assets = assets;
     }
 
     @Transactional(readOnly = true)
@@ -41,18 +44,28 @@ public class ContentService {
     public LessonView getLesson(String topicSlug, String lessonSlug) {
         Lesson l = lessons.findByTopicSlugAndSlug(topicSlug, lessonSlug)
                 .orElseThrow(() -> notFound("Lesson " + lessonSlug));
+        ContentAccess.lesson(l.isExclusive());
         List<Lesson> all = l.getTopic().getLessons();
         int idx = all.indexOf(l);
         LessonSummary prev = idx > 0 ? summary(all.get(idx - 1)) : null;
         LessonSummary next = idx >= 0 && idx < all.size() - 1 ? summary(all.get(idx + 1)) : null;
         return new LessonView(l.getId(), l.getSlug(), l.getTitle(), l.getStepNumber(), l.getContentMd(),
-                topicSlug, l.getTopic().getName(), all.size(), prev, next);
+                topicSlug, l.getTopic().getName(), all.size(), prev, next, l.isExclusive());
     }
 
     @Transactional(readOnly = true)
     public List<TopicSummary> search(String q) {
         return topics.findTop20ByNameContainingIgnoreCaseOrSummaryContainingIgnoreCase(q, q).stream()
                 .map(ContentService::summary).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public java.util.Map<String, Object> validateLessonAccess(long id, String topicSlug) {
+        Lesson lesson = lessons.findById(id).orElseThrow(() -> notFound("Lesson " + id));
+        ContentAccess.lesson(lesson.isExclusive());
+        if (!lesson.getTopic().getSlug().equals(topicSlug))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Lesson does not belong to this topic");
+        return java.util.Map.of("id", id, "topicSlug", topicSlug);
     }
 
     @Transactional
@@ -89,12 +102,14 @@ public class ContentService {
         l.setTitle(r.title());
         l.setStepNumber(r.stepNumber());
         l.setContentMd(r.contentMd());
+        l.setExclusive(r.exclusive());
         return summary(lessons.save(l));
     }
 
     @Transactional
     public void deleteLesson(Long id) {
         if (!lessons.existsById(id)) throw notFound("Lesson " + id);
+        assets.deleteForLesson(id);
         lessons.deleteById(id);
     }
 
@@ -104,7 +119,7 @@ public class ContentService {
     }
 
     private static LessonSummary summary(Lesson l) {
-        return new LessonSummary(l.getId(), l.getSlug(), l.getTitle(), l.getStepNumber());
+        return new LessonSummary(l.getId(), l.getSlug(), l.getTitle(), l.getStepNumber(), l.isExclusive());
     }
 
     private static ResponseStatusException notFound(String what) {

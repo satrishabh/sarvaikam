@@ -1,0 +1,25 @@
+{
+  "Sarvaikam": {
+    "color": {
+      "canvas": { "$type": "color", "$value": "#F6F7F9" },
+      "surface": { "$type": "color", "$value": "#FFFFFF" },
+      "ink": { "$type": "color", "$value": "#12325A" },
+      "muted": { "$type": "color", "$value": "#4A5A70" },
+      "line": { "$type": "color", "$value": "#E3E7ED" },
+      "track": { "$type": "color", "$value": "#EDF0F4" },
+      "accent": { "$type": "color", "$value": "#0C7279" },
+      "accentStrong": { "$type": "color", "$value": "#095B61" },
+      "accentSoft": { "$type": "color", "$value": "#E3F2F3" },
+      "gold": { "$type": "color", "$value": "#E0A945" },
+      "goldSoft": { "$type": "color", "$value": "#FBF2DF" },
+      "danger": { "$type": "color", "$value": "#B4232F" }
+    },
+    "dimension": {
+      "control": { "$type": "dimension", "$value": "44px" },
+      "spaceUnit": { "$type": "dimension", "$value": "4px" },
+      "fieldRadius": { "$type": "dimension", "$value": "12px" },
+      "surfaceRadius": { "$type": "dimension", "$value": "16px" },
+      "contentWidth": { "$type": "dimension", "$value": "1080px" }
+    }
+  }
+}

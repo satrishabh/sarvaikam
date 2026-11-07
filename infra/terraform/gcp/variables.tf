@@ -22,3 +22,9 @@ variable "db_tier" {
   type    = string
   default = "db-f1-micro"
 }
+
+variable "content_origins" {
+  type        = list(string)
+  description = "Exact browser origins allowed to upload learning resources"
+  default     = ["https://learn.sarvaikam.com"]
+}

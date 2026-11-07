@@ -4,10 +4,11 @@
 
 @layer base {
   html { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
-  body { @apply bg-canvas font-sans text-[17px] leading-relaxed text-ink; }
+  body { @apply bg-canvas font-sans text-[18px] leading-[1.65] text-ink; }
   h1, h2, h3 { @apply font-display tracking-tight text-ink; }
   :focus-visible { @apply rounded-md outline outline-2 outline-offset-2 outline-accent; }
   ::selection { @apply bg-accent-soft; }
+  .pb-safe { padding-bottom: max(0.75rem, env(safe-area-inset-bottom)); }
 }
 
 @layer components {
@@ -25,6 +26,10 @@
            transition-shadow focus:border-accent focus:outline-none focus:ring-4 focus:ring-accent/15;
   }
   .link { @apply font-medium text-accent hover:text-accent-strong; }
+  .field { @apply flex flex-col gap-2 text-[15px] font-medium; }
+  .field-help { @apply text-sm font-normal text-muted; }
+  .eyebrow { @apply text-xs font-semibold tracking-[0.16em] text-muted; }
+  .badge { @apply inline-flex items-center rounded-full border border-line bg-canvas px-2.5 py-1 text-xs font-medium; }
   .skeleton { @apply animate-pulse rounded-lg bg-track; }
 }
 

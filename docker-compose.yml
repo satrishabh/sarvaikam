@@ -19,6 +19,9 @@ services:
       DB_USER: ${POSTGRES_USER:-sarvaikam}
       DB_PASSWORD: ${POSTGRES_PASSWORD:-sarvaikam}
       JWT_SECRET: ${JWT_SECRET:-change-me-to-a-long-random-secret-of-32-bytes-min}
+      AUTH_SERVICE_URL: http://auth-service:8082
+      GCP_CONTENT_BUCKET: ${GCP_CONTENT_BUCKET:-}
+      GCP_SIGNING_SERVICE_ACCOUNT: ${GCP_SIGNING_SERVICE_ACCOUNT:-}
     depends_on: { postgres: { condition: service_healthy } }
 
   auth-service:
@@ -30,8 +33,12 @@ services:
       DB_USER: ${POSTGRES_USER:-sarvaikam}
       DB_PASSWORD: ${POSTGRES_PASSWORD:-sarvaikam}
       JWT_SECRET: ${JWT_SECRET:-change-me-to-a-long-random-secret-of-32-bytes-min}
-      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@sarvaikam.dev}
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin12345}
+      APP_ENV: ${APP_ENV:-dev}
+      PROFILE_ISSUER: ${PROFILE_ISSUER:-https://profile.sarvaikam.com/realms/sarvaikam}
+      PROFILE_API_CLIENT_ID: ${PROFILE_API_CLIENT_ID:-sarvaikam-learn-api}
+      PROFILE_API_CLIENT_SECRET: ${PROFILE_API_CLIENT_SECRET:-}
+      PROFILE_REGISTRATION_CLIENT_ID: ${PROFILE_REGISTRATION_CLIENT_ID:-sarvaikam-learn-registration}
+      PROFILE_REGISTRATION_CLIENT_SECRET: ${PROFILE_REGISTRATION_CLIENT_SECRET:-}
     depends_on: { postgres: { condition: service_healthy } }
 
   progress-service:
@@ -39,6 +46,8 @@ services:
     environment:
       DATABASE_URL: postgres://${POSTGRES_USER:-sarvaikam}:${POSTGRES_PASSWORD:-sarvaikam}@postgres:5432/${POSTGRES_DB:-sarvaikam}?sslmode=disable
       JWT_SECRET: ${JWT_SECRET:-change-me-to-a-long-random-secret-of-32-bytes-min}
+      AUTH_SERVICE_URL: http://auth-service:8082
+      CONTENT_SERVICE_URL: http://content-service:8081
     depends_on: { postgres: { condition: service_healthy } }
 
   frontend:

@@ -13,6 +13,8 @@ spec:
           image: sarvaikam/auth-service
           ports: [{ containerPort: 8082 }]
           env:
+            - { name: APP_ENV, value: prod }
+            - { name: DB_SYNCHRONIZE, value: "false" }
             - { name: DB_HOST, valueFrom: { secretKeyRef: { name: sarvaikam-secrets, key: DB_HOST } } }
             - { name: DB_PORT, value: "5432" }
             - { name: DB_NAME, valueFrom: { secretKeyRef: { name: sarvaikam-secrets, key: POSTGRES_DB } } }
@@ -21,6 +23,10 @@ spec:
             - { name: JWT_SECRET, valueFrom: { secretKeyRef: { name: sarvaikam-secrets, key: JWT_SECRET } } }
             - { name: PROFILE_ISSUER, value: https://profile.sarvaikam.com/realms/sarvaikam }
             - { name: PROFILE_CLIENT_ID, value: sarvaikam-learn }
+            - { name: PROFILE_API_CLIENT_ID, value: sarvaikam-learn-api }
+            - { name: PROFILE_REGISTRATION_CLIENT_ID, value: sarvaikam-learn-registration }
+            - { name: PROFILE_API_CLIENT_SECRET, valueFrom: { secretKeyRef: { name: sarvaikam-secrets, key: PROFILE_API_CLIENT_SECRET } } }
+            - { name: PROFILE_REGISTRATION_CLIENT_SECRET, valueFrom: { secretKeyRef: { name: sarvaikam-secrets, key: PROFILE_REGISTRATION_CLIENT_SECRET } } }
           readinessProbe:
             httpGet: { path: /api/auth/health, port: 8082 }
           livenessProbe:

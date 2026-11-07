@@ -89,6 +89,7 @@ export default function TopicPage() {
                     className={`flex-1 rounded-xl px-4 py-3.5 transition-colors hover:bg-surface ${isNext ? 'bg-surface ring-1 ring-line' : ''}`}>
                 <span className="sr-only">Step {l.stepNumber}{isDone ? ', complete' : ''}: </span>
                 <span className={`text-[17px] font-medium ${isDone ? 'text-muted' : ''}`}>{l.title}</span>
+                {l.exclusive && <span className="badge ml-2">Exclusive</span>}
               </Link>
             </li>
           );

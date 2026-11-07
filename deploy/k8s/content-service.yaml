@@ -13,6 +13,9 @@ spec:
           image: sarvaikam/content-service
           ports: [{ containerPort: 8081 }]
           env:
+            - { name: AUTH_SERVICE_URL, value: "http://auth-service:8082" }
+            - { name: GCP_CONTENT_BUCKET, valueFrom: { configMapKeyRef: { name: content-storage, key: bucket, optional: true } } }
+            - { name: GCP_SIGNING_SERVICE_ACCOUNT, valueFrom: { configMapKeyRef: { name: content-storage, key: signing-account, optional: true } } }
             - { name: DB_URL, valueFrom: { secretKeyRef: { name: sarvaikam-secrets, key: CONTENT_DB_URL } } }
             - { name: DB_USER, valueFrom: { secretKeyRef: { name: sarvaikam-secrets, key: POSTGRES_USER } } }
             - { name: DB_PASSWORD, valueFrom: { secretKeyRef: { name: sarvaikam-secrets, key: POSTGRES_PASSWORD } } }

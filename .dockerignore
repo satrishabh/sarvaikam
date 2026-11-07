@@ -6,3 +6,5 @@
 .cortex
 .env
 *.tfstate*
+.cache
+DevOpsUltiMateGuide_2026.zip

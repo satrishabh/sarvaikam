@@ -22,6 +22,8 @@ public class Lesson {
     @Column(name = "content_md", columnDefinition = "TEXT")
     private String contentMd;
 
+    private boolean exclusive;
+
     private OffsetDateTime updatedAt = OffsetDateTime.now();
 
     @PreUpdate
@@ -37,6 +39,8 @@ public class Lesson {
     public int getStepNumber() { return stepNumber; }
     public void setStepNumber(int stepNumber) { this.stepNumber = stepNumber; }
     public String getContentMd() { return contentMd; }
+    public boolean isExclusive() { return exclusive; }
+    public void setExclusive(boolean exclusive) { this.exclusive = exclusive; }
     public void setContentMd(String contentMd) { this.contentMd = contentMd; }
     public OffsetDateTime getUpdatedAt() { return updatedAt; }
 }

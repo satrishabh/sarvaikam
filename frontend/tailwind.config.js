@@ -1,4 +1,7 @@
 import typography from '@tailwindcss/typography';
+import { createRequire } from 'node:module';
+const tokens = createRequire(import.meta.url)('./design-tokens.json').Sarvaikam;
+const color = name => tokens.color[name].$value;
 
 /** @type {import('tailwindcss').Config} */
 export default {
@@ -7,15 +10,15 @@ export default {
     extend: {
       // Palette taken from the logo: navy type, one teal accent, gold reserved for "complete".
       colors: {
-        canvas: '#F6F7F9',
-        surface: '#FFFFFF',
-        ink: '#12325A',
-        muted: '#5B6B80',
-        line: '#E3E7ED',
-        track: '#EDF0F4',
-        accent: { DEFAULT: '#11828A', strong: '#0C6A71', soft: '#E3F2F3' },
-        gold: { DEFAULT: '#E0A945', soft: '#FBF2DF' },
-        danger: '#B4232F',
+        canvas: color('canvas'),
+        surface: color('surface'),
+        ink: color('ink'),
+        muted: color('muted'),
+        line: color('line'),
+        track: color('track'),
+        accent: { DEFAULT: color('accent'), strong: color('accentStrong'), soft: color('accentSoft') },
+        gold: { DEFAULT: color('gold'), soft: color('goldSoft') },
+        danger: color('danger'),
       },
       fontFamily: {
         sans: ['-apple-system', 'BlinkMacSystemFont', '"SF Pro Text"', '"Segoe UI"', 'Inter', 'Roboto', 'sans-serif'],
@@ -23,7 +26,13 @@ export default {
         mono: ['ui-monospace', '"SF Mono"', '"Cascadia Code"', 'Menlo', 'monospace'],
       },
       letterSpacing: { tightest: '-0.035em' },
-      maxWidth: { read: '70ch' },
+      maxWidth: { read: '68ch' },
+      keyframes: {
+        pop: { '0%': { transform: 'scale(1)' }, '40%': { transform: 'scale(1.08)' }, '100%': { transform: 'scale(1)' } },
+        rise: { '0%': { transform: 'translateY(16px)', opacity: '0' }, '100%': { transform: 'translateY(0)', opacity: '1' } },
+        burst: { '0%': { transform: 'scale(.4) rotate(0deg)', opacity: '1' }, '100%': { transform: 'scale(2.2) rotate(45deg)', opacity: '0' } },
+      },
+      animation: { pop: 'pop .45s cubic-bezier(.2,.9,.3,1.4)', rise: 'rise .3s cubic-bezier(.2,.8,.2,1)', burst: 'burst .6s ease-out forwards' },
     },
   },
   plugins: [typography],
