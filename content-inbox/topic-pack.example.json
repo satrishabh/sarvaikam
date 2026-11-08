@@ -1,0 +1,23 @@
+﻿[
+  {
+    "slug": "example-category",
+    "name": "Example subject — replace before publishing",
+    "description": "A reviewed description of the intended learning area.",
+    "icon": "",
+    "topics": [
+      {
+        "slug": "example-topic",
+        "name": "Example topic — replace before publishing",
+        "summary": "A concrete outcome for this topic.",
+        "level": "BEGINNER",
+        "lessons": [
+          {
+            "slug": "example-lesson",
+            "title": "Example lesson — replace before publishing",
+            "content": "## What you will learn\n\nReplace this with reviewed lesson Markdown, worked examples, and exercises."
+          }
+        ]
+      }
+    ]
+  }
+]

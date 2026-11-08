@@ -1,193 +1,344 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { api, Category } from '../api';
-import { useSkills } from '../components/SkillMap';
+﻿import { useState } from "react";
+import { Link } from "react-router-dom";
+import Icon from "../components/Icon";
+import {
+  LoadState,
+  ProgressBar,
+  SectionHeading,
+} from "../components/LearningUI";
+import { useSkills } from "../components/SkillMap";
+import { practiceQuestions } from "../practice";
+import useCatalogue from "../useCatalogue";
 
-const trackDetails: Record<string, { icon: string; tag: string; color: string }> = {
-  'behavioral-interviews': { icon: '✳', tag: 'People & stories', color: 'from-[#f9a47d] to-[#f35d5b]' },
-  'coding-interviews': { icon: '</>', tag: 'Problem solving', color: 'from-[#9f9af7] to-[#6c63e8]' },
-  'system-design-interviews': { icon: '◈', tag: 'Architecture', color: 'from-[#69d6c6] to-[#168d88]' },
-  'sql-interviews': { icon: '⌘', tag: 'Data & queries', color: 'from-[#f2cb72] to-[#ee9645]' },
-  'devops-cloud-interviews': { icon: '↗', tag: 'Cloud & operations', color: 'from-[#86baff] to-[#4a7de2]' },
+const details: Record<
+  string,
+  { icon: string; area: string; question: string; outcome: string }
+> = {
+  "coding-interviews": {
+    icon: "code",
+    area: "PROBLEM SOLVING",
+    question: "pair-sum",
+    outcome: "Clarify, solve, test, and explain complexity.",
+  },
+  "system-design-interviews": {
+    icon: "layers",
+    area: "SYSTEMS THINKING",
+    question: "url-shortener",
+    outcome: "Turn requirements into a design with clear trade-offs.",
+  },
+  "sql-interviews": {
+    icon: "chart",
+    area: "DATA & QUERIES",
+    question: "top-customers",
+    outcome: "Reason about data grain, queries, and edge cases.",
+  },
+  "behavioral-interviews": {
+    icon: "user",
+    area: "PEOPLE & STORIES",
+    question: "difficult-feedback",
+    outcome: "Build specific, honest stories about your work.",
+  },
+  "devops-cloud-interviews": {
+    icon: "cloud",
+    area: "RELIABILITY & DELIVERY",
+    question: "failed-deployment",
+    outcome: "Explain safe delivery and production decisions.",
+  },
 };
-
 const warmup = [
-  { day: '01', title: 'Know your story', detail: 'Draft your introduction and choose two STAR examples.' },
-  { day: '02', title: 'Think out loud', detail: 'Clarify a coding prompt, then solve and test it.' },
-  { day: '03', title: 'Design the shape', detail: 'Scope a system and sketch its main data flow.' },
-  { day: '04', title: 'Query the data', detail: 'Practise joins, grouping, and one window function.' },
-  { day: '05', title: 'Operate with care', detail: 'Talk through a production incident and safe recovery.' },
-  { day: '06', title: 'Run a mock', detail: 'Ask a partner to challenge your assumptions.' },
-  { day: '07', title: 'Review & reset', detail: 'Repeat the hardest drill and write down what improved.' },
+  {
+    title: "Tell your story",
+    detail:
+      "Choose a real example of feedback. Explain the context, your actions, and what changed.",
+    question: "difficult-feedback",
+  },
+  {
+    title: "Solve, then explain",
+    detail:
+      "Work through a pair-sum problem. Test duplicates and a missing pair.",
+    question: "pair-sum",
+  },
+  {
+    title: "Design a small system",
+    detail: "Clarify a URL shortener’s requirements before sketching a design.",
+    question: "url-shortener",
+  },
+  {
+    title: "Think in data",
+    detail:
+      "Build a monthly aggregation, then rank the results. Explain your tie policy.",
+    question: "top-customers",
+  },
+  {
+    title: "Reason under pressure",
+    detail: "Walk through a failed deployment, from mitigation to follow-up.",
+    question: "failed-deployment",
+  },
+  {
+    title: "Try a harder variation",
+    detail:
+      "Merge intervals. State your boundary assumptions and test a nested case.",
+    question: "merge-intervals",
+  },
+  {
+    title: "Return to the difficult bit",
+    detail:
+      "Repeat an exercise, compare your reasoning, and choose one next improvement.",
+    question: "notification-system",
+  },
 ];
-
 export default function InterviewPrepPage() {
-  const [categories, setCategories] = useState<Category[] | null>(null);
-  const [error, setError] = useState('');
-  const { skills, signedIn } = useSkills(categories ?? []);
-
-  useEffect(() => {
-    api.categories().then(setCategories).catch((e: Error) => setError(e.message));
-  }, []);
-
-  const category = categories?.find((item) => item.slug === 'interview-preparation');
-  const skill = useMemo(() => skills.find((item) => item.slug === 'interview-preparation'), [skills]);
-  const totalLessons = category?.topics.reduce((total, topic) => total + topic.lessonCount, 0) ?? 0;
-  const completedLessons = skill?.done ?? 0;
-  const completion = totalLessons ? Math.round((completedLessons / totalLessons) * 100) : 0;
-
-  if (error) {
-    return (
-      <div className="mx-auto max-w-2xl py-20 text-center">
-        <h1 className="text-3xl font-semibold">Your prep room couldn't load</h1>
-        <p className="mt-2 text-muted">{error}</p>
-        <Link to="/" className="link mt-4 inline-block">Back to Explore</Link>
-      </div>
-    );
-  }
-
+  const { categories, error, retry } = useCatalogue();
+  const { skills, signedIn, progressLoading, progressError } = useSkills(
+    categories ?? [],
+  );
+  const [day, setDay] = useState(0);
+  const category = categories?.find((c) => c.slug === "interview-preparation");
+  const skill = skills.find((c) => c.slug === "interview-preparation");
+  const total = category?.topics.reduce((n, t) => n + t.lessonCount, 0) ?? 0;
+  const selected = warmup[day];
   return (
-    <div className="space-y-14 sm:space-y-20">
-      <section className="relative isolate overflow-hidden rounded-[2rem] bg-[#111522] px-6 py-10 text-white sm:px-12 sm:py-14">
-        <div aria-hidden className="absolute -right-20 -top-32 -z-10 h-96 w-96 rounded-full bg-[#f36e57]/35 blur-3xl" />
-        <div aria-hidden className="absolute -bottom-48 right-1/4 -z-10 h-80 w-80 rounded-full bg-[#726cf0]/40 blur-3xl" />
-        <div className="grid items-center gap-10 lg:grid-cols-[1.2fr_.8fr]">
-          <div className="max-w-2xl">
-            <p className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-[13px] font-medium uppercase tracking-[.16em] text-white/75">
-              <span aria-hidden className="h-2 w-2 rounded-full bg-[#ff9a73]" />
-              The interview prep room
-            </p>
-            <h1 className="mt-6 font-display text-[42px] font-semibold leading-[1.02] tracking-tightest sm:text-[64px]">
-              Make your next<br className="hidden sm:block" /> interview your best one.
-            </h1>
-            <p className="mt-5 max-w-xl text-[17px] leading-relaxed text-white/70 sm:text-[19px]">
-              A practical warm-up for the stories you tell, the problems you solve, and the systems you design.
-              Learn a little. Practise out loud. Get sharper every round.
-            </p>
-            <div className="mt-8 flex flex-wrap items-center gap-3">
-              <a href="#tracks" className="inline-flex min-h-[48px] items-center justify-center rounded-full bg-[#ff8c68] px-6 text-[15px] font-semibold text-[#231816] transition-transform hover:-translate-y-0.5">
-                Pick your first drill <span aria-hidden className="ml-2">↘</span>
-              </a>
-              <span className="text-[14px] text-white/55">No cram session required.</span>
-            </div>
+    <div className="page-stack">
+      <section className="grid overflow-hidden rounded-[24px] border border-line bg-surface lg:grid-cols-[1.1fr_.9fr]">
+        <div className="p-7 sm:p-12">
+          <p className="eyebrow">THE INTERVIEW WORKSHOP</p>
+          <h1 className="mt-5 text-[clamp(2.4rem,5vw,3.8rem)] font-semibold leading-[1.08] tracking-tightest">
+            Know your stuff.
+            <br />
+            <span className="text-accent">Show your thinking.</span>
+          </h1>
+          <p className="mt-5 max-w-lg text-lg leading-relaxed text-muted">
+            Build the understanding behind a strong answer. Then practise saying
+            it, solving it, and defending your choices.
+          </p>
+          <div className="mt-7 flex flex-wrap gap-3">
+            <Link to="/practice" className="btn">
+              Start a practice session
+              <Icon name="play" className="h-4 w-4" />
+            </Link>
+            <a href="#tracks" className="outline-btn">
+              Explore prep tracks
+            </a>
           </div>
-
-          <div className="relative mx-auto w-full max-w-[340px] animate-rise">
-            <div className="absolute inset-3 rotate-6 rounded-[2rem] bg-gradient-to-br from-[#ffab78]/70 to-[#8078f5]/70 blur-sm" />
-            <div className="relative rotate-[-3deg] rounded-[1.75rem] border border-white/15 bg-[#1d2232]/95 p-5 shadow-2xl shadow-black/30">
-              <div className="flex items-center justify-between text-[12px] font-medium uppercase tracking-[.18em] text-white/50">
-                <span>Practice mode</span><span className="text-[#ffab78]">● Live</span>
-              </div>
-              <div className="mt-8 font-display text-[22px] font-semibold leading-snug">Tell me about a time you changed your mind.</div>
-              <div className="mt-5 flex items-center gap-3 rounded-2xl bg-white/[.06] p-3">
-                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#ff8c68]/15 text-[#ffab78]">✳</span>
-                <div>
-                  <p className="text-[13px] font-medium text-white/85">Your story, your words</p>
-                  <p className="text-[12px] text-white/45">Context → choice → learning</p>
-                </div>
-              </div>
-              <div className="mt-5 flex items-end gap-1.5" aria-hidden>
-                {[22, 38, 28, 48, 34, 56, 32, 44, 25, 50, 37, 61, 31, 45, 24].map((height, index) => (
-                  <span key={index} className={`w-full rounded-full ${index === 11 ? 'bg-[#ff9a73]' : 'bg-white/20'}`} style={{ height }} />
-                ))}
-              </div>
-              <p className="mt-2 text-right text-[11px] text-white/35">A strong answer sounds like you.</p>
-            </div>
-          </div>
+          <p className="mt-6 text-xs text-muted">
+            {practiceQuestions.length} practice exercises ·{" "}
+            {categories
+              ? `${total} published prep lessons`
+              : "Guided prep lessons"}{" "}
+            · Self-paced
+          </p>
         </div>
-      </section>
-
-      <section className="grid gap-8 lg:grid-cols-[.8fr_1.2fr]">
-        <div className="surface flex flex-col justify-between p-6 sm:p-8">
-          <div>
-            <p className="text-[13px] font-semibold uppercase tracking-[.15em] text-accent">Your starting point</p>
-            <h2 className="mt-3 text-[26px] font-semibold leading-tight">Small reps. Real confidence.</h2>
-            <p className="mt-3 text-[16px] text-muted">
-              {signedIn
-                ? `${completedLessons} of ${totalLessons} prep drills complete. Keep your momentum going.`
-                : 'Work through a track at your own pace. Sign in when you want your progress saved.'}
-            </p>
-          </div>
-          <div className="mt-7">
-            <div className="mb-2 flex items-center justify-between text-[14px]">
-              <span className="font-medium">Prep progress</span>
-              <span className="tabular-nums text-muted">
-                {signedIn ? `${completion}%` : categories ? `${totalLessons} guided drills` : 'Loading guided drills'}
-              </span>
-            </div>
-            <div className="h-2 overflow-hidden rounded-full bg-track">
-              <div className="h-full rounded-full bg-gradient-to-r from-[#f3a277] to-[#766df0] transition-[width] duration-700" style={{ width: `${signedIn ? completion : 8}%` }} />
-            </div>
-            {!signedIn && <Link to="/login" className="link mt-4 inline-block text-[14px]">Sign in to save your progress →</Link>}
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-line bg-[#eeedf9] p-6 sm:p-8">
-          <p className="text-[13px] font-semibold uppercase tracking-[.15em] text-[#6154bc]">A 7-day warm-up</p>
-          <h2 className="mt-2 text-[26px] font-semibold leading-tight">A little structure goes a long way.</h2>
-          <div className="mt-6 grid gap-x-6 gap-y-4 sm:grid-cols-2">
-            {warmup.map((item) => (
-              <div key={item.day} className="flex gap-3">
-                <span className="font-mono text-[13px] font-semibold text-[#796fd0]">{item.day}</span>
+        <div className="dark-grid p-7 text-white sm:p-10">
+          <p className="text-[10px] font-semibold uppercase tracking-[.18em] text-[#a4ded2]">
+            A USEFUL PRACTICE LOOP
+          </p>
+          <ol className="mt-7 space-y-6">
+            {[
+              [
+                "01",
+                "Learn the pattern",
+                "Read a lesson and work through its examples.",
+              ],
+              [
+                "02",
+                "Try it without notes",
+                "Use a timed prompt to make your thinking visible.",
+              ],
+              [
+                "03",
+                "Review, then repeat",
+                "Use the checklist to decide what to improve.",
+              ],
+            ].map(([n, title, copy]) => (
+              <li className="flex gap-4" key={n}>
+                <span className="font-mono text-xs text-[#9bd3c9]">{n}</span>
                 <div>
-                  <h3 className="text-[15px] font-semibold">{item.title}</h3>
-                  <p className="mt-0.5 text-[13px] leading-snug text-muted">{item.detail}</p>
+                  <h2 className="text-lg font-semibold text-white">{title}</h2>
+                  <p className="mt-1 text-sm text-[#c2cfdb]">{copy}</p>
                 </div>
-              </div>
+              </li>
             ))}
-          </div>
+          </ol>
+          <p className="mt-8 border-t border-white/15 pt-5 text-xs leading-relaxed text-[#c2cfdb]">
+            Practice is a place to find your gaps. Lesson completion and
+            self-review are not an interview score.
+          </p>
         </div>
       </section>
-
-      <section id="tracks" className="scroll-mt-24">
-        <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <p className="text-[13px] font-semibold uppercase tracking-[.15em] text-accent">Choose your focus</p>
-            <h2 className="mt-2 text-[32px] font-semibold tracking-tightest sm:text-[38px]">Five tracks. One stronger you.</h2>
+      <section id="tracks">
+        <SectionHeading
+          kicker="FIVE WAYS TO GET SHARPER"
+          title="Choose the conversation you’re preparing for."
+          description="Study the foundations in each track, then try a related exercise in the practice room."
+        />
+        {!categories ? (
+          <LoadState error={error} retry={retry} />
+        ) : !category ? (
+          <div className="surface p-7">
+            <h3 className="text-xl font-semibold">
+              Prep lessons haven’t been published yet.
+            </h3>
+            <p className="mt-2 text-muted">
+              You can still use the practice room while new lessons are being
+              added.
+            </p>
+            <Link to="/practice" className="btn mt-5">
+              Open practice room
+            </Link>
           </div>
-          <span className="text-[15px] text-muted">{totalLessons} short, practical drills</span>
-        </div>
-
-        {!category
-          ? <div className="grid gap-4 sm:grid-cols-2">{[0, 1, 2, 3].map((item) => <div key={item} className="skeleton h-44" />)}</div>
-          : <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              {category.topics.map((topic, index) => {
-                const detail = trackDetails[topic.slug] ?? { icon: '✦', tag: 'Interview skills', color: 'from-[#9f9af7] to-[#6c63e8]' };
-                const topicSkill = skill?.topics.find((item) => item.slug === topic.slug);
-                const done = topicSkill?.done ?? 0;
-                const percent = topicSkill?.total ? Math.round((done / topicSkill.total) * 100) : 0;
+        ) : (
+          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+            {Object.keys(details)
+              .map((slug) => category.topics.find((t) => t.slug === slug))
+              .filter((t) => !!t)
+              .map((topic) => {
+                const detail = details[topic.slug];
+                const done =
+                  skill?.topics.find((t) => t.slug === topic.slug)?.done ?? 0;
                 return (
-                  <Link key={topic.slug} to={`/topics/${topic.slug}`} className="group surface relative overflow-hidden p-6 transition-all duration-200 hover:-translate-y-1 hover:shadow-xl hover:shadow-ink/5">
-                    <div className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${detail.color}`} />
-                    <div className="flex items-start justify-between gap-3">
-                      <span className={`flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br ${detail.color} text-[20px] font-semibold text-white shadow-lg shadow-ink/10`}>
-                        {detail.icon}
+                  <article
+                    key={topic.slug}
+                    className="surface flex flex-col p-6"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="icon-tile">
+                        <Icon name={detail.icon} className="h-6 w-6" />
                       </span>
-                      <span className="rounded-full bg-track px-3 py-1 text-[12px] font-medium text-muted">{detail.tag}</span>
+                      <span className="text-xs text-muted">
+                        {topic.lessonCount} lessons
+                      </span>
                     </div>
-                    <p className="mt-6 text-[12px] font-semibold uppercase tracking-[.14em] text-muted">Track 0{index + 1}</p>
-                    <h3 className="mt-1 text-[22px] font-semibold leading-snug group-hover:text-accent">{topic.name}</h3>
-                    <p className="mt-2 min-h-[48px] text-[14px] leading-relaxed text-muted">{topic.summary}</p>
-                    <div className="mt-5 flex items-center justify-between text-[13px]">
-                      <span className="text-muted">{topic.lessonCount} drills</span>
-                      {signedIn
-                        ? <span className="font-medium tabular-nums">{done}/{topic.lessonCount} complete</span>
-                        : <span className="font-semibold text-accent">Explore track <span aria-hidden>→</span></span>}
+                    <p className="mt-6 text-[10px] font-semibold tracking-[.16em] text-muted">
+                      {detail.area}
+                    </p>
+                    <h3 className="mt-2 text-xl font-semibold">{topic.name}</h3>
+                    <p className="mt-3 flex-1 text-sm leading-relaxed text-muted">
+                      {detail.outcome}
+                    </p>
+                    {signedIn && !progressLoading && !progressError && (
+                      <div className="mt-5">
+                        <p className="mb-2 text-xs text-muted">
+                          {done}/{topic.lessonCount} lessons complete
+                        </p>
+                        <ProgressBar
+                          done={done}
+                          total={topic.lessonCount}
+                          label={`${topic.name} lesson progress`}
+                        />
+                      </div>
+                    )}
+                    <div className="mt-6 flex flex-wrap items-center justify-between gap-2 border-t border-line pt-4">
+                      <Link
+                        className="link inline-flex min-h-11 items-center gap-2 text-sm"
+                        to={`/topics/${topic.slug}`}
+                      >
+                        Study this track
+                        <Icon name="arrow" className="h-4 w-4" />
+                      </Link>
+                      <Link
+                        className="btn-quiet px-3 text-xs"
+                        to={`/practice?question=${detail.question}`}
+                      >
+                        Try an exercise
+                      </Link>
                     </div>
-                    {signedIn && <div className="mt-2 h-1 overflow-hidden rounded-full bg-track"><div className="h-full rounded-full bg-accent" style={{ width: `${percent}%` }} /></div>}
-                  </Link>
+                  </article>
                 );
               })}
-            </div>}
+            <Link
+              to="/practice"
+              className="dark-grid flex flex-col items-start justify-between rounded-2xl p-7 text-white"
+            >
+              <Icon name="target" className="h-8 w-8 text-[#a4ded2]" />
+              <div className="mt-8">
+                <h3 className="text-2xl font-semibold text-white">
+                  Less scrolling.
+                  <br />
+                  More deliberate practice.
+                </h3>
+                <p className="mt-3 text-sm text-[#c2cfdb]">
+                  Pick a prompt, set a timer, and see how your reasoning holds
+                  up.
+                </p>
+              </div>
+              <span className="mt-7 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-[#a4ded2]">
+                Enter the practice room
+                <Icon name="arrow" className="h-4 w-4" />
+              </span>
+            </Link>
+          </div>
+        )}
       </section>
-
-      <section className="rounded-2xl bg-[#141927] px-6 py-8 text-white sm:flex sm:items-center sm:justify-between sm:gap-8 sm:px-9">
-        <div className="max-w-2xl">
-          <p className="text-[13px] font-semibold uppercase tracking-[.15em] text-[#ffab78]">The best prep is personal</p>
-          <h2 className="mt-2 text-[25px] font-semibold leading-tight">Use your own notes. Practise with your own examples.</h2>
-          <p className="mt-2 text-[15px] leading-relaxed text-white/60">Bring the job description and the stories only you can tell. The framework is here to help you prepare—not to answer for you.</p>
+      <section>
+        <SectionHeading
+          kicker="A SUGGESTED 7-SESSION WARM-UP"
+          title="Build a rhythm that fits your week."
+          description="Use these as seven sessions, not a deadline. Repeat or skip a session to match your goals."
+        />
+        <div className="grid overflow-hidden rounded-2xl border border-line bg-surface md:grid-cols-[300px_1fr]">
+          <div
+            className="border-b border-line p-4 md:border-b-0 md:border-r"
+            role="group"
+            aria-label="Choose a warm-up session"
+          >
+            {warmup.map((item, i) => (
+              <button
+                key={item.title}
+                aria-pressed={day === i}
+                className={`flex min-h-14 w-full items-center gap-4 rounded-xl px-4 py-3 text-left text-sm ${day === i ? "bg-accent-soft font-semibold text-accent-strong" : "text-muted hover:bg-canvas"}`}
+                onClick={() => setDay(i)}
+              >
+                <span className="font-mono text-xs">0{i + 1}</span>
+                {item.title}
+              </button>
+            ))}
+          </div>
+          <div
+            className="flex flex-col justify-center p-7 sm:p-10"
+            aria-live="polite"
+          >
+            <span className="eyebrow">SESSION 0{day + 1}</span>
+            <h3 className="mt-4 text-3xl font-semibold tracking-tightest">
+              {selected.title}
+            </h3>
+            <p className="mt-4 max-w-lg text-muted">{selected.detail}</p>
+            <ul className="mt-6 space-y-3 text-sm">
+              {[
+                "State your assumptions before answering.",
+                "Work through one concrete example.",
+                "Choose one thing to improve after reviewing.",
+              ].map((text) => (
+                <li className="flex items-start gap-2" key={text}>
+                  <Icon name="check" className="mt-0.5 h-4 w-4 text-accent" />
+                  {text}
+                </li>
+              ))}
+            </ul>
+            <Link
+              className="btn mt-7 self-start"
+              to={`/practice?question=${selected.question}`}
+            >
+              Try this session
+              <Icon name="arrow" className="h-4 w-4" />
+            </Link>
+          </div>
         </div>
-        <Link to="/" className="btn mt-6 shrink-0 bg-white text-ink hover:bg-white/90 sm:mt-0">Explore all learning paths</Link>
+      </section>
+      <section className="flex flex-wrap items-center justify-between gap-7 rounded-2xl bg-accent-soft p-7 sm:p-9">
+        <div className="max-w-2xl">
+          <p className="eyebrow">BUILD THE KNOWLEDGE BEHIND THE ANSWER</p>
+          <h2 className="mt-3 text-2xl font-semibold">
+            Need to revisit the foundations?
+          </h2>
+          <p className="mt-2 text-sm text-muted">
+            Follow a backend, full-stack, or cloud path before returning to
+            interview practice.
+          </p>
+        </div>
+        <Link className="outline-btn" to="/paths">
+          Explore learning paths
+          <Icon name="arrow" className="h-4 w-4" />
+        </Link>
       </section>
     </div>
   );

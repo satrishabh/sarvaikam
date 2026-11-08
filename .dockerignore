@@ -7,4 +7,5 @@
 .env
 *.tfstate*
 .cache
+content-inbox
 DevOpsUltiMateGuide_2026.zip

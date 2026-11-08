@@ -1,121 +1,424 @@
-import { FormEvent, useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { api, Category, TopicSummary } from '../api';
-import Momentum from '../components/Momentum';
-import SkillMap, { useSkills } from '../components/SkillMap';
-
-const levelLabel: Record<string, string> = { BEGINNER: 'Beginner', INTERMEDIATE: 'Intermediate', ADVANCED: 'Advanced' };
-
-function TopicRow({ t }: { t: TopicSummary }) {
-  return (
-    <li>
-      <Link to={`/topics/${t.slug}`} className="group flex items-baseline gap-4 rounded-xl px-3 py-3.5 transition-colors hover:bg-surface">
-        <span className="min-w-0 flex-1">
-          <span className="block text-[18px] font-semibold group-hover:text-accent">{t.name}</span>
-          <span className="mt-0.5 block text-[16px] text-muted sm:truncate">{t.summary}</span>
-        </span>
-        <span className="hidden shrink-0 text-[14px] text-muted sm:block">{levelLabel[t.level] ?? t.level}</span>
-        <span className="w-16 shrink-0 text-right tabular-nums text-[14px] text-muted">{t.lessonCount} steps</span>
-      </Link>
-    </li>
-  );
-}
-
-function LoadingRows() {
-  return (
-    <div className="space-y-4" aria-busy="true" aria-label="Loading topics">
-      {[0, 1, 2, 3].map((i) => <div key={i} className="skeleton h-14" />)}
-    </div>
-  );
-}
+import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
+import { useSkills } from "../components/SkillMap";
+import SkillMap from "../components/SkillMap";
+import Momentum from "../components/Momentum";
+import Icon from "../components/Icon";
+import {
+  LoadState,
+  PathCard,
+  SectionHeading,
+  TopicCard,
+} from "../components/LearningUI";
+import { learningPaths } from "../learning";
+import useCatalogue from "../useCatalogue";
 
 export default function HomePage() {
-  const [categories, setCategories] = useState<Category[] | null>(null);
-  const [query, setQuery] = useState('');
-  const [results, setResults] = useState<TopicSummary[] | null>(null);
-  const [error, setError] = useState('');
-  const { skills, signedIn, items, user } = useSkills(categories ?? []);
-
-  useEffect(() => {
-    api.categories().then(setCategories).catch((e) => setError(e.message));
-  }, []);
-
-  const search = async (e: FormEvent) => {
-    e.preventDefault();
-    if (!query.trim()) return setResults(null);
-    setResults(await api.search(query.trim()).catch(() => []));
-  };
-
-  const totalSteps = (categories ?? []).reduce((s, c) => s + c.topics.reduce((n, t) => n + t.lessonCount, 0), 0);
-
+  const { categories, error, retry } = useCatalogue();
+  const {
+    skills,
+    signedIn,
+    items,
+    user,
+    progressLoading,
+    progressError,
+    reloadProgress,
+  } = useSkills(categories ?? []);
+  const [query, setQuery] = useState("");
+  const [subject, setSubject] = useState("all");
+  const [visible, setVisible] = useState(9);
+  const topics = useMemo(
+    () =>
+      (categories ?? [])
+        .flatMap((c) => c.topics)
+        .filter(
+          (t) =>
+            (subject === "all" || t.categorySlug === subject) &&
+            `${t.name} ${t.summary}`
+              .toLowerCase()
+              .includes(query.trim().toLowerCase()),
+        ),
+    [categories, subject, query],
+  );
+  const allTopics = (categories ?? []).flatMap((c) => c.topics);
+  const previewSkills = [...skills].sort((a, b) => {
+    const focus = ["coding-interviews", "java", "databases-sql"];
+    const rank = (topics: typeof a.topics) => {
+      const index = focus.findIndex((slug) =>
+        topics.some((t) => t.slug === slug),
+      );
+      return index < 0 ? focus.length : index;
+    };
+    return rank(a.topics) - rank(b.topics);
+  });
+  const lessonCount = allTopics.reduce((n, t) => n + t.lessonCount, 0);
+  const doneByTopic = new Map(
+    skills.flatMap((c) => c.topics).map((t) => [t.slug, t.done]),
+  );
   return (
-    <div className="space-y-14 sm:space-y-20">
-      <section className="mx-auto max-w-3xl text-center sm:pt-4">
-        <h1 className="text-[36px] font-semibold leading-[1.08] tracking-tightest sm:text-[60px]">
-          Get ready for your next interview, one step at a time.
-        </h1>
-        <p className="mx-auto mt-5 max-w-xl text-[18px] text-muted sm:text-[19px]">
-          Practise the stories, coding patterns, system design, SQL, and cloud skills that help you show your best work.
-        </p>
-        <Link to="/interview-prep" className="btn mt-6">Explore interview prep <span aria-hidden>→</span></Link>
-        {!user && <p className="mt-4 text-base text-muted">Learning for your business? <Link className="link" to="/login?mode=register&account=business">Apply for free business access</Link></p>}
-        <form onSubmit={search} role="search" className="mx-auto mt-8 flex max-w-xl flex-col gap-2 sm:flex-row">
-          <input className="input h-12 rounded-full px-5" aria-label="Search topics" placeholder="Search Kubernetes, LLMs, Snowflake"
-                 value={query} onChange={(e) => setQuery(e.target.value)} />
-          <button className="btn h-12">Search</button>
-        </form>
+    <div className="page-stack">
+      <section className="dark-grid relative isolate overflow-hidden rounded-[24px] p-7 text-white sm:p-12 lg:p-14">
+        <div className="grid items-center gap-12 lg:grid-cols-[1.15fr_1fr]">
+          <div>
+            <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[.2em] text-[#a4d9d4]">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#a4d9d4]" />A
+              WORKSPACE FOR YOUR NEXT CHAPTER
+            </p>
+            <h1 className="mt-6 max-w-xl text-[clamp(2.6rem,5vw,4.5rem)] font-semibold leading-[1.06] tracking-tightest text-white">
+              Learn deeply.
+              <br />
+              Build confidently.
+              <br />
+              <span className="text-[#99d7cc]">Interview clearly.</span>
+            </h1>
+            <p className="mt-6 max-w-lg text-base leading-relaxed text-[#c2cfdb] sm:text-lg">
+              A deliberate path from “I’ve read about it” to “I can explain it.”
+              Build engineering skills, practise the hard questions, and see
+              your next step.
+            </p>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Link
+                className="btn bg-[#a4ded2] text-[#102c43] hover:bg-[#c0ede4]"
+                to="/paths"
+              >
+                Find your learning path
+                <Icon name="arrow" className="h-4 w-4" />
+              </Link>
+              <Link
+                className="inline-flex min-h-11 items-center gap-2 rounded-full border border-white/25 px-5 text-sm font-medium text-white hover:bg-white/10"
+                to="/practice"
+              >
+                Try a practice session
+                <Icon name="play" className="h-4 w-4" />
+              </Link>
+            </div>
+            <div className="mt-9 flex flex-wrap gap-5 border-t border-white/15 pt-5 text-xs text-[#c2cfdb]">
+              <span className="flex items-center gap-2">
+                <Icon name="book" className="h-4 w-4" />
+                {categories
+                  ? `${lessonCount} guided lessons`
+                  : "Guided lessons"}
+              </span>
+              <span className="flex items-center gap-2">
+                <Icon name="target" className="h-4 w-4" />
+                Interview practice
+              </span>
+              <span className="flex items-center gap-2">
+                <Icon name="chart" className="h-4 w-4" />
+                Saved progress
+              </span>
+            </div>
+          </div>
+          <div className="relative mx-auto w-full max-w-[420px]">
+            <div className="rounded-2xl border border-white/20 bg-[#17374f] p-5 shadow-2xl sm:p-7">
+              <div className="flex items-center justify-between border-b border-white/15 pb-5">
+                <span className="text-xs font-medium text-[#d0e1e8]">
+                  YOUR ENGINEERING JOURNEY
+                </span>
+                <span className="rounded-full bg-white/10 px-2 py-1 text-[10px] text-[#b9d8d9]">
+                  A suggested approach
+                </span>
+              </div>
+              <ol className="mt-6 space-y-0">
+                {[
+                  {
+                    icon: "book",
+                    title: "Understand the foundations",
+                    detail: "Languages, data, and how systems work",
+                    tag: "01 / LEARN",
+                  },
+                  {
+                    icon: "code",
+                    title: "Put ideas into practice",
+                    detail: "Work through examples and exercises",
+                    tag: "02 / APPLY",
+                  },
+                  {
+                    icon: "target",
+                    title: "Explain your thinking",
+                    detail: "Coding, design, SQL, and your stories",
+                    tag: "03 / PREPARE",
+                  },
+                ].map((item, i) => (
+                  <li
+                    key={item.title}
+                    className="relative flex gap-4 pb-8 last:pb-0"
+                  >
+                    {i < 2 && (
+                      <span
+                        aria-hidden
+                        className="absolute left-5 top-11 h-[calc(100%-3rem)] w-px bg-white/20"
+                      />
+                    )}
+                    <span
+                      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${i === 2 ? "bg-[#a4ded2] text-[#102c43]" : "border border-white/15 bg-white/5 text-[#a4ded2]"}`}
+                    >
+                      <Icon name={item.icon} className="h-5 w-5" />
+                    </span>
+                    <div>
+                      <p className="text-[9px] font-semibold tracking-[.16em] text-[#a4becb]">
+                        {item.tag}
+                      </p>
+                      <h2 className="mt-1 text-base font-semibold text-white">
+                        {item.title}
+                      </h2>
+                      <p className="mt-1 text-xs leading-relaxed text-[#b8cbd7]">
+                        {item.detail}
+                      </p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+              <div className="mt-7 flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-3">
+                <Icon name="spark" className="h-5 w-5 text-[#a4ded2]" />
+                <p className="text-xs text-[#d0e1e8]">
+                  You choose the pace. We make the next step clear.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
       </section>
 
-      {user && <Momentum items={items} name={user.name} />}
-
-      {error && (
-        <div className="surface mx-auto max-w-xl p-5 text-center">
-          <p className="font-medium">Topics couldn't be loaded.</p>
-          <p className="mt-1 text-[15px] text-muted">The content service didn't respond ({error}). Refresh in a minute; it may still be starting.</p>
+      {user && !progressLoading && !progressError && (
+        <Momentum items={items} name={user.name} />
+      )}
+      {progressError && (
+        <div
+          role="alert"
+          className="surface flex flex-wrap items-center gap-4 p-5"
+        >
+          <p className="flex-1 text-sm text-muted">{progressError}</p>
+          <button className="outline-btn" onClick={reloadProgress}>
+            Reload progress
+          </button>
         </div>
       )}
 
-      {results && (
-        <section aria-live="polite">
-          <div className="mb-3 flex items-baseline justify-between">
-            <h2 className="text-2xl font-semibold">Results for "{query}"</h2>
-            <button className="link text-[15px]" onClick={() => { setResults(null); setQuery(''); }}>Clear search</button>
+      <section>
+        <SectionHeading
+          kicker="A DIRECTION, NOT A GUESS"
+          title="Start with where you want to go."
+          description="Three practical paths for software engineers. Follow the sequence or make it your own."
+          action={
+            <Link
+              className="link inline-flex min-h-11 items-center gap-2 text-sm"
+              to="/paths"
+            >
+              Explore the paths
+              <Icon name="arrow" className="h-4 w-4" />
+            </Link>
+          }
+        />
+        {categories ? (
+          <div className="grid gap-5 md:grid-cols-3">
+            {learningPaths.map((path) => (
+              <PathCard key={path.slug} path={path} categories={categories} />
+            ))}
           </div>
-          {results.length === 0
-            ? <p className="text-muted">No topics match. Try a broader word such as "cloud" or "python".</p>
-            : <ul className="-mx-3">{results.map((t) => <TopicRow key={t.id} t={t} />)}</ul>}
-        </section>
-      )}
+        ) : (
+          <LoadState error={error} retry={retry} />
+        )}
+      </section>
 
-      {categories && categories.length > 0 && (
-        <section className="surface p-6 sm:p-10">
-          <div className="mb-2 flex flex-wrap items-baseline gap-x-4 gap-y-1">
-            <h2 className="text-[28px] font-semibold">{signedIn ? 'Your skill map' : 'What you can learn'}</h2>
-            <Link to="/skills" className="link ml-auto text-[15px]">See the full map</Link>
-          </div>
-          <p className="text-[15px] text-muted">
-            {signedIn
-              ? 'Each bar is a subject; each segment is a topic. Gold means finished.'
-              : <>{totalSteps} steps across {categories.length} subjects. <Link to="/login" className="link">Sign in</Link> to track your progress.</>}
-          </p>
-          <div className="mt-4"><SkillMap skills={skills} signedIn={signedIn} limit={signedIn ? 3 : undefined} /></div>
-        </section>
-      )}
-
-      {!categories && !error && <LoadingRows />}
-
-      <div id="topics" className="scroll-mt-24" />
-      {categories?.map((c) => (
-        <section key={c.id} id={c.slug} className="scroll-mt-24">
-          <h2 className="flex items-center gap-3 text-[28px] font-semibold">
-            <span aria-hidden>{c.icon}</span>{c.name}
+      <section className="grid overflow-hidden rounded-2xl border border-line bg-surface lg:grid-cols-[.9fr_1.1fr]">
+        <div className="bg-[#ebf2f2] p-7 sm:p-9">
+          <p className="eyebrow">THE INTERVIEW WORKSHOP</p>
+          <h2 className="mt-4 text-3xl font-semibold leading-tight tracking-tightest">
+            Good answers start
+            <br />
+            with better practice.
           </h2>
-          <p className="mt-1 max-w-read text-muted">{c.description}</p>
-          <ul className="-mx-3 mt-4 divide-y divide-line/70">
-            {c.topics.map((t) => <TopicRow key={t.id} t={t} />)}
-          </ul>
-        </section>
-      ))}
+          <p className="mt-4 max-w-md text-sm leading-relaxed text-muted">
+            Think through a problem, write an answer, and review your reasoning.
+            A little structure makes each session count.
+          </p>
+          <Link to="/interview-prep" className="btn mt-6">
+            Explore interview prep
+            <Icon name="arrow" className="h-4 w-4" />
+          </Link>
+        </div>
+        <div className="p-7 sm:p-9">
+          <div className="flex items-center justify-between">
+            <span className="topic-tag">SYSTEM DESIGN</span>
+            <span className="flex items-center gap-1.5 text-xs text-muted">
+              <Icon name="clock" className="h-4 w-4" />
+              20-minute exercise
+            </span>
+          </div>
+          <h3 className="mt-5 text-2xl font-semibold">
+            How would you design a URL shortener?
+          </h3>
+          <p className="mt-3 text-sm text-muted">
+            Start with the requirements. Consider identifiers, storage,
+            redirects, and the trade-offs you would make.
+          </p>
+          <div className="mt-5 flex flex-wrap gap-2">
+            {["Clarify", "Design", "Review"].map((s, i) => (
+              <span key={s} className="topic-tag">
+                0{i + 1} · {s}
+              </span>
+            ))}
+          </div>
+          <Link
+            to="/practice?question=url-shortener"
+            className="link mt-6 inline-flex min-h-11 items-center gap-2 text-sm"
+          >
+            Open the practice room
+            <Icon name="arrow" className="h-4 w-4" />
+          </Link>
+        </div>
+      </section>
+
+      <section>
+        <SectionHeading
+          kicker={
+            signedIn
+              ? "YOUR LEARNING, MADE VISIBLE"
+              : "A CLEAR VIEW OF YOUR SKILLS"
+          }
+          title={
+            signedIn
+              ? "Your skill map. Your next step."
+              : "A skill map with a next step."
+          }
+          description={
+            signedIn
+              ? "See which topics you’ve started, what you’ve finished, and where to go next."
+              : "Explore each subject and its topics. Sign in when you’re ready to save your completed lessons."
+          }
+          action={
+            <Link to="/skills" className="outline-btn text-sm">
+              Open full skill map
+              <Icon name="arrow" className="h-4 w-4" />
+            </Link>
+          }
+        />
+        {categories && !progressLoading && !progressError ? (
+          <SkillMap skills={previewSkills} signedIn={signedIn} limit={3} />
+        ) : progressError ? (
+          <p className="surface p-6 text-sm text-muted">
+            Reload your saved progress above to view your skill map accurately.
+          </p>
+        ) : (
+          <LoadState error={error} retry={retry} />
+        )}
+      </section>
+
+      <section id="topics">
+        <SectionHeading
+          kicker="THE LEARNING LIBRARY"
+          title="Follow your curiosity."
+          description="Find a specific technology or explore a new area. Every topic opens into an ordered lesson sequence."
+        />
+        <div className="surface mb-6 grid gap-4 p-4 sm:grid-cols-[1fr_240px]">
+          <label className="relative block">
+            <span className="sr-only">Search the learning library</span>
+            <Icon
+              name="search"
+              className="pointer-events-none absolute left-3.5 top-3 h-5 w-5 text-muted"
+            />
+            <input
+              type="search"
+              className="input pl-11"
+              placeholder="Search a technology or skill…"
+              value={query}
+              onChange={(e) => {
+                setQuery(e.target.value);
+                setVisible(9);
+              }}
+            />
+          </label>
+          <label>
+            <span className="sr-only">Filter by subject</span>
+            <select
+              className="input"
+              value={subject}
+              onChange={(e) => {
+                setSubject(e.target.value);
+                setVisible(9);
+              }}
+            >
+              <option value="all">All subjects</option>
+              {categories?.map((c) => (
+                <option key={c.slug} value={c.slug}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+        {categories ? (
+          <>
+            <p role="status" className="mb-5 text-xs text-muted">
+              {topics.length} {topics.length === 1 ? "topic" : "topics"}
+              {query ? ` matching “${query}”` : " to explore"}
+            </p>
+            {topics.length ? (
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {topics.slice(0, visible).map((topic) => (
+                  <TopicCard
+                    key={topic.slug}
+                    topic={topic}
+                    done={doneByTopic.get(topic.slug)}
+                    signedIn={signedIn && !progressLoading && !progressError}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="surface p-9 text-center">
+                <h3 className="text-xl font-semibold">
+                  No topics match this search.
+                </h3>
+                <p className="mt-2 text-muted">
+                  Try another keyword or choose all subjects.
+                </p>
+                <button
+                  className="outline-btn mt-5"
+                  onClick={() => {
+                    setQuery("");
+                    setSubject("all");
+                  }}
+                >
+                  Clear filters
+                </button>
+              </div>
+            )}
+            {visible < topics.length && (
+              <div className="mt-7 text-center">
+                <button
+                  className="outline-btn"
+                  onClick={() => setVisible((n) => n + 9)}
+                >
+                  Show more topics
+                  <Icon name="chevron" className="h-4 w-4 rotate-90" />
+                </button>
+              </div>
+            )}
+          </>
+        ) : (
+          <LoadState error={error} retry={retry} />
+        )}
+      </section>
+      <section className="flex flex-wrap items-center justify-between gap-7 rounded-2xl border border-line bg-accent-soft p-7 sm:p-9">
+        <div>
+          <p className="eyebrow">BETTER, TOGETHER</p>
+          <h2 className="mt-2 text-2xl font-semibold">
+            Build a learning habit across your team.
+          </h2>
+          <p className="mt-2 max-w-xl text-sm text-muted">
+            Approved businesses receive exclusive learning content at no charge.
+            Apply from your profile.
+          </p>
+        </div>
+        <Link
+          to={user ? "/profile" : "/login?mode=register&account=business"}
+          className="outline-btn"
+        >
+          Explore business access
+          <Icon name="arrow" className="h-4 w-4" />
+        </Link>
+      </section>
     </div>
   );
 }

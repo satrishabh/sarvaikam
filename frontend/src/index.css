@@ -3,16 +3,36 @@
 @tailwind utilities;
 
 @layer base {
-  html { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
-  body { @apply bg-canvas font-sans text-[18px] leading-[1.65] text-ink; }
-  h1, h2, h3 { @apply font-display tracking-tight text-ink; }
-  :focus-visible { @apply rounded-md outline outline-2 outline-offset-2 outline-accent; }
-  ::selection { @apply bg-accent-soft; }
-  .pb-safe { padding-bottom: max(0.75rem, env(safe-area-inset-bottom)); }
+  html {
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  body {
+    @apply bg-canvas font-sans text-[16px] leading-[1.65] text-ink;
+  }
+  html {
+    scroll-padding-top: 100px;
+  }
+  h1,
+  h2,
+  h3 {
+    @apply font-display tracking-tight text-ink;
+  }
+  :focus-visible {
+    @apply rounded-md outline outline-2 outline-offset-2 outline-accent;
+  }
+  ::selection {
+    @apply bg-accent-soft;
+  }
+  .pb-safe {
+    padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+  }
 }
 
 @layer components {
-  .surface { @apply rounded-2xl border border-line bg-surface; }
+  .surface {
+    @apply rounded-2xl border border-line bg-surface;
+  }
   .btn {
     @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full bg-accent px-5 text-[15px] font-medium text-white
            transition-colors duration-200 hover:bg-accent-strong disabled:cursor-not-allowed disabled:opacity-50;
@@ -25,14 +45,91 @@
     @apply min-h-[44px] w-full rounded-xl border border-line bg-surface px-4 text-[16px] text-ink placeholder:text-muted/70
            transition-shadow focus:border-accent focus:outline-none focus:ring-4 focus:ring-accent/15;
   }
-  .link { @apply font-medium text-accent hover:text-accent-strong; }
-  .field { @apply flex flex-col gap-2 text-[15px] font-medium; }
-  .field-help { @apply text-sm font-normal text-muted; }
-  .eyebrow { @apply text-xs font-semibold tracking-[0.16em] text-muted; }
-  .badge { @apply inline-flex items-center rounded-full border border-line bg-canvas px-2.5 py-1 text-xs font-medium; }
-  .skeleton { @apply animate-pulse rounded-lg bg-track; }
+  .link {
+    @apply font-medium text-accent hover:text-accent-strong;
+  }
+  .field {
+    @apply flex flex-col gap-2 text-[15px] font-medium;
+  }
+  .field-help {
+    @apply text-sm font-normal text-muted;
+  }
+  .eyebrow {
+    @apply text-xs font-semibold tracking-[0.16em] text-muted;
+  }
+  .badge {
+    @apply inline-flex items-center rounded-full border border-line bg-canvas px-2.5 py-1 text-xs font-medium;
+  }
+  .skeleton {
+    @apply animate-pulse rounded-lg bg-track;
+  }
+  .section-heading {
+    @apply mb-7 flex flex-wrap items-end justify-between gap-5;
+  }
+  .page-stack {
+    @apply space-y-14 sm:space-y-20;
+  }
+  .path-card {
+    @apply relative block overflow-hidden rounded-2xl border border-line bg-surface p-6 transition-[transform,box-shadow,border-color] hover:-translate-y-1 hover:border-accent/30 hover:shadow-xl hover:shadow-ink/5 sm:p-7;
+  }
+  .topic-card {
+    @apply flex min-w-0 flex-col rounded-2xl border border-line bg-surface p-5 transition-colors hover:border-accent/40 sm:p-6;
+  }
+  .topic-tag {
+    @apply inline-flex items-center rounded-md border border-line bg-canvas px-2 py-1 text-[11px] font-medium text-muted;
+  }
+  .icon-tile {
+    @apply inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent;
+  }
+  .tone-violet .icon-tile {
+    background: #efedfc;
+    color: #6251b8;
+  }
+  .tone-blue .icon-tile {
+    background: #eaf0fc;
+    color: #3563b1;
+  }
+  .progress-track {
+    @apply h-1.5 overflow-hidden rounded-full bg-track;
+  }
+  .progress-track > div {
+    @apply h-full rounded-full transition-[width] duration-300;
+  }
+  .dark-grid {
+    background-color: #102c43;
+    background-image: radial-gradient(#ffffff13 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+  .workspace-nav {
+    @apply inline-flex min-h-11 items-center gap-2 rounded-lg px-3 text-sm font-medium text-muted transition-colors hover:bg-track hover:text-ink;
+  }
+  .workspace-nav[aria-current="page"] {
+    @apply bg-accent-soft text-accent-strong;
+  }
+  .filter-chip {
+    @apply inline-flex min-h-11 items-center gap-2 rounded-full border border-line bg-surface px-4 text-sm font-medium text-muted transition-colors hover:border-accent/40;
+  }
+  .filter-chip[aria-pressed="true"] {
+    @apply border-ink bg-ink text-white;
+  }
+  .outline-btn {
+    @apply btn-quiet border border-line bg-surface;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  header,
+  .reading-controls {
+    backdrop-filter: none !important;
+    background: #fff !important;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }

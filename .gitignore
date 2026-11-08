@@ -11,3 +11,5 @@ target/
 .idea/
 .vscode/
 .cache/
+content-inbox/drafts/
+content-inbox/assets/
