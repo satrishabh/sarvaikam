@@ -128,8 +128,8 @@ export default function InterviewPrepPage() {
             · Self-paced
           </p>
         </div>
-        <div className="dark-grid hidden p-7 text-white sm:p-10 lg:block">
-          <p className="text-[10px] font-semibold uppercase tracking-[.18em] text-[#a4ded2]">
+        <div className="soft-panel hidden p-7 text-ink sm:p-10 lg:block">
+          <p className="text-[10px] font-semibold uppercase tracking-[.18em] text-accent">
             A USEFUL PRACTICE LOOP
           </p>
           <ol className="mt-7 space-y-6">
@@ -151,15 +151,15 @@ export default function InterviewPrepPage() {
               ],
             ].map(([n, title, copy]) => (
               <li className="flex gap-4" key={n}>
-                <span className="font-mono text-xs text-[#9bd3c9]">{n}</span>
+                <span className="font-mono text-xs text-accent">{n}</span>
                 <div>
-                  <h2 className="text-lg font-semibold text-white">{title}</h2>
-                  <p className="mt-1 text-sm text-[#c2cfdb]">{copy}</p>
+                  <h2 className="text-lg font-semibold text-ink">{title}</h2>
+                  <p className="mt-1 text-sm text-muted">{copy}</p>
                 </div>
               </li>
             ))}
           </ol>
-          <p className="mt-8 border-t border-white/15 pt-5 text-xs leading-relaxed text-[#c2cfdb]">
+          <p className="mt-8 border-t border-line pt-5 text-xs leading-relaxed text-muted">
             Practice is a place to find your gaps. Lesson completion and
             self-review are not an interview score.
           </p>
@@ -247,21 +247,21 @@ export default function InterviewPrepPage() {
               })}
             <Link
               to="/practice"
-              className="dark-grid flex flex-col items-start justify-between rounded-2xl p-7 text-white"
+              className="soft-panel flex flex-col items-start justify-between rounded-2xl p-7 text-ink"
             >
-              <Icon name="target" className="h-8 w-8 text-[#a4ded2]" />
+              <Icon name="target" className="h-8 w-8 text-accent" />
               <div className="mt-8">
-                <h3 className="text-2xl font-semibold text-white">
+                <h3 className="text-2xl font-semibold text-ink">
                   Less scrolling.
                   <br />
                   More deliberate practice.
                 </h3>
-                <p className="mt-3 text-sm text-[#c2cfdb]">
+                <p className="mt-3 text-sm text-muted">
                   Pick a prompt, set a timer, and see how your reasoning holds
                   up.
                 </p>
               </div>
-              <span className="mt-7 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-[#a4ded2]">
+              <span className="mt-7 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-accent">
                 Enter the practice room
                 <Icon name="arrow" className="h-4 w-4" />
               </span>

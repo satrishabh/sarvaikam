@@ -12,6 +12,11 @@ const LoginPage = lazy(() => import("./pages/LoginPage"));
 const SkillsPage = lazy(() => import("./pages/SkillsPage"));
 const TopicPage = lazy(() => import("./pages/TopicPage"));
 const ProfilePage = lazy(() => import("./pages/ProfilePage"));
+const BusinessAccessPage = lazy(() =>
+  import("./pages/ProfilePage").then((module) => ({
+    default: module.BusinessAccessPage,
+  })),
+);
 const UsersPage = lazy(() => import("./pages/UsersPage"));
 const PathsPage = lazy(() => import("./pages/PathsPage"));
 const PracticePage = lazy(() => import("./pages/PracticePage"));
@@ -65,6 +70,7 @@ export default function App() {
           "/practice": "Practice room",
           "/interview-prep": "Interview prep",
           "/profile": "Your profile",
+          "/profile/business": "Business access",
           "/login": "Sign in",
           "/admin": "Content studio",
           "/admin/users": "Profile management",
@@ -258,6 +264,7 @@ export default function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/admin" element={<AdminPage />} />
             <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/profile/business" element={<BusinessAccessPage />} />
             <Route path="/admin/users" element={<UsersPage />} />
             <Route
               path="*"

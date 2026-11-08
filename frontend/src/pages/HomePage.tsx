@@ -84,42 +84,39 @@ export default function HomePage() {
           <Icon name="chevron" className="ml-auto h-4 w-4" />
         </a>
       </section>
-      <section className="dark-grid relative isolate hidden overflow-hidden rounded-[24px] p-7 text-white sm:p-12 lg:block lg:p-14">
+      <section className="soft-panel relative isolate hidden overflow-hidden rounded-[24px] p-7 text-ink sm:p-12 lg:block lg:p-14">
         <div className="grid items-center gap-12 lg:grid-cols-[1.15fr_1fr]">
           <div>
-            <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[.2em] text-[#a4d9d4]">
-              <span className="h-1.5 w-1.5 rounded-full bg-[#a4d9d4]" />A
-              WORKSPACE FOR YOUR NEXT CHAPTER
+            <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[.2em] text-accent">
+              <span className="h-1.5 w-1.5 rounded-full bg-accent" />A WORKSPACE
+              FOR YOUR NEXT CHAPTER
             </p>
-            <h1 className="mt-6 max-w-xl text-[clamp(2.6rem,5vw,4.5rem)] font-semibold leading-[1.06] tracking-tightest text-white">
+            <h1 className="mt-6 max-w-xl text-[clamp(2.6rem,5vw,4.5rem)] font-semibold leading-[1.06] tracking-tightest text-ink">
               Learn deeply.
               <br />
               Build confidently.
               <br />
-              <span className="text-[#99d7cc]">Interview clearly.</span>
+              <span className="text-accent">Interview clearly.</span>
             </h1>
-            <p className="mt-6 max-w-lg text-base leading-relaxed text-[#c2cfdb] sm:text-lg">
+            <p className="mt-6 max-w-lg text-base leading-relaxed text-muted sm:text-lg">
               A deliberate path from “I’ve read about it” to “I can explain it.”
               Build engineering skills, practise the hard questions, and see
               your next step.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Link
-                className="btn bg-[#a4ded2] text-[#102c43] hover:bg-[#c0ede4]"
-                to="/paths"
-              >
+              <Link className="btn" to="/paths">
                 Find your learning path
                 <Icon name="arrow" className="h-4 w-4" />
               </Link>
               <Link
-                className="inline-flex min-h-11 items-center gap-2 rounded-full border border-white/25 px-5 text-sm font-medium text-white hover:bg-white/10"
+                className="inline-flex min-h-11 items-center gap-2 rounded-full border border-line px-5 text-sm font-medium text-ink hover:bg-white/70"
                 to="/practice"
               >
                 Try a practice session
                 <Icon name="play" className="h-4 w-4" />
               </Link>
             </div>
-            <div className="mt-9 flex flex-wrap gap-5 border-t border-white/15 pt-5 text-xs text-[#c2cfdb]">
+            <div className="mt-9 flex flex-wrap gap-5 border-t border-line pt-5 text-xs text-muted">
               <span className="flex items-center gap-2">
                 <Icon name="book" className="h-4 w-4" />
                 {categories
@@ -137,12 +134,12 @@ export default function HomePage() {
             </div>
           </div>
           <div className="relative mx-auto w-full max-w-[420px]">
-            <div className="rounded-2xl border border-white/20 bg-[#17374f] p-5 shadow-2xl sm:p-7">
-              <div className="flex items-center justify-between border-b border-white/15 pb-5">
-                <span className="text-xs font-medium text-[#d0e1e8]">
+            <div className="rounded-2xl border border-line bg-white/90 p-5 shadow-lg shadow-ink/5 sm:p-7">
+              <div className="flex items-center justify-between border-b border-line pb-5">
+                <span className="text-xs font-medium text-muted">
                   YOUR ENGINEERING JOURNEY
                 </span>
-                <span className="rounded-full bg-white/10 px-2 py-1 text-[10px] text-[#b9d8d9]">
+                <span className="rounded-full bg-white/70 px-2 py-1 text-[10px] text-muted">
                   A suggested approach
                 </span>
               </div>
@@ -174,31 +171,31 @@ export default function HomePage() {
                     {i < 2 && (
                       <span
                         aria-hidden
-                        className="absolute left-5 top-11 h-[calc(100%-3rem)] w-px bg-white/20"
+                        className="absolute left-5 top-11 h-[calc(100%-3rem)] w-px bg-line"
                       />
                     )}
                     <span
-                      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${i === 2 ? "bg-[#a4ded2] text-[#102c43]" : "border border-white/15 bg-white/5 text-[#a4ded2]"}`}
+                      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${i === 2 ? "bg-accent text-white" : "border border-line bg-white/70 text-accent"}`}
                     >
                       <Icon name={item.icon} className="h-5 w-5" />
                     </span>
                     <div>
-                      <p className="text-[9px] font-semibold tracking-[.16em] text-[#a4becb]">
+                      <p className="text-[9px] font-semibold tracking-[.16em] text-muted">
                         {item.tag}
                       </p>
-                      <h2 className="mt-1 text-base font-semibold text-white">
+                      <h2 className="mt-1 text-base font-semibold text-ink">
                         {item.title}
                       </h2>
-                      <p className="mt-1 text-xs leading-relaxed text-[#b8cbd7]">
+                      <p className="mt-1 text-xs leading-relaxed text-muted">
                         {item.detail}
                       </p>
                     </div>
                   </li>
                 ))}
               </ol>
-              <div className="mt-7 flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-3">
-                <Icon name="spark" className="h-5 w-5 text-[#a4ded2]" />
-                <p className="text-xs text-[#d0e1e8]">
+              <div className="mt-7 flex items-center gap-3 rounded-xl border border-line bg-white/70 p-3">
+                <Icon name="spark" className="h-5 w-5 text-accent" />
+                <p className="text-xs text-muted">
                   You choose the pace. We make the next step clear.
                 </p>
               </div>
@@ -249,7 +246,7 @@ export default function HomePage() {
       </section>
 
       <section className="grid overflow-hidden rounded-2xl border border-line bg-surface lg:grid-cols-[.9fr_1.1fr]">
-        <div className="bg-[#ebf2f2] p-7 sm:p-9">
+        <div className="bg-accent-soft/50 p-7 sm:p-9">
           <p className="eyebrow">THE INTERVIEW WORKSHOP</p>
           <h2 className="mt-4 text-3xl font-semibold leading-tight tracking-tightest">
             Good answers start
@@ -439,7 +436,9 @@ export default function HomePage() {
           </p>
         </div>
         <Link
-          to={user ? "/profile" : "/login?mode=register&account=business"}
+          to={
+            user ? "/profile/business" : "/login?mode=register&account=business"
+          }
           className="outline-btn"
         >
           Explore business access

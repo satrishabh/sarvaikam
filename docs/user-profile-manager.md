@@ -6,7 +6,7 @@ Learn uses the existing [User Profile Manager](https://github.com/satrishabh/use
 
 Registration and login use Learn's own React forms at `/login`. They call Learn's same-origin NestJS API, which calls Profile Manager from the server. The browser receives an app token, never an identity service secret or refresh token. The old Keycloak JavaScript login redirect is no longer used by these screens.
 
-Normal registration needs **email verification, with no administrator approval**. A verified normal user can apply for business membership at `/profile`. The account remains a normal user while pending. An administrator reviews the organization, website, and learning goals at `/admin/users`, adds feedback, and approves or declines the application. Approval grants the Business role; there is no payment step. Declined applicants can update their details and apply again.
+Normal registration needs **email verification, with no administrator approval**. A verified normal user can apply for business membership at `/profile/business`. The account remains a normal user while pending. An administrator reviews the organization, website, and learning goals at `/admin/users`, adds feedback, and approves or declines the application. Approval grants the Business role; there is no payment step. Declined applicants can update their details and apply again.
 
 Email verification and password-reset messages are sent by Profile Manager using its existing SMTP configuration. The secure action links in these messages still lead to Profile Manager's action pages. Learn provides the request forms; fully replacing those action pages would require a custom Keycloak theme or extension in the separate repository. This change does not pretend that Keycloak exposes a public headless registration or verification endpoint.
 
@@ -172,3 +172,7 @@ cd frontend && npm run build
 Before production rollout, complete the client/secret and SQL setup above, then test: registration email delivery, verification, login, refresh after page reload, logout, password recovery, normal access, pending/declined/approved business journeys, administrator permissions, role changes on an existing session, and a real bucket upload/download from an approved browser origin.
 
 The design rationale and open-source Penpot workflow are documented in [`profile-design.md`](profile-design.md).
+
+### Sign-in destinations
+
+Ordinary sign-ins open the learning home page (`/`). The profile page (`/profile`) shows account details and an optional link to business membership. Only an explicit business entry (`/login?account=business`) opens the business application after sign-in. Pending applications keep their existing learning access.

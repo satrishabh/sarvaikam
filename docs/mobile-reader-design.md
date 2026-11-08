@@ -8,7 +8,7 @@ The AIO mobile implementation was inspected in `platform/frontend/src/App.jsx` a
 
 The compact design plan:
 
-- Palette: navy `#12325A`, teal `#0C7279`, canvas `#F6F7F9`, white `#FFFFFF`, paper `#F6F0E3`, night `#14212C`.
+- Palette: ink `#252932`, orange `#A74412`, canvas `#FCFCFD`, white `#FFFFFF`, paper `#F6F0E3`, night `#14212C`.
 - Typography: the established system sans for navigation and application UI; an optional Georgia book face for the article; monospace for code. Articles are limited to 68ch on desktop and the available safe width on mobile.
 - Structure: a compact app header, persistent task navigation, and details in a focused drawer. The article is the distinctive surface; other controls stay restrained.
 - Restraint: the tall desktop introduction is hidden on mobile; decorative path metadata and repeated section labels are reduced there. Actual lesson ordering remains visible because it carries meaning.
@@ -55,3 +55,7 @@ The browser checks use the real seed catalogue with mocked auth/content/progress
 Review images are saved locally in the ignored `.cache/` directory: `mobile-app-home.png`, `mobile-app-drawer.png`, `mobile-app-reader.png`, `mobile-reader-paper.png`, `mobile-reader-night.png`, `mobile-reader-settings.png`, and `mobile-practice-answer.png`.
 
 Deployment remains through the **sarvaikam** project in AIO. This code change does not perform a live rollout.
+
+## White and orange refresh
+
+White surfaces use a restrained peach-to-orange gradient on the home and interview introduction panels. Orange actions use dark burnt orange for readable white labels. Gold continues to mean completed lessons. Mobile navigation uses the same orange active state. Paper and Night reading modes remain available; article backgrounds do not inherit decorative gradients.
