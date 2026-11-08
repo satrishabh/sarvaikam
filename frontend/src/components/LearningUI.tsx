@@ -117,19 +117,19 @@ export function PathCard({
           className="h-5 w-5 text-muted transition-transform group-hover:translate-x-1"
         />
       </div>
-      <p className="mt-7 text-xs font-semibold uppercase tracking-widest text-muted">
+      <p className="path-card-label mt-7 text-xs font-semibold uppercase tracking-widest text-muted">
         CAREER PATH
       </p>
       <h3 className="mt-2 text-2xl font-semibold">{path.name}</h3>
       <p className="mt-2 text-sm text-muted">{path.subtitle}</p>
-      <div className="mt-6 flex flex-wrap gap-2">
+      <div className="path-card-topics mt-6 flex flex-wrap gap-2">
         {topics.slice(0, 3).map((t) => (
           <span className="topic-tag" key={t.slug}>
             {t.name}
           </span>
         ))}
       </div>
-      <p className="mt-6 border-t border-line pt-4 text-sm font-medium">
+      <p className="path-card-count mt-6 border-t border-line pt-4 text-sm font-medium">
         {topics.length} topics <span className="mx-2 text-line">/</span>{" "}
         {topics.reduce((n, t) => n + t.lessonCount, 0)} lessons
       </p>

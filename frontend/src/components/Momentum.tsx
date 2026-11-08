@@ -168,7 +168,7 @@ export default function Momentum({
         </div>
       </div>
 
-      <div className="surface flex flex-col justify-between gap-4 p-6">
+      <div className="surface order-first flex flex-col justify-between gap-4 p-6 md:order-none">
         {resume && next ? (
           <>
             <div>

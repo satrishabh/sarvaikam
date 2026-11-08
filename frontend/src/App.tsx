@@ -3,6 +3,7 @@ import { Link, NavLink, Route, Routes, useLocation } from "react-router-dom";
 import { useAuth } from "./auth";
 import { can } from "./api";
 import Icon from "./components/Icon";
+import MobileSheet from "./components/MobileSheet";
 import HomePage from "./pages/HomePage";
 const AdminPage = lazy(() => import("./pages/AdminPage"));
 const InterviewPrepPage = lazy(() => import("./pages/InterviewPrepPage"));
@@ -26,19 +27,33 @@ export default function App() {
   const [open, setOpen] = useState(false);
   const [logoutError, setLogoutError] = useState("");
   const location = useLocation();
+  const isReader = /^\/topics\/[^/]+\/[^/]+\/?$/.test(location.pathname);
+  const [keyboardOpen, setKeyboardOpen] = useState(false);
   useEffect(() => {
-    if (!open) return;
-    const close = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setOpen(false);
-        document
-          .querySelector<HTMLButtonElement>('[aria-controls="mobile-nav"]')
-          ?.focus();
-      }
+    const viewport = window.visualViewport;
+    const measure = () => {
+      const editing = document.activeElement?.matches(
+        'input, textarea, [contenteditable="true"]',
+      );
+      setKeyboardOpen(
+        !!editing && !!viewport && window.innerHeight - viewport.height > 150,
+      );
     };
-    window.addEventListener("keydown", close);
-    return () => window.removeEventListener("keydown", close);
-  }, [open]);
+    viewport?.addEventListener("resize", measure);
+    document.addEventListener("focusin", measure);
+    document.addEventListener("focusout", measure);
+    const resize = () => {
+      if (window.innerWidth >= 1024) setOpen(false);
+      measure();
+    };
+    window.addEventListener("resize", resize);
+    return () => {
+      viewport?.removeEventListener("resize", measure);
+      document.removeEventListener("focusin", measure);
+      document.removeEventListener("focusout", measure);
+      window.removeEventListener("resize", resize);
+    };
+  }, []);
   useEffect(() => {
     setOpen(false);
     const title =
@@ -110,15 +125,17 @@ export default function App() {
     </>
   );
   return (
-    <div className="flex min-h-screen flex-col">
+    <div
+      className={`app-shell flex min-h-screen flex-col ${isReader ? "is-reader" : ""}`}
+    >
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:bg-surface focus:p-3"
       >
         Skip to content
       </a>
-      <header className="sticky top-0 z-30 border-b border-line bg-surface/95 backdrop-blur-xl">
-        <div className="mx-auto flex min-h-[76px] max-w-[1240px] items-center gap-5 px-5 sm:px-8">
+      <header className="app-header sticky top-0 z-30 border-b border-line bg-surface/95 backdrop-blur-xl">
+        <div className="app-header-inner mx-auto flex min-h-[76px] max-w-[1240px] items-center gap-5 px-5 sm:px-8">
           <Link
             to="/"
             aria-label="Sarvaikam home"
@@ -140,7 +157,11 @@ export default function App() {
           </nav>
           <div className="flex items-center gap-2">
             {user ? (
-              <NavLink to="/profile" className="workspace-nav">
+              <NavLink
+                to="/profile"
+                className="workspace-nav"
+                aria-label="Your account"
+              >
                 <span className="flex h-8 w-8 items-center justify-center rounded-full bg-accent-soft text-accent">
                   {user.name.charAt(0).toUpperCase()}
                 </span>
@@ -156,32 +177,55 @@ export default function App() {
               aria-label={open ? "Close navigation" : "Open navigation"}
               aria-expanded={open}
               aria-controls="mobile-nav"
+              aria-haspopup="dialog"
               onClick={() => setOpen(!open)}
             >
               <Icon name={open ? "close" : "menu"} />
             </button>
           </div>
         </div>
-        {open && (
-          <nav
-            id="mobile-nav"
-            aria-label="Mobile navigation"
-            className="mx-auto grid max-w-[1240px] gap-1 border-t border-line px-5 py-4 lg:hidden"
-          >
-            {links}
-            {user && (
-              <button
-                className="workspace-nav"
-                onClick={() =>
-                  void logout().catch((cause) => setLogoutError(cause.message))
-                }
-              >
-                Sign out
-              </button>
-            )}
-          </nav>
-        )}
       </header>
+      <MobileSheet
+        id="mobile-nav"
+        open={open}
+        title="Your learning workspace"
+        onClose={() => setOpen(false)}
+      >
+        <p className="mb-5 text-sm text-muted">
+          {user
+            ? `Signed in as ${user.name}`
+            : "Learn at your pace. Sign in to save progress."}
+        </p>
+        <nav aria-label="Mobile navigation" className="grid gap-1">
+          {links}
+          <NavLink to="/practice" className="workspace-nav">
+            <Icon name="play" className="h-4 w-4" />
+            Practice room
+          </NavLink>
+          <NavLink to={user ? "/profile" : "/login"} className="workspace-nav">
+            <Icon name="user" className="h-4 w-4" />
+            {user ? "Your account & access" : "Sign in or register"}
+          </NavLink>
+        </nav>
+        <div className="mt-6 border-t border-line pt-5 text-sm">
+          <p className="font-semibold">Learning details</p>
+          <p className="mt-2 text-muted">
+            Your lesson completion is saved to your account. Practice drafts
+            stay in this browser.
+          </p>
+          {user && (
+            <button
+              className="outline-btn mt-5"
+              onClick={() => {
+                setOpen(false);
+                void logout().catch((cause) => setLogoutError(cause.message));
+              }}
+            >
+              Sign out
+            </button>
+          )}
+        </div>
+      </MobileSheet>
       {logoutError && (
         <p role="alert" className="mx-auto px-5 pt-4 text-danger">
           {logoutError}
@@ -189,7 +233,7 @@ export default function App() {
       )}
       <main
         id="main-content"
-        className="mx-auto w-full max-w-[1240px] flex-1 px-5 py-9 sm:px-8 sm:py-12"
+        className="app-main mx-auto w-full max-w-[1240px] flex-1 px-5 py-9 sm:px-8 sm:py-12"
       >
         <Suspense
           fallback={
@@ -232,7 +276,46 @@ export default function App() {
           </Routes>
         </Suspense>
       </main>
-      <footer className="mt-10 border-t border-line bg-surface">
+      {!isReader && (
+        <nav
+          aria-label="Mobile primary navigation"
+          className={`mobile-tabs ${keyboardOpen ? "keyboard-open" : ""}`}
+        >
+          {[
+            { to: "/", label: "Home", icon: "book" },
+            { to: "/paths", label: "Paths", icon: "layers" },
+            { to: "/interview-prep", label: "Prep", icon: "target" },
+            { to: "/skills", label: "Skills", icon: "chart" },
+          ].map((item) => (
+            <Link
+              key={item.to}
+              to={item.to}
+              aria-current={
+                (
+                  item.to === "/interview-prep"
+                    ? location.pathname === item.to ||
+                      location.pathname === "/practice"
+                    : location.pathname === item.to
+                )
+                  ? "page"
+                  : undefined
+              }
+            >
+              <Icon name={item.icon} className="h-5 w-5" />
+              <span>{item.label}</span>
+            </Link>
+          ))}
+          <button
+            onClick={() => setOpen(true)}
+            aria-label="More workspace options"
+            aria-haspopup="dialog"
+          >
+            <Icon name="menu" className="h-5 w-5" />
+            <span>More</span>
+          </button>
+        </nav>
+      )}
+      <footer className="app-footer mt-10 border-t border-line bg-surface">
         <div className="mx-auto flex max-w-[1240px] flex-wrap items-center justify-between gap-7 px-5 py-9 sm:px-8">
           <div>
             <Link to="/" className="flex items-center gap-2 font-semibold">

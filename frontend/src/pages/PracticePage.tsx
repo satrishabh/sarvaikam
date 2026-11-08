@@ -29,16 +29,14 @@ function Session({
   const [checks, setChecks] = useState<number[]>([]);
   const [reflection, setReflection] = useState("");
   const [summary, setSummary] = useState(false);
+  const [mobilePanel, setMobilePanel] = useState<"prompt" | "answer">("prompt");
   useEffect(() => {
-    const timer = setTimeout(() => {
-      try {
-        localStorage.setItem(key, notes);
-        setSaved(true);
-      } catch {
-        setSaved(false);
-      }
-    }, 350);
-    return () => clearTimeout(timer);
+    try {
+      localStorage.setItem(key, notes);
+      setSaved(true);
+    } catch {
+      setSaved(false);
+    }
   }, [key, notes]);
   useEffect(() => {
     if (deadline === null) return;
@@ -63,7 +61,27 @@ function Session({
   const clock = `${String(Math.floor(remaining / 60)).padStart(2, "0")}:${String(remaining % 60).padStart(2, "0")}`;
   return (
     <div className="grid items-start gap-6 lg:grid-cols-[1fr_1.05fr]">
-      <section className="surface p-6 sm:p-8">
+      <div
+        className="practice-switch lg:hidden"
+        role="group"
+        aria-label="Practice view"
+      >
+        <button
+          aria-pressed={mobilePanel === "prompt"}
+          onClick={() => setMobilePanel("prompt")}
+        >
+          Question & hints
+        </button>
+        <button
+          aria-pressed={mobilePanel === "answer"}
+          onClick={() => setMobilePanel("answer")}
+        >
+          Answer & review
+        </button>
+      </div>
+      <section
+        className={`practice-prompt surface p-6 sm:p-8 ${mobilePanel === "prompt" ? "" : "hidden lg:block"}`}
+      >
         <div className="flex flex-wrap items-center gap-2">
           <span className="topic-tag">{question.category}</span>
           <span className="topic-tag">{question.difficulty}</span>
@@ -125,8 +143,24 @@ function Session({
           Review the related lessons
           <Icon name="arrow" className="h-4 w-4" />
         </Link>
+        <button
+          className="btn mt-5 w-full lg:hidden"
+          onClick={() => {
+            setMobilePanel("answer");
+            requestAnimationFrame(() =>
+              document
+                .getElementById("practice-answer")
+                ?.scrollIntoView({ block: "start" }),
+            );
+          }}
+        >
+          Write your answer
+        </button>
       </section>
-      <div className="space-y-5">
+      <div
+        id="practice-answer"
+        className={`practice-answer space-y-5 ${mobilePanel === "answer" ? "" : "hidden lg:block"}`}
+      >
         <section className="surface overflow-hidden">
           <div className="flex flex-wrap items-center justify-between gap-4 border-b border-line bg-canvas p-5">
             <div>
@@ -337,21 +371,25 @@ export default function PracticePage() {
     practiceQuestions.find((q) => q.id === requested) ?? practiceQuestions[0];
   const categories = [...new Set(practiceQuestions.map((q) => q.category))];
   const [category, setCategory] = useState(question.category);
+  const [pickerOpen, setPickerOpen] = useState(false);
   useEffect(() => {
     setCategory(question.category);
   }, [question.category]);
   return (
-    <div className="space-y-8">
+    <div className="practice-page space-y-8">
       <header className="flex flex-wrap items-end justify-between gap-5">
         <div>
           <Link to="/interview-prep" className="link text-xs">
             Interview prep /
           </Link>
-          <h1 className="mt-3 text-[clamp(2rem,5vw,3.3rem)] font-semibold leading-tight tracking-tightest">
+          <h1 className="mt-3 hidden text-[clamp(2rem,5vw,3.3rem)] font-semibold leading-tight tracking-tightest lg:block">
             A little practice.
             <br />A clearer next attempt.
           </h1>
-          <p className="mt-4 max-w-2xl text-muted">
+          <h1 className="mt-2 text-3xl font-semibold tracking-tight lg:hidden">
+            Practice room
+          </h1>
+          <p className="mt-4 hidden max-w-2xl text-muted lg:block">
             Choose a question, make your thinking visible, and reflect on what
             to improve. No microphone or camera is used.
           </p>
@@ -360,44 +398,71 @@ export default function PracticePage() {
           {practiceQuestions.length} guided exercises
         </span>
       </header>
-      <section
-        aria-label="Choose a practice exercise"
-        className="surface grid gap-4 p-5 sm:grid-cols-[240px_1fr]"
-      >
-        <label className="field">
-          Practice area
-          <select
-            className="input"
-            value={category}
-            onChange={(e) => {
-              const value = e.target.value;
-              setCategory(value);
-              const next = practiceQuestions.find((q) => q.category === value)!;
-              setParams({ question: next.id });
-            }}
-          >
-            {categories.map((c) => (
-              <option key={c}>{c}</option>
-            ))}
-          </select>
-        </label>
-        <label className="field">
-          Question
-          <select
-            className="input"
-            value={question.id}
-            onChange={(e) => setParams({ question: e.target.value })}
-          >
-            {practiceQuestions
-              .filter((q) => q.category === category)
-              .map((q) => (
-                <option key={q.id} value={q.id}>
-                  {q.title}
-                </option>
+      <div>
+        <button
+          className="practice-picker-toggle lg:hidden"
+          onClick={() => setPickerOpen((value) => !value)}
+          aria-expanded={pickerOpen}
+          aria-controls="exercise-picker"
+        >
+          <span>
+            <span className="block text-xs text-muted">
+              {question.category}
+            </span>
+            <span className="mt-1 block text-sm font-semibold">
+              {question.title}
+            </span>
+          </span>
+          <span className="ml-auto flex items-center gap-1 text-xs text-accent">
+            Change
+            <Icon name="chevron" className="h-4 w-4 rotate-90" />
+          </span>
+        </button>
+        <section
+          id="exercise-picker"
+          aria-label="Choose a practice exercise"
+          className={`surface gap-4 p-5 sm:grid-cols-[240px_1fr] ${pickerOpen ? "grid mt-3 lg:mt-0" : "hidden lg:grid"}`}
+        >
+          <label className="field">
+            Practice area
+            <select
+              className="input"
+              value={category}
+              onChange={(e) => {
+                const value = e.target.value;
+                setCategory(value);
+                const next = practiceQuestions.find(
+                  (q) => q.category === value,
+                )!;
+                setParams({ question: next.id });
+              }}
+            >
+              {categories.map((c) => (
+                <option key={c}>{c}</option>
               ))}
-          </select>
-        </label>
-      </section>
+            </select>
+          </label>
+          <label className="field">
+            Question
+            <select
+              className="input"
+              value={question.id}
+              onChange={(e) => {
+                setParams({ question: e.target.value });
+                setPickerOpen(false);
+              }}
+            >
+              {practiceQuestions
+                .filter((q) => q.category === category)
+                .map((q) => (
+                  <option key={q.id} value={q.id}>
+                    {q.title}
+                  </option>
+                ))}
+            </select>
+          </label>
+        </section>
+      </div>
       <Session
         key={`${user?.id ?? "guest"}-${question.id}`}
         question={question}

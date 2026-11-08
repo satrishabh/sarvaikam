@@ -109,6 +109,8 @@ and a practice room with eight timed exercises, hints, browser-local drafts, and
 Completion records learning activity; the app does not provide automated grading or certify interview readiness.
 See [the content handoff guide](docs/content-handoff.md) for what to provide and where it is stored,
 and [the redesign notes](docs/learning-experience.md) for behavior, validation, and known limits.
+The [mobile and reader design notes](docs/mobile-reader-design.md) cover the app-style navigation,
+AIO-inspired details drawer, and saved reading preferences.
 
 Seed files live in `services/content-service/src/main/resources/seed/` and load in filename order:
 

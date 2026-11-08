@@ -1,4 +1,4 @@
-﻿import {
+import {
   Children,
   isValidElement,
   ReactNode,
@@ -13,6 +13,13 @@ import { useAuth } from "../auth";
 import LessonAssets from "../components/LessonAssets";
 import Icon from "../components/Icon";
 import { readingMinutes } from "../engagement";
+import MobileSheet from "../components/MobileSheet";
+import ReaderSettings from "../components/ReaderSettings";
+import ReadingPosition from "../components/ReadingPosition";
+import {
+  readReaderPreferences,
+  saveReaderPreferences,
+} from "../readerPreferences";
 
 function CodeBlock({ children }: { children?: ReactNode }) {
   const [status, setStatus] = useState("");
@@ -42,9 +49,17 @@ function CodeBlock({ children }: { children?: ReactNode }) {
           {status}
         </span>
       </div>
-      <pre className="!m-0 overflow-x-auto !rounded-none !bg-transparent !p-5 text-[13px] leading-relaxed text-white">
+      <pre
+        tabIndex={0}
+        role="region"
+        aria-label="Scrollable code example"
+        className="!m-0 overflow-x-auto !rounded-none !bg-transparent !p-5 text-[13px] leading-relaxed text-white"
+      >
         {children}
       </pre>
+      <p className="px-5 pb-3 text-xs !text-[#c2cfdb] lg:hidden">
+        Swipe sideways to read long lines of code.
+      </p>
       {status && <p className="px-5 pb-3 text-xs text-[#a4ded2]">{status}</p>}
     </div>
   );
@@ -60,8 +75,30 @@ export default function LessonPage() {
   const [checking, setChecking] = useState(true);
   const [error, setError] = useState("");
   const [saveError, setSaveError] = useState("");
-  const [fontSize, setFontSize] = useState(18);
+  const [preferences, setPreferences] = useState(readReaderPreferences);
+  const [preferencesSaved, setPreferencesSaved] = useState(true);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [attempt, setAttempt] = useState(0);
+  useEffect(() => {
+    setPreferencesSaved(saveReaderPreferences(preferences));
+  }, [preferences]);
+  useEffect(() => {
+    const previous = document.documentElement.getAttribute("data-reader-theme");
+    document.documentElement.setAttribute(
+      "data-reader-theme",
+      preferences.theme,
+    );
+    return () => {
+      if (previous === null)
+        document.documentElement.removeAttribute("data-reader-theme");
+      else document.documentElement.setAttribute("data-reader-theme", previous);
+    };
+  }, [preferences.theme]);
+  useEffect(() => {
+    setDetailsOpen(false);
+    setSettingsOpen(false);
+  }, [lessonSlug, topicSlug]);
   useEffect(() => {
     if (!ready) return;
     let active = true;
@@ -210,7 +247,41 @@ export default function LessonPage() {
     </nav>
   );
   return (
-    <div className="grid items-start gap-9 pb-24 lg:grid-cols-[230px_1fr] xl:gap-14">
+    <div className="reader-layout grid items-start gap-9 pb-24 lg:grid-cols-[230px_1fr] xl:gap-14">
+      <ReadingPosition lessonId={lesson.id} />
+      <MobileSheet
+        open={detailsOpen}
+        title="Lesson details"
+        onClose={() => setDetailsOpen(false)}
+      >
+        <p className="text-lg font-semibold">{lesson.topicName}</p>
+        <p className="mt-2 text-sm text-muted">
+          Lesson {lesson.stepNumber} of {lesson.totalSteps}. Choose a lesson to
+          continue.
+        </p>
+        <div
+          onClick={(event) => {
+            if ((event.target as HTMLElement).closest("a"))
+              setDetailsOpen(false);
+          }}
+        >
+          {sequence}
+          <Link to={`/topics/${topicSlug}`} className="outline-btn mt-5 w-full">
+            Topic overview
+          </Link>
+        </div>
+      </MobileSheet>
+      <MobileSheet
+        open={settingsOpen}
+        title="Reading settings"
+        onClose={() => setSettingsOpen(false)}
+      >
+        <ReaderSettings
+          value={preferences}
+          onChange={setPreferences}
+          saved={preferencesSaved}
+        />
+      </MobileSheet>
       <aside className="hidden lg:sticky lg:top-28 lg:block">
         <Link
           to={`/topics/${topicSlug}`}
@@ -220,7 +291,7 @@ export default function LessonPage() {
           Back to {lesson.topicName}
         </Link>
         <p className="mt-6 text-[10px] font-semibold uppercase tracking-widest text-muted">
-          IN THIS TOPIC
+          In this topic
         </p>
         {sequence}
         <Link
@@ -231,25 +302,23 @@ export default function LessonPage() {
           Put it into practice
         </Link>
       </aside>
-      <article className="min-w-0 max-w-[76ch]">
-        <div className="lg:hidden">
-          <details className="surface mb-6 p-4">
-            <summary className="cursor-pointer text-sm font-medium">
-              {lesson.topicName} · Lesson {lesson.stepNumber} of{" "}
-              {lesson.totalSteps}
-            </summary>
-            {sequence}
-            <Link
-              to={`/topics/${topicSlug}`}
-              className="link mt-4 inline-block text-xs"
-            >
-              View topic overview
-            </Link>
-          </details>
+      <article className="reader-article min-w-0 max-w-[68ch]">
+        <div className="reader-mobile-tools lg:hidden">
+          <button onClick={() => setDetailsOpen(true)} aria-haspopup="dialog">
+            <Icon name="book" className="h-4 w-4" />
+            Lesson details
+          </button>
+          <button
+            onClick={() => setSettingsOpen(true)}
+            aria-label="Reading settings"
+            aria-haspopup="dialog"
+          >
+            <span className="font-serif text-base">Aa</span>Reading settings
+          </button>
         </div>
         <div className="flex flex-wrap items-center gap-3 text-xs text-muted">
           <span>
-            LESSON {lesson.stepNumber} / {lesson.totalSteps}
+            Lesson {lesson.stepNumber} / {lesson.totalSteps}
           </span>
           <span className="h-1 w-1 rounded-full bg-line" />
           <span className="flex items-center gap-1.5">
@@ -268,27 +337,14 @@ export default function LessonPage() {
           >
             {lesson.topicName}
           </Link>
-          <div
-            role="group"
-            aria-label="Reading text size"
-            className="flex items-center gap-2"
+          <button
+            className="reader-desktop-settings hidden min-h-11 items-center gap-2 text-sm lg:inline-flex"
+            onClick={() => setSettingsOpen(true)}
+            aria-label="Reading settings"
+            aria-haspopup="dialog"
           >
-            <span className="mr-2 text-[11px] text-muted">Text size</span>
-            {[16, 18, 20].map((size, i) => (
-              <button
-                key={size}
-                className={`flex h-11 w-11 items-center justify-center rounded-lg text-xs ${fontSize === size ? "bg-ink text-white" : "bg-track"}`}
-                onClick={() => setFontSize(size)}
-                aria-label={`${["Small", "Medium", "Large"][i]} reading text`}
-                aria-pressed={fontSize === size}
-              >
-                A
-                <span className="ml-0.5 text-[9px]">
-                  {i === 0 ? "−" : i === 2 ? "+" : ""}
-                </span>
-              </button>
-            ))}
-          </div>
+            <span className="font-serif text-lg">Aa</span>Reading settings
+          </button>
         </div>
         {saveError && (
           <div
@@ -305,20 +361,38 @@ export default function LessonPage() {
           </div>
         )}
         <div
-          style={{ fontSize }}
-          className="prose mt-8 max-w-none leading-[1.85] prose-headings:font-semibold prose-headings:tracking-tight prose-headings:text-ink prose-p:text-ink/90 prose-a:text-accent prose-strong:text-ink prose-code:rounded prose-code:bg-track prose-code:px-1 prose-code:font-normal prose-code:text-ink prose-code:before:content-none prose-code:after:content-none prose-pre:rounded-xl prose-li:text-ink/90 prose-blockquote:border-accent prose-blockquote:font-normal prose-blockquote:text-muted prose-table:text-sm [&_pre_code]:bg-transparent [&_pre_code]:p-0 [&_pre_code]:text-white [&_img]:max-w-full [&_table]:block [&_table]:overflow-auto"
+          id="lesson-body"
+          style={{
+            fontSize: preferences.size,
+            lineHeight: preferences.spacing === "comfortable" ? 1.85 : 1.65,
+            fontFamily:
+              preferences.font === "serif"
+                ? 'Georgia, "Times New Roman", serif'
+                : "inherit",
+          }}
+          className="reader-copy prose mt-8 max-w-none leading-[1.85] prose-headings:font-semibold prose-headings:tracking-tight prose-headings:text-ink prose-p:text-ink/90 prose-a:text-accent prose-strong:text-ink prose-code:rounded prose-code:bg-track prose-code:px-1 prose-code:font-normal prose-code:text-ink prose-code:before:content-none prose-code:after:content-none prose-pre:rounded-xl prose-li:text-ink/90 prose-blockquote:border-accent prose-blockquote:font-normal prose-blockquote:text-muted prose-table:text-sm [&_pre_code]:bg-transparent [&_pre_code]:p-0 [&_pre_code]:text-white [&_img]:max-w-full"
         >
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}
             components={{
               pre: ({ children }) => <CodeBlock>{children}</CodeBlock>,
+              table: ({ children }) => (
+                <div
+                  role="region"
+                  aria-label="Scrollable lesson table"
+                  tabIndex={0}
+                  className="my-6 max-w-full overflow-x-auto"
+                >
+                  <table>{children}</table>
+                </div>
+              ),
             }}
           >
             {lesson.contentMd}
           </ReactMarkdown>
         </div>
-        <section className="mt-10 rounded-2xl border border-accent/15 bg-accent-soft p-6">
-          <p className="eyebrow">BEFORE YOU MOVE ON</p>
+        <section className="reader-reflection mt-10 rounded-2xl border border-accent/15 bg-accent-soft p-6">
+          <p className="text-sm font-medium">Before you move on</p>
           <h2 className="mt-3 text-xl font-semibold">
             Explain one idea without your notes.
           </h2>
@@ -345,7 +419,7 @@ export default function LessonPage() {
                 to={`/topics/${topicSlug}/${lesson.previous.slug}`}
               >
                 <Icon name="chevron" className="h-4 w-4 rotate-180" />
-                <span className="hidden sm:inline">Previous</span>
+                <span>Previous</span>
               </Link>
             ) : (
               <Link

@@ -57,7 +57,34 @@ export default function HomePage() {
   );
   return (
     <div className="page-stack">
-      <section className="dark-grid relative isolate overflow-hidden rounded-[24px] p-7 text-white sm:p-12 lg:p-14">
+      <section className="mobile-start lg:hidden">
+        <p className="text-sm text-muted">
+          {user
+            ? `Welcome back, ${user.name.split(" ")[0]}.`
+            : "Your engineering notebook"}
+        </p>
+        <h1 className="mt-2 text-[clamp(1.9rem,7.5vw,2.6rem)] font-semibold leading-tight tracking-tightest">
+          What will you learn next?
+        </h1>
+        <p className="mt-3 text-base text-muted">
+          Build a skill, work through a lesson, or practise an interview
+          question.
+        </p>
+        <div className="mt-5 grid grid-cols-2 gap-3">
+          <Link to="/paths" className="btn px-3">
+            Find a path
+          </Link>
+          <Link to="/practice" className="outline-btn px-3">
+            Practice
+          </Link>
+        </div>
+        <a href="#topics" className="mobile-search mt-5">
+          <Icon name="search" />
+          <span>Find a topic in the library</span>
+          <Icon name="chevron" className="ml-auto h-4 w-4" />
+        </a>
+      </section>
+      <section className="dark-grid relative isolate hidden overflow-hidden rounded-[24px] p-7 text-white sm:p-12 lg:block lg:p-14">
         <div className="grid items-center gap-12 lg:grid-cols-[1.15fr_1fr]">
           <div>
             <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[.2em] text-[#a4d9d4]">

@@ -94,3 +94,60 @@ test("practice question links, timer suggestions, hints, and review data are com
     );
   }
 });
+
+const {
+  readReaderPreferences,
+  saveReaderPreferences,
+  defaultReaderPreferences,
+} = require("../../.cache/learning-tests/readerPreferences.js");
+function withStorage(t, implementation) {
+  const previous = Object.getOwnPropertyDescriptor(globalThis, "localStorage");
+  Object.defineProperty(globalThis, "localStorage", {
+    configurable: true,
+    value: implementation,
+  });
+  t.after(() => {
+    if (previous) Object.defineProperty(globalThis, "localStorage", previous);
+    else delete globalThis.localStorage;
+  });
+}
+test("reader settings safely recover from malformed or unsupported saved values", (t) => {
+  withStorage(t, { getItem: () => "{broken" });
+  assert.deepEqual(readReaderPreferences(), defaultReaderPreferences);
+  globalThis.localStorage.getItem = () =>
+    JSON.stringify({
+      size: 200,
+      font: "unknown",
+      theme: "unknown",
+      spacing: "unknown",
+    });
+  assert.deepEqual(readReaderPreferences(), defaultReaderPreferences);
+});
+test("reader settings round-trip without changing lesson or account data", (t) => {
+  const stored = new Map();
+  withStorage(t, {
+    getItem: (key) => stored.get(key),
+    setItem: (key, value) => stored.set(key, value),
+  });
+  const settings = {
+    size: 22,
+    font: "serif",
+    theme: "night",
+    spacing: "compact",
+  };
+  assert.equal(saveReaderPreferences(settings), true);
+  assert.deepEqual(readReaderPreferences(), settings);
+  assert.deepEqual([...stored.keys()], ["sarvaikam.reader.v1"]);
+});
+test("blocked browser storage does not break the reader", (t) => {
+  withStorage(t, {
+    getItem: () => {
+      throw new Error("Blocked");
+    },
+    setItem: () => {
+      throw new Error("Blocked");
+    },
+  });
+  assert.deepEqual(readReaderPreferences(), defaultReaderPreferences);
+  assert.equal(saveReaderPreferences(defaultReaderPreferences), false);
+});

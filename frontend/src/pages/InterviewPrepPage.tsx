@@ -99,7 +99,7 @@ export default function InterviewPrepPage() {
   const selected = warmup[day];
   return (
     <div className="page-stack">
-      <section className="grid overflow-hidden rounded-[24px] border border-line bg-surface lg:grid-cols-[1.1fr_.9fr]">
+      <section className="interview-intro grid overflow-hidden rounded-[24px] border border-line bg-surface lg:grid-cols-[1.1fr_.9fr]">
         <div className="p-7 sm:p-12">
           <p className="eyebrow">THE INTERVIEW WORKSHOP</p>
           <h1 className="mt-5 text-[clamp(2.4rem,5vw,3.8rem)] font-semibold leading-[1.08] tracking-tightest">
@@ -128,7 +128,7 @@ export default function InterviewPrepPage() {
             · Self-paced
           </p>
         </div>
-        <div className="dark-grid p-7 text-white sm:p-10">
+        <div className="dark-grid hidden p-7 text-white sm:p-10 lg:block">
           <p className="text-[10px] font-semibold uppercase tracking-[.18em] text-[#a4ded2]">
             A USEFUL PRACTICE LOOP
           </p>
