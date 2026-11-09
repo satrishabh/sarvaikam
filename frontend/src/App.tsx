@@ -5,6 +5,7 @@ import { can } from "./api";
 import Icon from "./components/Icon";
 import MobileSheet from "./components/MobileSheet";
 import HomePage from "./pages/HomePage";
+import LegalPage from "./pages/LegalPage";
 const AdminPage = lazy(() => import("./pages/AdminPage"));
 const InterviewPrepPage = lazy(() => import("./pages/InterviewPrepPage"));
 const LessonPage = lazy(() => import("./pages/LessonPage"));
@@ -69,6 +70,9 @@ export default function App() {
           "/skills": "Skill map",
           "/practice": "Practice room",
           "/interview-prep": "Interview prep",
+          "/privacy": "Privacy",
+          "/terms": "Terms",
+          "/contact": "Contact",
           "/profile": "Your profile",
           "/profile/business": "Business access",
           "/login": "Sign in",
@@ -266,6 +270,9 @@ export default function App() {
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/profile/business" element={<BusinessAccessPage />} />
             <Route path="/admin/users" element={<UsersPage />} />
+            <Route path="/privacy" element={<LegalPage kind="privacy" />} />
+            <Route path="/terms" element={<LegalPage kind="terms" />} />
+            <Route path="/contact" element={<LegalPage kind="contact" />} />
             <Route
               path="*"
               element={
@@ -345,6 +352,15 @@ export default function App() {
             </Link>
             <Link className="hover:text-accent" to="/practice">
               Practice room
+            </Link>
+            <Link className="hover:text-accent" to="/privacy">
+              Privacy
+            </Link>
+            <Link className="hover:text-accent" to="/terms">
+              Terms
+            </Link>
+            <Link className="hover:text-accent" to="/contact">
+              Contact
             </Link>
             {user ? (
               <button
