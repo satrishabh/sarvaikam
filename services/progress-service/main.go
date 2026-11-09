@@ -57,9 +57,14 @@ func main() {
 		log.Fatalf("migrate: %v", err)
 	}
 
+	jwtSecret := env("JWT_SECRET", "")
+	if len(jwtSecret) < 32 {
+		log.Fatal("JWT_SECRET must be set to at least 32 characters")
+	}
+
 	s := &server{
 		db:        db,
-		secret:    []byte(env("JWT_SECRET", "change-me-to-a-long-random-secret-of-32-bytes-min")),
+		secret:    []byte(jwtSecret),
 		readyURLs: splitList(os.Getenv("READY_URLS")),
 		client:    &http.Client{Timeout: 2 * time.Second},
 	}

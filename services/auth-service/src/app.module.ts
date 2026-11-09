@@ -28,11 +28,15 @@ import { SessionController } from './session.controller';
       extra: { max: Number(process.env.DB_POOL_SIZE ?? 5) },
     }),
     TypeOrmModule.forFeature([User, RolePolicy, AccessAudit]),
-    JwtModule.register({
+    JwtModule.registerAsync({
       global: true,
-      secret: process.env.JWT_SECRET ?? 'change-me-to-a-long-random-secret-of-32-bytes-min',
-      // Shorter sessions outside dev.
-      signOptions: { expiresIn: '5m', algorithm: 'HS256' },
+      // Fail at startup rather than sign tokens with a known fallback secret.
+      useFactory: () => {
+        const secret = process.env.JWT_SECRET;
+        if (!secret || secret.length < 32) throw new Error('JWT_SECRET must be set to at least 32 characters');
+        // Shorter sessions outside dev.
+        return { secret, signOptions: { expiresIn: '5m', algorithm: 'HS256' } };
+      },
     }),
   ],
   controllers: [AuthController, SessionController],

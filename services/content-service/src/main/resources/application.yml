@@ -35,7 +35,8 @@ spring:
     timeout-per-shutdown-phase: 20s
 
 app:
-  jwt-secret: ${JWT_SECRET:change-me-to-a-long-random-secret-of-32-bytes-min}
+  # No default: the service must not start with a known secret. Set JWT_SECRET (32+ chars).
+  jwt-secret: ${JWT_SECRET}
   seed-pattern: ${SEED_PATTERN:classpath*:seed/*.json}
 
 logging:
