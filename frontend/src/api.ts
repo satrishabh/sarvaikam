@@ -1,3 +1,5 @@
+import type { ReaderPreferences } from './readerPreferences';
+
 export interface TopicSummary {
   id: number;
   slug: string;
@@ -56,6 +58,7 @@ export interface User {
   reviewedAt: string | null;
   disabled: boolean;
   createdAt: string;
+  readerPreferences: ReaderPreferences | null;
 }
 export type Role = 'ADMIN' | 'BUSINESS' | 'USER';
 export type Permission = 'content.exclusive' | 'content.manage' | 'assets.download' | 'candidates.view';
@@ -63,6 +66,7 @@ export interface RolePolicy { role: Role; permissions: Permission[] }
 export interface AuditEntry { id: string; actor: string; action: string; target: string; details: Record<string, unknown>; createdAt: string }
 export interface Asset { id: string; filename: string; contentType: string; size: number }
 export interface Session { token: string; user: User }
+export interface BookmarkItem { lessonId: number; topicSlug: string; createdAt: string }
 export const can = (user: User | null, permission: Permission) => user?.permissions.includes(permission) ?? false;
 export interface ProgressItem {
   lessonId: number;
@@ -146,6 +150,16 @@ export const api = {
     }),
   uncomplete: (lessonId: number) =>
     request<void>(`/api/progress/lessons/${lessonId}/complete`, { method: 'DELETE' }),
+  updateReaderPreferences: (prefs: ReaderPreferences) =>
+    request<User>('/api/auth/me/reader-preferences', { method: 'PUT', body: JSON.stringify(prefs) }),
+  bookmarks: () => request<BookmarkItem[]>('/api/progress/me/bookmarks'),
+  bookmark: (lessonId: number, topicSlug: string) =>
+    request<void>(`/api/progress/lessons/${lessonId}/bookmark`, {
+      method: 'PUT',
+      body: JSON.stringify({ topicSlug }),
+    }),
+  unbookmark: (lessonId: number) =>
+    request<void>(`/api/progress/lessons/${lessonId}/bookmark`, { method: 'DELETE' }),
 
   upsertLesson: (l: { topicSlug: string; slug: string; title: string; stepNumber: number; contentMd: string; exclusive: boolean; stage?: LearningStage }) =>
     request<LessonSummary>('/api/content/admin/lessons', { method: 'PUT', body: JSON.stringify(l) }),

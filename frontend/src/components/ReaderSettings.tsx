@@ -7,10 +7,14 @@ export default function ReaderSettings({
   value,
   onChange,
   saved,
+  signedIn,
+  syncFailed,
 }: {
   value: ReaderPreferences;
   onChange: (value: ReaderPreferences) => void;
   saved: boolean;
+  signedIn: boolean;
+  syncFailed: boolean;
 }) {
   return (
     <div className="reader-settings space-y-7">
@@ -86,9 +90,13 @@ export default function ReaderSettings({
         </div>
       </fieldset>
       <p role="status" className="text-sm text-muted">
-        {saved
-          ? "Preferences are saved on this device. Your lesson progress stays separate."
-          : "Preferences apply for this visit. This browser could not save them."}
+        {!saved
+          ? "Preferences apply for this visit. This browser could not save them."
+          : !signedIn
+            ? "Saved on this device. Sign in to use the same settings on every device."
+            : syncFailed
+              ? "Saved on this device, but your account could not be updated. Change a setting to try again."
+              : "Saved to your account, so they follow you to every device."}
       </p>
       <button
         className="outline-btn w-full"

@@ -11,15 +11,21 @@ export const defaultReaderPreferences: ReaderPreferences = {
   theme: "day",
   spacing: "comfortable",
 };
+// Returns settings only when every field is a known value, so stored or account data can never break the reader.
+export function normalizeReaderPreferences(raw: unknown): ReaderPreferences | null {
+  if (!raw || typeof raw !== "object") return null;
+  const value = raw as Partial<Record<keyof ReaderPreferences, unknown>>;
+  const valid =
+    [16, 18, 20, 22].includes(value.size as number) &&
+    ["sans", "serif"].includes(value.font as string) &&
+    ["day", "paper", "night"].includes(value.theme as string) &&
+    ["comfortable", "compact"].includes(value.spacing as string);
+  return valid ? (value as ReaderPreferences) : null;
+}
 export function readReaderPreferences(): ReaderPreferences {
   try {
     const raw = JSON.parse(localStorage.getItem(KEY) ?? "{}");
-    return {
-      size: [16, 18, 20, 22].includes(raw.size) ? raw.size : 18,
-      font: raw.font === "serif" ? "serif" : "sans",
-      theme: ["day", "paper", "night"].includes(raw.theme) ? raw.theme : "day",
-      spacing: raw.spacing === "compact" ? "compact" : "comfortable",
-    };
+    return normalizeReaderPreferences(raw) ?? { ...defaultReaderPreferences };
   } catch {
     return { ...defaultReaderPreferences };
   }

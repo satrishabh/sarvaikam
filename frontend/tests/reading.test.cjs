@@ -86,3 +86,13 @@ test("resume is optional when browser storage is unavailable or corrupt", () => 
   fakeStorage({ getItem: () => "{not json", setItem() {} });
   assert.equal(readResumePoint(1), null);
 });
+
+test("reader settings from storage or the account are used only when every value is known", () => {
+  const { normalizeReaderPreferences } = require("../../.cache/learning-tests/readerPreferences.js");
+  const valid = { size: 20, font: "serif", theme: "night", spacing: "compact" };
+  assert.deepEqual(normalizeReaderPreferences(valid), valid);
+  assert.equal(normalizeReaderPreferences(null), null);
+  assert.equal(normalizeReaderPreferences({}), null);
+  assert.equal(normalizeReaderPreferences({ ...valid, size: "20" }), null);
+  assert.equal(normalizeReaderPreferences({ ...valid, theme: "sepia" }), null);
+});

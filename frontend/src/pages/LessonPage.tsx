@@ -21,6 +21,7 @@ import ReadingPosition from "../components/ReadingPosition";
 import {
   readReaderPreferences,
   saveReaderPreferences,
+  type ReaderPreferences,
 } from "../readerPreferences";
 import {
   outlineFromMarkdown,
@@ -87,6 +88,9 @@ export default function LessonPage() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const [resumeId, setResumeId] = useState("");
+  const [bookmarked, setBookmarked] = useState(false);
+  const [bookmarkError, setBookmarkError] = useState("");
+  const [preferencesSyncFailed, setPreferencesSyncFailed] = useState(false);
   useEffect(() => {
     setPreferencesSaved(saveReaderPreferences(preferences));
   }, [preferences]);
@@ -179,6 +183,57 @@ export default function LessonPage() {
       active = false;
     };
   }, [user?.id, lesson?.id, topicSlug, attempt]);
+  useEffect(() => {
+    let active = true;
+    setBookmarkError("");
+    if (!user || !lesson) {
+      setBookmarked(false);
+      return;
+    }
+    api
+      .bookmarks()
+      .then((items) => {
+        if (active) setBookmarked(items.some((item) => item.lessonId === lesson.id));
+      })
+      .catch(() => {
+        if (active) setBookmarked(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [user?.id, lesson?.id]);
+  useEffect(() => {
+    setPreferencesSyncFailed(false);
+    if (!user) return;
+    if (user.readerPreferences) {
+      // The account's saved settings win on sign-in, so they follow the reader across devices.
+      setPreferences(user.readerPreferences);
+      return;
+    }
+    // First time this account has settings: keep this device's settings as the account's settings.
+    api
+      .updateReaderPreferences(readReaderPreferences())
+      .catch(() => setPreferencesSyncFailed(true));
+  }, [user?.id]);
+  const changePreferences = (next: ReaderPreferences) => {
+    setPreferences(next);
+    setPreferencesSyncFailed(false);
+    if (!user) return;
+    api
+      .updateReaderPreferences(next)
+      .catch(() => setPreferencesSyncFailed(true));
+  };
+  const toggleBookmark = async () => {
+    if (!lesson) return;
+    setBookmarkError("");
+    try {
+      if (bookmarked) await api.unbookmark(lesson.id);
+      else await api.bookmark(lesson.id, topicSlug);
+      setBookmarked(!bookmarked);
+    } catch (cause) {
+      setBookmarkError((cause as Error).message);
+    }
+  };
   const toggle = async () => {
     if (!lesson) return;
     setSaving(true);
@@ -294,8 +349,10 @@ export default function LessonPage() {
       >
         <ReaderSettings
           value={preferences}
-          onChange={setPreferences}
+          onChange={changePreferences}
           saved={preferencesSaved}
+          signedIn={!!user}
+          syncFailed={preferencesSyncFailed}
         />
       </MobileSheet>
       <aside className="hidden lg:sticky lg:top-28 lg:block">
@@ -355,6 +412,16 @@ export default function LessonPage() {
           >
             {lesson.topicName}
           </Link>
+          {user && (
+            <button
+              onClick={() => void toggleBookmark()}
+              aria-pressed={bookmarked}
+              className="inline-flex min-h-11 items-center gap-2 text-sm text-accent"
+            >
+              <Icon name="check" className={bookmarked ? "h-4 w-4" : "hidden"} />
+              {bookmarked ? "Saved for later" : "Save for later"}
+            </button>
+          )}
           <button
             className="reader-desktop-settings hidden min-h-11 items-center gap-2 text-sm lg:inline-flex"
             onClick={() => setSettingsOpen(true)}
@@ -364,6 +431,11 @@ export default function LessonPage() {
             <span className="font-serif text-lg">Aa</span>Reading settings
           </button>
         </div>
+        {bookmarkError && (
+          <p role="alert" className="mt-4 text-sm text-accent-strong">
+            Could not update saved lessons: {bookmarkError}
+          </p>
+        )}
         {resumeItem && resumeItem.id !== outline[0]?.id && (
           <a
             href={`#${resumeItem.id}`}

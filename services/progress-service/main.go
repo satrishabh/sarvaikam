@@ -28,7 +28,15 @@ CREATE TABLE IF NOT EXISTS lesson_progress (
     completed_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     PRIMARY KEY (user_id, lesson_id)
 );
-CREATE INDEX IF NOT EXISTS idx_progress_user_topic ON lesson_progress(user_id, topic_slug);`
+CREATE INDEX IF NOT EXISTS idx_progress_user_topic ON lesson_progress(user_id, topic_slug);
+CREATE TABLE IF NOT EXISTS lesson_bookmarks (
+    user_id    UUID        NOT NULL,
+    lesson_id  BIGINT      NOT NULL,
+    topic_slug VARCHAR(100) NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    PRIMARY KEY (user_id, lesson_id)
+);
+CREATE INDEX IF NOT EXISTS idx_bookmarks_user_created ON lesson_bookmarks(user_id, created_at DESC);`
 
 type ctxKey struct{}
 type permissionsKey struct{}
@@ -44,6 +52,12 @@ type progressItem struct {
 	LessonID    int64     `json:"lessonId"`
 	TopicSlug   string    `json:"topicSlug"`
 	CompletedAt time.Time `json:"completedAt"`
+}
+
+type bookmarkItem struct {
+	LessonID  int64     `json:"lessonId"`
+	TopicSlug string    `json:"topicSlug"`
+	CreatedAt time.Time `json:"createdAt"`
 }
 
 func main() {
@@ -76,6 +90,9 @@ func main() {
 			r.Get("/me/topics/{topicSlug}", s.topicProgress)
 			r.Post("/lessons/{lessonId}/complete", s.complete)
 			r.Delete("/lessons/{lessonId}/complete", s.uncomplete)
+			r.Get("/me/bookmarks", s.listBookmarks)
+			r.Put("/lessons/{lessonId}/bookmark", s.bookmark)
+			r.Delete("/lessons/{lessonId}/bookmark", s.unbookmark)
 		})
 	})
 
@@ -225,37 +242,13 @@ func (s *server) complete(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, 400, err.Error())
 		return
 	}
-	var body struct {
-		TopicSlug string `json:"topicSlug"`
-	}
-	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 4096)).Decode(&body); err != nil || len(body.TopicSlug) > 100 || !regexp.MustCompile(`^[a-z0-9]+(-[a-z0-9]+)*$`).MatchString(body.TopicSlug) {
-		writeErr(w, 400, "topicSlug is required")
-		return
-	}
-	checkURL := env("CONTENT_SERVICE_URL", "http://localhost:8081") + "/api/content/lessons/" + strconv.FormatInt(id, 10) + "/access?topicSlug=" + url.QueryEscape(body.TopicSlug)
-	check, err := http.NewRequestWithContext(r.Context(), http.MethodGet, checkURL, nil)
-	if err != nil {
-		writeErr(w, 503, "lesson validation unavailable")
-		return
-	}
-	check.Header.Set("Authorization", r.Header.Get("Authorization"))
-	result, err := s.client.Do(check)
-	if err != nil {
-		writeErr(w, 503, "lesson validation unavailable")
-		return
-	}
-	result.Body.Close()
-	if result.StatusCode != http.StatusOK {
-		status := result.StatusCode
-		if status != 400 && status != 401 && status != 403 && status != 404 {
-			status = 503
-		}
-		writeErr(w, status, "Check that the lesson belongs to this topic and your role has access")
+	topicSlug, ok := s.checkLessonAccess(w, r, id)
+	if !ok {
 		return
 	}
 	_, err = s.db.Exec(r.Context(),
 		`INSERT INTO lesson_progress (user_id, lesson_id, topic_slug) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING`,
-		userID(r), id, body.TopicSlug)
+		userID(r), id, topicSlug)
 	if err != nil {
 		writeErr(w, 500, "insert failed")
 		return
@@ -271,6 +264,98 @@ func (s *server) uncomplete(w http.ResponseWriter, r *http.Request) {
 	}
 	if _, err := s.db.Exec(r.Context(),
 		`DELETE FROM lesson_progress WHERE user_id = $1 AND lesson_id = $2`, userID(r), id); err != nil {
+		writeErr(w, 500, "delete failed")
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
+// checkLessonAccess reads topicSlug from the JSON body and asks content-service whether the caller
+// may use that lesson in that topic. It writes the error response itself and reports ok=false on failure.
+func (s *server) checkLessonAccess(w http.ResponseWriter, r *http.Request, id int64) (string, bool) {
+	var body struct {
+		TopicSlug string `json:"topicSlug"`
+	}
+	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 4096)).Decode(&body); err != nil || len(body.TopicSlug) > 100 || !regexp.MustCompile(`^[a-z0-9]+(-[a-z0-9]+)*$`).MatchString(body.TopicSlug) {
+		writeErr(w, 400, "topicSlug is required")
+		return "", false
+	}
+	checkURL := env("CONTENT_SERVICE_URL", "http://localhost:8081") + "/api/content/lessons/" + strconv.FormatInt(id, 10) + "/access?topicSlug=" + url.QueryEscape(body.TopicSlug)
+	check, err := http.NewRequestWithContext(r.Context(), http.MethodGet, checkURL, nil)
+	if err != nil {
+		writeErr(w, 503, "lesson validation unavailable")
+		return "", false
+	}
+	check.Header.Set("Authorization", r.Header.Get("Authorization"))
+	result, err := s.client.Do(check)
+	if err != nil {
+		writeErr(w, 503, "lesson validation unavailable")
+		return "", false
+	}
+	result.Body.Close()
+	if result.StatusCode != http.StatusOK {
+		status := result.StatusCode
+		if status != 400 && status != 401 && status != 403 && status != 404 {
+			status = 503
+		}
+		writeErr(w, status, "Check that the lesson belongs to this topic and your role has access")
+		return "", false
+	}
+	return body.TopicSlug, true
+}
+
+func (s *server) listBookmarks(w http.ResponseWriter, r *http.Request) {
+	rows, err := s.db.Query(r.Context(),
+		`SELECT lesson_id, topic_slug, created_at FROM lesson_bookmarks WHERE user_id = $1 ORDER BY created_at DESC`,
+		userID(r))
+	if err != nil {
+		writeErr(w, 500, "query failed")
+		return
+	}
+	defer rows.Close()
+	items := []bookmarkItem{}
+	for rows.Next() {
+		var b bookmarkItem
+		if err := rows.Scan(&b.LessonID, &b.TopicSlug, &b.CreatedAt); err != nil {
+			writeErr(w, 500, "scan failed")
+			return
+		}
+		items = append(items, b)
+	}
+	if rows.Err() != nil {
+		writeErr(w, 500, "query failed")
+		return
+	}
+	writeJSON(w, 200, items)
+}
+
+func (s *server) bookmark(w http.ResponseWriter, r *http.Request) {
+	id, err := lessonID(r)
+	if err != nil {
+		writeErr(w, 400, err.Error())
+		return
+	}
+	topicSlug, ok := s.checkLessonAccess(w, r, id)
+	if !ok {
+		return
+	}
+	if _, err := s.db.Exec(r.Context(),
+		`INSERT INTO lesson_bookmarks (user_id, lesson_id, topic_slug) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING`,
+		userID(r), id, topicSlug); err != nil {
+		writeErr(w, 500, "insert failed")
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func (s *server) unbookmark(w http.ResponseWriter, r *http.Request) {
+	id, err := lessonID(r)
+	if err != nil {
+		writeErr(w, 400, err.Error())
+		return
+	}
+	if _, err := s.db.Exec(r.Context(),
+		`DELETE FROM lesson_bookmarks WHERE user_id = $1 AND lesson_id = $2`, userID(r), id); err != nil {
 		writeErr(w, 500, "delete failed")
 		return
 	}

@@ -2,6 +2,13 @@ import { Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn } from 
 
 export type Role = 'USER' | 'BUSINESS' | 'ADMIN';
 
+export interface ReaderPreferences {
+  size: 16 | 18 | 20 | 22;
+  font: 'sans' | 'serif';
+  theme: 'day' | 'paper' | 'night';
+  spacing: 'comfortable' | 'compact';
+}
+
 @Entity('users')
 @Index('users_oidc_sub_unique', ['oidcSub'], { unique: true, where: 'oidc_sub IS NOT NULL' })
 export class User {
@@ -46,6 +53,9 @@ export class User {
 
   @Column({ default: false })
   disabled: boolean;
+
+  @Column({ name: 'reader_preferences', type: 'jsonb', default: () => "'{}'" })
+  readerPreferences: Partial<ReaderPreferences>;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt: Date;

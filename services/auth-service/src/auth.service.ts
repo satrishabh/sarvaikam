@@ -9,7 +9,7 @@ import { EntityManager, Repository } from 'typeorm';
 import { isEmail } from 'class-validator';
 import { AccessAudit, DEFAULT_PERMISSIONS, PERMISSIONS, Permission, RolePolicy } from './access.entity';
 import { BusinessApplicationDto, ReviewDto, UserAccessDto } from './profile.dto';
-import { User } from './user.entity';
+import { ReaderPreferences, User } from './user.entity';
 
 export interface PublicUser {
   id: string;
@@ -25,6 +25,15 @@ export interface PublicUser {
   reviewedAt: Date | null;
   disabled: boolean;
   createdAt: Date;
+  readerPreferences: ReaderPreferences | null;
+}
+
+// Stored JSON is only trusted when every setting is a known value; anything else reads as "not set".
+function storedPreferences(value: Partial<ReaderPreferences> | null | undefined): ReaderPreferences | null {
+  if (!value || typeof value !== 'object') return null;
+  const valid = [16, 18, 20, 22].includes(value.size as number) && ['sans', 'serif'].includes(value.font as string)
+    && ['day', 'paper', 'night'].includes(value.theme as string) && ['comfortable', 'compact'].includes(value.spacing as string);
+  return valid ? { size: value.size!, font: value.font!, theme: value.theme!, spacing: value.spacing! } : null;
 }
 
 type ProfileTokenClaims = jwt.JwtPayload & {
@@ -142,7 +151,15 @@ export class AuthService {
     return { id: u.id, email: u.email, name: u.name, role: u.role, permissions,
       businessStatus: u.businessStatus, organization: u.organization, businessWebsite: u.businessWebsite,
       businessReason: u.businessReason, reviewNote: u.reviewNote, reviewedAt: u.reviewedAt,
-      disabled: u.disabled, createdAt: u.createdAt };
+      disabled: u.disabled, createdAt: u.createdAt, readerPreferences: storedPreferences(u.readerPreferences) };
+  }
+
+  async updateReaderPreferences(id: string, prefs: ReaderPreferences): Promise<PublicUser> {
+    const user = await this.users.findOneBy({ id });
+    if (!user || user.disabled) throw new UnauthorizedException('This account is unavailable');
+    user.readerPreferences = { size: prefs.size, font: prefs.font, theme: prefs.theme, spacing: prefs.spacing };
+    await this.users.save(user);
+    return this.toPublic(user);
   }
 
   private profileName(claims: ProfileTokenClaims, fallback: string) {
