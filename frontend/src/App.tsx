@@ -144,7 +144,7 @@ export default function App() {
       >
         Skip to content
       </a>
-      <header className="app-header sticky top-0 z-30 border-b border-line bg-surface/95 backdrop-blur-xl">
+      <header className="app-header sticky top-0 z-30 bg-surface/85 saturate-150 backdrop-blur-xl">
         <div className="app-header-inner mx-auto flex min-h-[76px] max-w-[1240px] items-center gap-5 px-5 sm:px-8">
           <Link
             to="/"
