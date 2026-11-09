@@ -4,7 +4,7 @@ import { api, can, Topic } from "../api";
 import { useAuth } from "../auth";
 import Icon from "../components/Icon";
 import { LoadState, ProgressBar } from "../components/LearningUI";
-import { levelName } from "../learning";
+import { groupedLessons, orderedLessons, lessonStage } from "../learning";
 
 export default function TopicPage() {
   const { topicSlug = "" } = useParams();
@@ -54,7 +54,11 @@ export default function TopicPage() {
     return <LoadState error={error} retry={() => setAttempt((n) => n + 1)} />;
   if (!topic) return <LoadState />;
   const completed = topic.lessons.filter((l) => done.has(l.id)).length;
-  const next = topic.lessons.find((l) => !done.has(l.id));
+  const sequence = orderedLessons(topic.lessons);
+  const groups = groupedLessons(topic.lessons);
+  const next = sequence.find((l) => !done.has(l.id));
+  const core = sequence.filter((l) => lessonStage(l) !== "DEEP_DIVE");
+  const coreComplete = core.length > 0 && core.every((l) => done.has(l.id));
   const mayReadExclusive =
     can(user, "content.exclusive") || can(user, "content.manage");
   const nextLocked = next?.exclusive && !mayReadExclusive;
@@ -74,7 +78,7 @@ export default function TopicPage() {
           </Link>
         </nav>
         <div className="mt-6 flex flex-wrap gap-2">
-          <span className="topic-tag">{levelName(topic.level)}</span>
+          <span className="topic-tag">Starter → Intermediate → Advanced</span>
           <span className="topic-tag">
             {topic.lessons.length} guided lessons
           </span>
@@ -87,14 +91,22 @@ export default function TopicPage() {
       <div className="grid items-start gap-7 lg:grid-cols-[1fr_300px]">
         <section className="surface overflow-hidden">
           <div className="border-b border-line p-6">
-            <h2 className="text-xl font-semibold">Your lesson sequence</h2>
+            <h2 className="text-xl font-semibold">Choose your learning level</h2>
             <p className="mt-1 text-sm text-muted">
-              Work through the ideas in order, or return to a lesson you need.
+              Start with the foundations, build practical skills, then explore advanced work. Deep Dive is optional.
             </p>
           </div>
           {topic.lessons.length ? (
-            <ol className="divide-y divide-line">
-              {topic.lessons.map((lesson, i) => {
+            <div className="divide-y divide-line">
+            {groups.map((stage, stageIndex) => (
+              <details key={stage.key} open className="group/level">
+                <summary className="cursor-pointer p-5 sm:p-6">
+                  <span className="text-lg font-semibold">{stageIndex + 1}. {stage.name}{stage.key === "DEEP_DIVE" ? " · Optional" : ""}</span>
+                  <span className="ml-3 text-xs text-muted">{stage.lessons.length} lessons{user ? ` · ${stage.lessons.filter(lesson => done.has(lesson.id)).length} completed` : ""}</span>
+                </summary>
+                <div className="px-5 pb-4 text-sm text-muted sm:px-6"><p>{stage.description}</p><p className="mt-2">{stage.readiness}</p></div>
+                {stage.lessons.length ? <ol className="divide-y divide-line border-t border-line">
+              {stage.lessons.map((lesson, i) => {
                 const finished = done.has(lesson.id);
                 const locked = lesson.exclusive && !mayReadExclusive;
                 return (
@@ -109,7 +121,7 @@ export default function TopicPage() {
                         {finished ? (
                           <Icon name="check" className="h-4 w-4" />
                         ) : (
-                          String(i + 1).padStart(2, "0")
+                          `${stageIndex + 1}.${i + 1}`
                         )}
                       </span>
                       <span className="min-w-0 flex-1">
@@ -141,7 +153,10 @@ export default function TopicPage() {
                   </li>
                 );
               })}
-            </ol>
+            </ol> : <p className="px-6 pb-6 text-sm text-muted">No lessons published at this level yet. More material will be added here.</p>}
+              </details>
+            ))}
+            </div>
           ) : (
             <p className="p-7 text-muted">
               Lessons haven’t been published for this topic yet.
@@ -154,7 +169,7 @@ export default function TopicPage() {
               <Icon name="chart" className="h-6 w-6" />
             </span>
             <h2 className="mt-5 text-xl font-semibold">
-              One lesson at a time.
+              Your learning progress.
             </h2>
             {user ? (
               <>
@@ -176,12 +191,13 @@ export default function TopicPage() {
                 track of your progress.
               </p>
             )}
+            {coreComplete && <p className="mt-4 text-sm font-medium text-accent">Core path complete. Deep Dive lessons are optional.</p>}
             {next && !nextLocked && (
               <Link
                 className="btn mt-6 w-full"
                 to={`/topics/${topicSlug}/${next.slug}`}
               >
-                {completed ? "Continue learning" : "Start learning"}
+                {next.stage === "DEEP_DIVE" ? "Explore optional deep dives" : completed ? "Continue learning" : "Start learning"}
                 <Icon name="arrow" className="h-4 w-4" />
               </Link>
             )}

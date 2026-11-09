@@ -8,6 +8,7 @@ Copy this template into `drafts/<topic-slug>/<lesson-slug>.md`. Replace every pl
 - Author / reviewer:
 - Last reviewed:
 - Level and prerequisites:
+- Learning stage: STARTER / INTERMEDIATE / ADVANCED / DEEP_DIVE (optional specialist study)
 - Intended learning outcomes:
 - Access: standard / exclusive
 - Source references and permission to reuse:

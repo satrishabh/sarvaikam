@@ -27,7 +27,7 @@ import java.util.*;
 public class SeedLoader implements ApplicationRunner {
     private static final Logger log = LoggerFactory.getLogger(SeedLoader.class);
 
-    record SeedLesson(String slug, String title, String content) {}
+    record SeedLesson(String slug, String title, String content, String stage) {}
     record SeedTopic(String slug, String name, String summary, String level, List<SeedLesson> lessons) {}
     record SeedCategory(String slug, String name, String description, String icon, List<SeedTopic> topics) {}
 
@@ -87,7 +87,7 @@ public class SeedLoader implements ApplicationRunner {
                 for (int i = 0; i < ls.size(); i++) {
                     SeedLesson l = ls.get(i);
                     if (lessons.findByTopicSlugAndSlug(t.slug(), l.slug()).isPresent()) continue;
-                    service.upsertLesson(new LessonRequest(t.slug(), l.slug(), l.title(), i + 1, l.content(), false));
+                    service.upsertLesson(new LessonRequest(t.slug(), l.slug(), l.title(), i + 1, l.content(), false, l.stage() == null ? "STARTER" : l.stage()));
                     added++;
                 }
             }

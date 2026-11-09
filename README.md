@@ -5,7 +5,9 @@ Terraform, VMs, Docker, Kubernetes, AWS / Azure / GCP, Java, Node.js, Python, Go
 Transformers, LLMs, MLOps, vector databases, Spring Boot, TypeScript/NestJS, microservices, Redis,
 Kafka, SQL, Databricks, Snowflake, CI/CD, Helm/GitOps and observability.
 
-**33 topics, 176 lessons** ship as seed content, including guided behavioral, coding, system design, SQL, and DevOps/cloud interview prep. Admins can add or edit lessons in the built-in CMS.
+**33 topics, 194 lessons** ship as seed content, including guided behavioral, coding, system design, SQL, and DevOps/cloud interview prep. Admins can add or edit lessons in the built-in CMS.
+
+Every topic groups lessons into **Starter → Intermediate → Advanced → optional Deep Dive** levels. Content studio lets authors assign levels as new material arrives. See [learning levels](docs/learning-levels.md).
 
 ## Architecture
 
@@ -120,6 +122,8 @@ Seed files live in `services/content-service/src/main/resources/seed/` and load 
 | `10-advanced.json` | Advanced lessons and projects appended to existing topics |
 | `20-trending.json` | New: DevOps category (CI/CD, Helm/GitOps, Observability), MLOps, Vector DBs, Microservices, Redis, Kafka |
 | `30-interview-prep.json` | Interview prep tracks: behavioral, coding, system design, SQL, and DevOps/cloud |
+| `40-java-full-stack.json` | Eight Java full-stack study guides with practice tasks and self-review; see [intake notes](docs/java-content.md) |
+| `50-java-concurrency-jvm.json` | Ten Java 21 lessons on threading, locks, virtual threads, JVM internals, GC, performance and clean code |
 
 On every startup the loader merges all files and inserts **only missing** categories, topics and lessons,
 so you can add a new file (for example `30-my-topics.json`) and redeploy without touching edits made in

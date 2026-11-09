@@ -37,7 +37,7 @@ public class ContentService {
         Topic t = topics.findBySlug(slug).orElseThrow(() -> notFound("Topic " + slug));
         return new TopicView(t.getId(), t.getSlug(), t.getName(), t.getSummary(), t.getLevel(),
                 t.getCategory().getSlug(), t.getCategory().getName(),
-                t.getLessons().stream().map(ContentService::summary).toList());
+                ordered(t).stream().map(ContentService::summary).toList());
     }
 
     @Transactional(readOnly = true)
@@ -45,12 +45,12 @@ public class ContentService {
         Lesson l = lessons.findByTopicSlugAndSlug(topicSlug, lessonSlug)
                 .orElseThrow(() -> notFound("Lesson " + lessonSlug));
         ContentAccess.lesson(l.isExclusive());
-        List<Lesson> all = l.getTopic().getLessons();
+        List<Lesson> all = ordered(l.getTopic());
         int idx = all.indexOf(l);
         LessonSummary prev = idx > 0 ? summary(all.get(idx - 1)) : null;
         LessonSummary next = idx >= 0 && idx < all.size() - 1 ? summary(all.get(idx + 1)) : null;
         return new LessonView(l.getId(), l.getSlug(), l.getTitle(), l.getStepNumber(), l.getContentMd(),
-                topicSlug, l.getTopic().getName(), all.size(), prev, next, l.isExclusive());
+                topicSlug, l.getTopic().getName(), all.size(), prev, next, l.isExclusive(), l.getStage());
     }
 
     @Transactional(readOnly = true)
@@ -103,6 +103,7 @@ public class ContentService {
         l.setStepNumber(r.stepNumber());
         l.setContentMd(r.contentMd());
         l.setExclusive(r.exclusive());
+        if (r.stage() != null) l.setStage(r.stage());
         return summary(lessons.save(l));
     }
 
@@ -119,7 +120,18 @@ public class ContentService {
     }
 
     private static LessonSummary summary(Lesson l) {
-        return new LessonSummary(l.getId(), l.getSlug(), l.getTitle(), l.getStepNumber(), l.isExclusive());
+        return new LessonSummary(l.getId(), l.getSlug(), l.getTitle(), l.getStepNumber(), l.isExclusive(), l.getStage());
+    }
+
+    private static List<Lesson> ordered(Topic topic) {
+        return topic.getLessons().stream().sorted(java.util.Comparator
+                .comparingInt((Lesson lesson) -> switch (lesson.getStage()) {
+                    case "STARTER" -> 0;
+                    case "INTERMEDIATE" -> 1;
+                    case "ADVANCED" -> 2;
+                    case "DEEP_DIVE" -> 3;
+                    default -> 4;
+                }).thenComparingInt(Lesson::getStepNumber).thenComparing(Lesson::getId)).toList();
     }
 
     private static ResponseStatusException notFound(String what) {

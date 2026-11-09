@@ -12,6 +12,7 @@ import { api, Lesson, Topic } from "../api";
 import { useAuth } from "../auth";
 import LessonAssets from "../components/LessonAssets";
 import Icon from "../components/Icon";
+import { stageName } from "../learning";
 import { readingMinutes } from "../engagement";
 import MobileSheet from "../components/MobileSheet";
 import ReaderSettings from "../components/ReaderSettings";
@@ -325,6 +326,7 @@ export default function LessonPage() {
             <Icon name="clock" className="h-3.5 w-3.5" />
             About {readingMinutes(lesson.contentMd)} min reading
           </span>
+          <span className="badge">{stageName(lesson.stage)}{lesson.stage === "DEEP_DIVE" ? " · Optional" : ""}</span>
           {lesson.exclusive && <span className="badge">Exclusive</span>}
         </div>
         <h1 className="mt-5 text-[clamp(2rem,4vw,3rem)] font-semibold leading-[1.15] tracking-tightest">

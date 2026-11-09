@@ -1,6 +1,6 @@
 ﻿# Content handoff for Sarvaikam
 
-The redesigned experience is focused first on software engineers: backend, full-stack, cloud, coding, system design, SQL, and behavioral interviews. The current catalogue has 33 topics and 176 seed lessons. These are starting material, not a claim of complete coverage or guaranteed interview outcomes.
+The redesigned experience is focused first on software engineers: backend, full-stack, cloud, coding, system design, SQL, and behavioral interviews. The current catalogue has 33 topics and 194 seed lessons. Lessons use Starter, Intermediate, Advanced, and optional Deep Dive levels; see [learning levels](learning-levels.md). These are starting material, not a claim of complete coverage or guaranteed interview outcomes.
 
 ## Where to put what you provide
 

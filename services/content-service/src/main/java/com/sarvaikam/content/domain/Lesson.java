@@ -24,6 +24,8 @@ public class Lesson {
 
     private boolean exclusive;
 
+    private String stage = "STARTER";
+
     private OffsetDateTime updatedAt = OffsetDateTime.now();
 
     @PreUpdate
@@ -39,6 +41,8 @@ public class Lesson {
     public int getStepNumber() { return stepNumber; }
     public void setStepNumber(int stepNumber) { this.stepNumber = stepNumber; }
     public String getContentMd() { return contentMd; }
+    public String getStage() { return stage; }
+    public void setStage(String stage) { this.stage = stage; }
     public boolean isExclusive() { return exclusive; }
     public void setExclusive(boolean exclusive) { this.exclusive = exclusive; }
     public void setContentMd(String contentMd) { this.contentMd = contentMd; }

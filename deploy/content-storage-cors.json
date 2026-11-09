@@ -1,0 +1,11 @@
+[
+  {
+    "origin": [
+      "https://learn.sarvaikam.com",
+      "https://sarvaikam-dev.34.180.3.18.nip.io"
+    ],
+    "method": ["PUT", "GET", "HEAD"],
+    "responseHeader": ["Content-Type", "Content-Length", "ETag", "x-goog-generation"],
+    "maxAgeSeconds": 3600
+  }
+]

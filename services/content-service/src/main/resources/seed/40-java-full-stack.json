@@ -1,0 +1,64 @@
+[
+  {
+    "topics": [
+      {
+        "summary": "Modern Java 21: records, streams, virtual threads and the JVM ecosystem.",
+        "lessons": [
+          {
+            "title": "Core Java: from source code to a tested module",
+            "content": "## Goal\nTrace a Java program from source to execution and organize a small project that someone else can build.\n\n## Study guide\nThe JDK supplies development tools; the JVM executes compiled bytecode. Keep the project JDK and build configuration aligned. Maven or Gradle should describe dependencies and the repeatable build rather than relying on an IDE's local settings.\n\nSeparate parsing, validation, and business rules. Use packages to group responsibilities; introduce explicit Java modules when dependency boundaries need enforcement. Debug with breakpoints and inspect values before changing code.\n\nFor text processing, distinguish literal replacement from regular expressions. Make validation rules explicit: a simple email pattern is an input-format check, not proof that a mailbox exists. Immutable objects must also protect mutable values passed into or returned from them.\n\n## Practice\nCreate a command-line contact validator with separate validation and reporting packages. Reject blank input, report invalid entries, and print a count of accepted contacts. Add unit tests for empty input, valid input, and malformed input.\n\n## Self-review\nExplain the roles of compiler, class loader, and JVM. Show how to build outside the IDE. Explain why a final reference alone does not make its referenced object immutable.",
+            "slug": "full-stack-core-java",
+            "stage": "STARTER"
+          },
+          {
+            "title": "OOP, generics and concurrent work",
+            "content": "## Goal\nDesign domain boundaries and explain what happens when multiple tasks use them.\n\n## Study guide\nEncapsulation keeps domain rules close to the state they protect. Interfaces describe capabilities; polymorphism lets callers use those capabilities without selecting concrete implementations. Prefer a small, meaningful abstraction over a deep hierarchy.\n\nUse records for transparent data carriers and sealed hierarchies when the allowed variants form a controlled set. A record can still contain mutable objects. Generics express type constraints; bounds and wildcards should follow whether an API reads or writes values. Reflection accesses runtime type information but adds coupling and can bypass ordinary design boundaries.\n\nCallable represents work that returns a result; Future represents its eventual outcome. Plan how callers handle failure, interruption, cancellation, and executor shutdown. Sharing mutable state requires a deliberate synchronization policy.\n\n## Practice\nModel a library loan service with a repository interface and an in-memory implementation. Run two attempts to borrow the same copy concurrently. Define a single successful borrower as the acceptance criterion.\n\n## Self-review\nIdentify the operation that must be atomic. Explain why making each repository method thread-safe may still leave a multi-step borrowing workflow unsafe.",
+            "slug": "full-stack-oop-design",
+            "stage": "INTERMEDIATE"
+          },
+          {
+            "title": "Collections and stream processing lab",
+            "content": "## Goal\nChoose data structures based on operations and preserve correctness under concurrency.\n\n## Study guide\nList, set, and map express different contracts: sequence, uniqueness, and key-based lookup. Decide whether ordering, duplicate handling, and lookup or update patterns matter before choosing an implementation.\n\nComparable defines a type's natural ordering; Comparator supplies an ordering for a particular use. Define tie handling explicitly. Streams describe a processing pipeline; collectors determine the result structure and how values combine. Keep transformations free of shared mutable side effects.\n\nConcurrentHashMap supports concurrent map operations, but compound workflows still need atomic methods or coordination. CopyOnWriteArrayList copies on modification, so assess the read/write balance. Parallel streams require measurement and a workload that can be split safely.\n\n## Practice\nBuild a catalogue keyed by book ID. Reject duplicate IDs, filter available books, and group them by author. Specify whether results need sorting. Exercise concurrent reservation of a single book.\n\n## Self-review\nCheck empty input, duplicate keys, equal sort keys, and simultaneous updates. Explain the cost of a write-heavy workload and why parallel execution is not automatically faster.",
+            "slug": "full-stack-collections-lab",
+            "stage": "INTERMEDIATE"
+          },
+          {
+            "title": "JDBC transactions and database access",
+            "content": "## Goal\nMake a multi-step database change succeed or fail as one unit.\n\n## Study guide\nUse parameterized statements for input values and close connections, statements, and result sets reliably. A transaction groups changes into an atomic operation: disable automatic commits when appropriate, commit on success, and roll back on failure. Do not hide the original failure if cleanup also fails.\n\nBatching reduces repeated database interactions; it does not replace transaction design. Stored procedure calls use callable statements. A connection pool manages reusable connections, so return connections promptly and avoid leaking transaction state.\n\nIndexes trade storage and write overhead for access paths. Inspect a query plan against representative data. Pagination needs a stable ordering; define how ties and concurrent inserts affect the result.\n\n## Practice\nTransfer an amount between two accounts in a test database. Validate the amount and available balance, update both accounts in one transaction, and deliberately fail after the first update.\n\n## Self-review\nVerify that failure leaves both balances unchanged. Test missing accounts and concurrent transfers. Explain the isolation or locking policy needed to prevent invalid balances.",
+            "slug": "full-stack-jdbc-transactions",
+            "stage": "INTERMEDIATE"
+          },
+          {
+            "title": "Hibernate relationships and query behavior",
+            "content": "## Goal\nPersist related entities while making database access visible and predictable.\n\n## Study guide\nDescribe relationship ownership, cardinality, and lifecycle before choosing mappings. Cascading an operation is a domain decision; deleting a parent should not accidentally delete independently owned data.\n\nLazy and eager loading influence when data is fetched, but neither is a universal performance solution. Inspect SQL for a concrete use case. A list endpoint that traverses related entities can cause repeated queries. Choose a fetch strategy for the endpoint and paginate deliberately.\n\nCriteria queries provide a programmatic way to compose predicates. Keep filtering in the database when practical and return a response representation that does not expose persistence internals.\n\n## Practice\nModel authors and books. Implement a paginated book listing with author names and an optional title filter. Record the generated SQL and query count for one book and for a full page.\n\n## Self-review\nTest missing relationships, page boundaries, and deletion behavior. Explain transaction boundaries and show that query count does not grow by one extra lookup for every displayed book.",
+            "slug": "full-stack-hibernate-loading",
+            "stage": "ADVANCED"
+          },
+          {
+            "title": "Spring services, security and operations",
+            "content": "## Goal\nConnect application configuration, authorization, and operational visibility in one service.\n\n## Study guide\nDependency injection makes collaborators explicit. Separate controller, business, and persistence responsibilities. Profiles select environment-specific configuration; credentials belong in runtime secret configuration.\n\nAuthentication establishes identity; authorization decides whether that identity may perform an operation. For token-based APIs, token verification and endpoint access rules both matter. Test denied access as carefully as successful access.\n\nMessaging introduces retries and duplicate delivery into business workflows. Design consumers to tolerate reprocessing and make failure handling observable. Service health, request latency, errors, and dependency failures help explain behavior after deployment. Keep operational endpoints appropriately protected.\n\n## Practice\nBuild a task API with a service layer, persistence, and owner-based access. Add separate development and test configuration, health reporting, and a message-consumer design for task notifications.\n\n## Self-review\nVerify anonymous rejection, cross-user access denial, invalid input handling, and dependency failure behavior. Explain how a duplicate notification event avoids causing the business action twice.",
+            "slug": "full-stack-spring-service",
+            "stage": "ADVANCED"
+          },
+          {
+            "title": "Full-stack integration and delivery capstone",
+            "content": "## Goal\nConnect a browser client to a Java API and define an observable delivery workflow.\n\n## Study guide\nStart with the API contract: resource names, request validation, response fields, status codes, and error shape. Include authentication and pagination behavior. API tests should check both success and rejection paths.\n\nA frontend needs explicit loading, empty, success, and failure states. Keep server data and local interface state distinct. Real-time updates also need reconnection behavior and authorization; a WebSocket connection is not a substitute for access checks.\n\nA delivery pipeline should build and test reproducibly before packaging and deployment. Configuration, database changes, health checks, and rollback behavior belong in the release plan.\n\n## Practice\nConnect a task dashboard to the service from the Spring guide. Support listing, creation, validation feedback, and retry after a failed request. Add a pipeline that builds both applications and runs API checks against a test environment.\n\n## Self-review\nCheck expired sessions, an unavailable API, duplicate submissions, and an empty task list. Write deployment and rollback steps, with a way to verify that the deployed frontend reaches the intended API.",
+            "slug": "full-stack-api-integration",
+            "stage": "ADVANCED"
+          },
+          {
+            "title": "Frontend foundations for Java developers",
+            "content": "## Goal\nBuild an accessible interface and manage asynchronous data without losing user feedback.\n\n## Study guide\nUse semantic HTML and responsive CSS before adding framework abstractions. Flexbox can arrange navigation items, but keyboard access, labels, and narrow-screen behavior still need deliberate checks.\n\nUnderstand event bubbling before implementing delegation. Asynchronous requests can fail, arrive out of order, or finish after the user leaves a view. Define loading and error behavior and avoid overwriting newer state with an older response.\n\nTypeScript describes expected shapes at development time; external data still needs runtime validation. Choose one frontend framework for the capstone. With React, keep state transitions explicit and clean up subscriptions and other long-lived effects.\n\n## Practice\nBuild a responsive navigation bar, a labeled password-visibility control, and a contact form with format feedback. Add a task list fetched from the Java API. Preserve form values when submission fails.\n\n## Self-review\nUse the interface by keyboard and at a narrow viewport. Test invalid server data, failed requests, and repeated interactions. Explain the difference between a TypeScript type and runtime input validation.",
+            "slug": "full-stack-frontend-foundations",
+            "stage": "STARTER"
+          }
+        ],
+        "level": "BEGINNER",
+        "name": "Java",
+        "slug": "java"
+      }
+    ],
+    "name": "Languages",
+    "slug": "languages"
+  }
+]

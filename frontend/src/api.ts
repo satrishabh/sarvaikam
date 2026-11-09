@@ -15,12 +15,14 @@ export interface Category {
   icon: string;
   topics: TopicSummary[];
 }
+export type LearningStage = "STARTER" | "INTERMEDIATE" | "ADVANCED" | "DEEP_DIVE";
 export interface LessonSummary {
   id: number;
   slug: string;
   title: string;
   stepNumber: number;
   exclusive: boolean;
+  stage?: LearningStage;
 }
 export interface Topic {
   id: number;
@@ -145,7 +147,7 @@ export const api = {
   uncomplete: (lessonId: number) =>
     request<void>(`/api/progress/lessons/${lessonId}/complete`, { method: 'DELETE' }),
 
-  upsertLesson: (l: { topicSlug: string; slug: string; title: string; stepNumber: number; contentMd: string; exclusive: boolean }) =>
+  upsertLesson: (l: { topicSlug: string; slug: string; title: string; stepNumber: number; contentMd: string; exclusive: boolean; stage?: LearningStage }) =>
     request<LessonSummary>('/api/content/admin/lessons', { method: 'PUT', body: JSON.stringify(l) }),
   deleteLesson: (id: number) => request<void>(`/api/content/admin/lessons/${id}`, { method: 'DELETE' }),
 };

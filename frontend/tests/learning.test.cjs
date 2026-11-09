@@ -7,7 +7,25 @@ const {
   pathTopics,
   progressPercent,
   topicState,
+  groupedLessons,
+  orderedLessons,
 } = require("../../.cache/learning-tests/learning.js");
+
+test("levels preserve lessons and sequence while keeping deep dives optional", () => {
+  const lessons = [
+    { id: 1, slug: "internals", stage: "DEEP_DIVE", stepNumber: 1 },
+    { id: 2, slug: "locks", stage: "ADVANCED", stepNumber: 2 },
+    { id: 3, slug: "setup", stage: "STARTER", stepNumber: 3 },
+    { id: 4, slug: "legacy", stepNumber: 4 },
+  ];
+  assert.deepEqual(orderedLessons(lessons).map(l => l.slug), ["setup", "legacy", "locks", "internals"]);
+  const groups = groupedLessons(lessons);
+  assert.equal(groups.length, 4);
+  assert.equal(groups[1].lessons.length, 0);
+  assert.match(groups[3].description, /Optional/);
+  assert.equal(new Set(groups.flatMap(g => g.lessons.map(l => l.id))).size, lessons.length);
+  assert.equal(lessons[0].slug, "internals");
+});
 const {
   practiceQuestions,
 } = require("../../.cache/learning-tests/practice.js");
@@ -42,16 +60,24 @@ const seedDir = path.resolve(
   "../../services/content-service/src/main/resources/seed",
 );
 const published = new Map();
+const lessonKeys = new Set();
 for (const file of fs.readdirSync(seedDir).filter((f) => f.endsWith(".json"))) {
   const data = JSON.parse(
     fs.readFileSync(path.join(seedDir, file), "utf8").replace(/^\uFEFF/, ""),
   );
   for (const category of data)
-    for (const topic of category.topics)
+    for (const topic of category.topics) {
+      for (const lesson of topic.lessons) {
+        const key = `${topic.slug}/${lesson.slug}`;
+        assert.ok(!lessonKeys.has(key), `Duplicate lesson: ${key}`);
+        lessonKeys.add(key);
+        assert.ok(["STARTER", "INTERMEDIATE", "ADVANCED", "DEEP_DIVE"].includes(lesson.stage), `Missing or invalid level: ${key}`);
+      }
       published.set(
         topic.slug,
         (published.get(topic.slug) || 0) + topic.lessons.length,
       );
+    }
 }
 
 test("career paths link to real lesson-bearing catalogue topics without duplicates", () => {

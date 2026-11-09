@@ -1,0 +1,10 @@
+# Merge these values into apps/sarvaikam/values-dev.yaml in aio-gitops.
+# Preserve existing envFrom (including sarvaikam-profile-runtime) and other env.
+# The live sarvaikam-dev Argo CD Application currently has equivalent Helm
+# parameter overrides, which take precedence over values files.
+serviceAccountName: sarvaikam-content
+env:
+  - name: GCP_CONTENT_BUCKET
+    value: cotent_bucket
+  - name: GCP_SIGNING_SERVICE_ACCOUNT
+    value: sarvaikam-content@project-d28840cd-be2f-4901-85e.iam.gserviceaccount.com
