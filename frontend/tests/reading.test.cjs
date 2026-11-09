@@ -96,3 +96,28 @@ test("reader settings from storage or the account are used only when every value
   assert.equal(normalizeReaderPreferences({ ...valid, size: "20" }), null);
   assert.equal(normalizeReaderPreferences({ ...valid, theme: "sepia" }), null);
 });
+
+test("lesson search reports each match with its section and ignores very short queries", () => {
+  const { searchLesson } = require("../../.cache/learning-tests/readingOutline.js");
+  const markdown = [
+    "Intro about Records.",
+    "## Core idea",
+    "Records are immutable.",
+    "```java",
+    "record Point(int x) {}",
+    "```",
+    "## Summary",
+    "Nothing relevant here.",
+  ].join("\n");
+  assert.deepEqual(
+    searchLesson(markdown, "RECORD").map((m) => [m.sectionId, m.sectionText]),
+    [
+      ["lesson-body", "Introduction"],
+      ["core-idea", "Core idea"],
+      ["core-idea", "Core idea"],
+    ],
+  );
+  assert.equal(searchLesson(markdown, "r").length, 0);
+  assert.equal(searchLesson(markdown, "immutable")[0].snippet, "Records are immutable.");
+  assert.equal(searchLesson(markdown, "record", 1).length, 1);
+});

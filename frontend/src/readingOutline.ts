@@ -92,3 +92,33 @@ export function saveResumePoint(point: ResumePoint) {
     // Resume is a convenience; the lesson reads the same without it.
   }
 }
+
+export interface LessonMatch {
+  sectionId: string;
+  sectionText: string;
+  snippet: string;
+}
+
+// Finds lines of lesson text that contain the query and reports the section each one sits in.
+// Matches are case-insensitive; the intro before the first heading links to the top of the lesson.
+export function searchLesson(markdown: string, query: string, limit = 30): LessonMatch[] {
+  const needle = query.trim().toLowerCase();
+  if (needle.length < 2) return [];
+  const outline = outlineFromMarkdown(markdown);
+  const matches: LessonMatch[] = [];
+  markdown.split("\n").forEach((source, index) => {
+    if (matches.length >= limit || HEADING.test(source)) return;
+    const text = plainText(source);
+    const at = text.toLowerCase().indexOf(needle);
+    if (at < 0) return;
+    const section = outline.filter((item) => item.line <= index + 1).pop();
+    const start = Math.max(0, at - 60);
+    const end = Math.min(text.length, at + needle.length + 60);
+    matches.push({
+      sectionId: section?.id ?? "lesson-body",
+      sectionText: section?.text ?? "Introduction",
+      snippet: `${start > 0 ? "…" : ""}${text.slice(start, end)}${end < text.length ? "…" : ""}`,
+    });
+  });
+  return matches;
+}

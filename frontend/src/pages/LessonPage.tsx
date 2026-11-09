@@ -16,6 +16,7 @@ import { stageName } from "../learning";
 import { readingMinutes } from "../engagement";
 import MobileSheet from "../components/MobileSheet";
 import LessonOutline from "../components/LessonOutline";
+import LessonSearch from "../components/LessonSearch";
 import ReaderSettings from "../components/ReaderSettings";
 import ReadingPosition from "../components/ReadingPosition";
 import {
@@ -336,6 +337,7 @@ export default function LessonPage() {
           }}
         >
           {sequence}
+          <LessonSearch markdown={lesson.contentMd} />
           <LessonOutline items={outline} />
           <Link to={`/topics/${topicSlug}`} className="outline-btn mt-5 w-full">
             Topic overview
@@ -367,6 +369,7 @@ export default function LessonPage() {
           In this topic
         </p>
         {sequence}
+        <LessonSearch markdown={lesson.contentMd} />
         <LessonOutline items={outline} />
         <Link
           className="mt-7 flex items-center gap-2 rounded-xl border border-line bg-surface p-4 text-xs font-medium text-accent"
