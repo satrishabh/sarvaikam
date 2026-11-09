@@ -8,5 +8,10 @@
     "rootDir": "src",
     "outDir": "../.cache/learning-tests"
   },
-  "include": ["src/learning.ts", "src/practice.ts", "src/readerPreferences.ts"]
+  "include": [
+    "src/learning.ts",
+    "src/practice.ts",
+    "src/readerPreferences.ts",
+    "src/readingOutline.ts"
+  ]
 }

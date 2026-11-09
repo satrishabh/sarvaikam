@@ -15,12 +15,17 @@ import Icon from "../components/Icon";
 import { stageName } from "../learning";
 import { readingMinutes } from "../engagement";
 import MobileSheet from "../components/MobileSheet";
+import LessonOutline from "../components/LessonOutline";
 import ReaderSettings from "../components/ReaderSettings";
 import ReadingPosition from "../components/ReadingPosition";
 import {
   readReaderPreferences,
   saveReaderPreferences,
 } from "../readerPreferences";
+import {
+  outlineFromMarkdown,
+  readResumePoint,
+} from "../readingOutline";
 
 function CodeBlock({ children }: { children?: ReactNode }) {
   const [status, setStatus] = useState("");
@@ -81,9 +86,13 @@ export default function LessonPage() {
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [attempt, setAttempt] = useState(0);
+  const [resumeId, setResumeId] = useState("");
   useEffect(() => {
     setPreferencesSaved(saveReaderPreferences(preferences));
   }, [preferences]);
+  useEffect(() => {
+    setResumeId(lesson ? (readResumePoint(lesson.id)?.id ?? "") : "");
+  }, [lesson?.id]);
   useEffect(() => {
     const previous = document.documentElement.getAttribute("data-reader-theme");
     document.documentElement.setAttribute(
@@ -226,6 +235,11 @@ export default function LessonPage() {
         ))}
       </div>
     );
+  const outline = outlineFromMarkdown(lesson.contentMd);
+  const headingIds = new Map(outline.map((item) => [item.line, item.id]));
+  const headingId = (node?: { position?: { start: { line: number } } }) =>
+    node?.position ? headingIds.get(node.position.start.line) : undefined;
+  const resumeItem = outline.find((item) => item.id === resumeId);
   const sequence = (
     <nav aria-label="Topic lessons" className="mt-4 space-y-1">
       {topic?.lessons.map((item, i) => (
@@ -267,6 +281,7 @@ export default function LessonPage() {
           }}
         >
           {sequence}
+          <LessonOutline items={outline} />
           <Link to={`/topics/${topicSlug}`} className="outline-btn mt-5 w-full">
             Topic overview
           </Link>
@@ -295,6 +310,7 @@ export default function LessonPage() {
           In this topic
         </p>
         {sequence}
+        <LessonOutline items={outline} />
         <Link
           className="mt-7 flex items-center gap-2 rounded-xl border border-line bg-surface p-4 text-xs font-medium text-accent"
           to="/practice"
@@ -348,6 +364,16 @@ export default function LessonPage() {
             <span className="font-serif text-lg">Aa</span>Reading settings
           </button>
         </div>
+        {resumeItem && resumeItem.id !== outline[0]?.id && (
+          <a
+            href={`#${resumeItem.id}`}
+            onClick={() => setResumeId("")}
+            className="mt-5 flex min-h-11 items-center gap-2 rounded-xl bg-accent-soft p-4 text-sm font-medium text-accent-strong"
+          >
+            <Icon name="chevron" className="h-4 w-4 shrink-0" />
+            <span>Continue from “{resumeItem.text}”</span>
+          </a>
+        )}
         {saveError && (
           <div
             role="alert"
@@ -377,6 +403,12 @@ export default function LessonPage() {
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}
             components={{
+              h2: ({ node, children }) => (
+                <h2 id={headingId(node)}>{children}</h2>
+              ),
+              h3: ({ node, children }) => (
+                <h3 id={headingId(node)}>{children}</h3>
+              ),
               pre: ({ children }) => <CodeBlock>{children}</CodeBlock>,
               table: ({ children }) => (
                 <div

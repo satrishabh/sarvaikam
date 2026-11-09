@@ -1,9 +1,13 @@
 import { useEffect, useState } from "react";
+import { saveResumePoint } from "../readingOutline";
+
+const HEADINGS = "#lesson-body h2[id], #lesson-body h3[id]";
 
 export default function ReadingPosition({ lessonId }: { lessonId: number }) {
   const [position, setPosition] = useState(0);
   useEffect(() => {
     let frame = 0;
+    let savedId = "";
     const update = () => {
       const article = document.getElementById("lesson-body");
       if (!article) return;
@@ -15,6 +19,15 @@ export default function ReadingPosition({ lessonId }: { lessonId: number }) {
           Math.min(100, Math.round(((80 - rect.top) / distance) * 100)),
         ),
       );
+      const current = Array.from(
+        document.querySelectorAll<HTMLElement>(HEADINGS),
+      )
+        .filter((h) => h.getBoundingClientRect().top <= window.innerHeight * 0.35)
+        .pop();
+      if (current && current.id !== savedId) {
+        savedId = current.id;
+        saveResumePoint({ lessonId, id: current.id });
+      }
     };
     const schedule = () => {
       cancelAnimationFrame(frame);
