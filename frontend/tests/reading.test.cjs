@@ -121,3 +121,29 @@ test("lesson search reports each match with its section and ignores very short q
   assert.equal(searchLesson(markdown, "immutable")[0].snippet, "Records are immutable.");
   assert.equal(searchLesson(markdown, "record", 1).length, 1);
 });
+
+// Ratchet: lessons without section headings get no table of contents. The count may fall, never rise.
+test("seeded lessons do not add new unstructured content", () => {
+  const fs = require("node:fs");
+  const path = require("node:path");
+  const { outlineFromMarkdown } = require("../../.cache/learning-tests/readingOutline.js");
+  const seed = path.join(__dirname, "../../services/content-service/src/main/resources/seed");
+  const UNSTRUCTURED_BASELINE = 176;
+  let lessons = 0;
+  const unstructured = [];
+  for (const file of fs.readdirSync(seed).filter((name) => name.endsWith(".json"))) {
+    for (const category of JSON.parse(fs.readFileSync(path.join(seed, file), "utf8"))) {
+      for (const topic of category.topics ?? []) {
+        for (const lesson of topic.lessons ?? []) {
+          lessons++;
+          if (outlineFromMarkdown(lesson.content ?? "").length < 2) unstructured.push(`${topic.slug}/${lesson.slug}`);
+        }
+      }
+    }
+  }
+  assert.ok(lessons > 0, "no seeded lessons were found");
+  assert.ok(
+    unstructured.length <= UNSTRUCTURED_BASELINE,
+    `${unstructured.length} lessons lack section headings (baseline ${UNSTRUCTURED_BASELINE}); add ## headings to new lessons`,
+  );
+});
