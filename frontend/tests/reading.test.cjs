@@ -147,3 +147,20 @@ test("seeded lessons do not add new unstructured content", () => {
     `${unstructured.length} lessons lack section headings (baseline ${UNSTRUCTURED_BASELINE}); add ## headings to new lessons`,
   );
 });
+
+test("lesson cards split at second-level headings and keep the introduction", () => {
+  const { lessonCards } = require("../../.cache/learning-tests/readingOutline.js");
+  const cards = lessonCards(["Intro text.", "## First", "Body one.", "### Sub", "More.", "## Second", "Body two.", "```", "## not a card", "```"].join("\n"));
+  assert.deepEqual(
+    cards.map((card) => [card.id, card.title]),
+    [["lesson-body", "Introduction"], ["first", "First"], ["second", "Second"]],
+  );
+  assert.equal(cards[1].markdown, "Body one.\n\n### Sub\nMore.".replace("\n\n", "\n"));
+  assert.ok(cards[2].markdown.includes("## not a card"));
+});
+
+test("lessons without enough second-level headings split at third-level headings", () => {
+  const { lessonCards } = require("../../.cache/learning-tests/readingOutline.js");
+  const cards = lessonCards(["### Alpha", "a", "### Beta", "b"].join("\n"));
+  assert.deepEqual(cards.map((card) => card.title), ["Alpha", "Beta"]);
+});

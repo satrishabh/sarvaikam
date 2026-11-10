@@ -122,3 +122,32 @@ export function searchLesson(markdown: string, query: string, limit = 30): Lesso
   });
   return matches;
 }
+
+export interface LessonCard {
+  id: string;
+  title: string;
+  markdown: string;
+}
+
+// Splits a lesson into swipeable cards at its ## headings. A lesson with fewer than two ## headings
+// splits at ### headings instead, and text before the first heading becomes an introduction card.
+export function lessonCards(markdown: string): LessonCard[] {
+  const lines = markdown.split("\n");
+  const outline = outlineFromMarkdown(markdown);
+  const headings = outline.filter((item) => item.level === 2).length >= 2
+    ? outline.filter((item) => item.level === 2)
+    : outline;
+  const starts = headings.map((item) => item.line - 1);
+  const cards: LessonCard[] = [];
+  const intro = lines.slice(0, starts[0] ?? lines.length).join("\n").trim();
+  if (intro) cards.push({ id: "lesson-body", title: "Introduction", markdown: intro });
+  headings.forEach((item, index) => {
+    const end = starts[index + 1] ?? lines.length;
+    cards.push({
+      id: item.id,
+      title: item.text,
+      markdown: lines.slice(starts[index] + 1, end).join("\n").trim(),
+    });
+  });
+  return cards;
+}

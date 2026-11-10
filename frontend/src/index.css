@@ -779,3 +779,76 @@ html[data-reader-theme] :focus-visible {
   border-radius: 14px;
   box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.06);
 }
+
+/* Swipe cards: a full-screen deck of lesson sections. Cards track the finger; touch-action is handled in code. */
+.lesson-deck {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  background: var(--reader-page, #f7f8fa);
+  color: var(--reader-text, #12325a);
+  padding: max(12px, env(safe-area-inset-top)) 0 max(12px, env(safe-area-inset-bottom));
+}
+.lesson-deck-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 4px 16px 8px;
+}
+.lesson-deck-stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  padding: 8px 16px;
+}
+.lesson-card {
+  position: absolute;
+  inset: 8px 16px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 24px;
+  border: 1px solid var(--reader-line, #e3e7ed);
+  background: var(--reader-fill, #fff);
+  box-shadow: 0 1px 2px rgb(18 50 90 / 0.05), 0 24px 48px -28px rgb(18 50 90 / 0.25);
+  touch-action: none;
+  cursor: grab;
+  user-select: none;
+}
+.lesson-card:active {
+  cursor: grabbing;
+}
+.lesson-card-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 28px 24px 32px;
+  user-select: text;
+  cursor: auto;
+}
+.lesson-deck-bottom {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 8px 16px 4px;
+}
+.lesson-deck-dots {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+}
+.lesson-deck-dots span {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--reader-line, #d6dce5);
+  transition: width 240ms ease, background-color 240ms ease;
+}
+.lesson-deck-dots span.is-active {
+  width: 20px;
+  background: var(--reader-accent, #b84a14);
+}

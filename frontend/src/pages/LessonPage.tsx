@@ -17,6 +17,7 @@ import { readingMinutes } from "../engagement";
 import MobileSheet from "../components/MobileSheet";
 import LessonOutline from "../components/LessonOutline";
 import LessonSearch from "../components/LessonSearch";
+import LessonCards from "../components/LessonCards";
 import ReaderSettings from "../components/ReaderSettings";
 import ReadingPosition from "../components/ReadingPosition";
 import {
@@ -25,6 +26,7 @@ import {
   type ReaderPreferences,
 } from "../readerPreferences";
 import {
+  lessonCards,
   outlineFromMarkdown,
   readResumePoint,
 } from "../readingOutline";
@@ -91,6 +93,7 @@ export default function LessonPage() {
   const [resumeId, setResumeId] = useState("");
   const [bookmarked, setBookmarked] = useState(false);
   const [bookmarkError, setBookmarkError] = useState("");
+  const [cardsOpen, setCardsOpen] = useState(false);
   const [preferencesSyncFailed, setPreferencesSyncFailed] = useState(false);
   useEffect(() => {
     setPreferencesSaved(saveReaderPreferences(preferences));
@@ -320,6 +323,13 @@ export default function LessonPage() {
   return (
     <div className="reader-layout grid items-start gap-9 pb-24 lg:grid-cols-[230px_1fr] xl:gap-14">
       <ReadingPosition lessonId={lesson.id} />
+      {cardsOpen && (
+        <LessonCards
+          cards={lessonCards(lesson.contentMd)}
+          title={lesson.title}
+          onClose={() => setCardsOpen(false)}
+        />
+      )}
       <MobileSheet
         open={detailsOpen}
         title="Lesson details"
@@ -415,6 +425,15 @@ export default function LessonPage() {
           >
             {lesson.topicName}
           </Link>
+          <div className="flex flex-wrap items-center gap-5">
+          <button
+            onClick={() => setCardsOpen(true)}
+            aria-haspopup="dialog"
+            className="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-accent"
+          >
+            <Icon name="layers" className="h-4 w-4" />
+            Swipe cards
+          </button>
           {user && (
             <button
               onClick={() => void toggleBookmark()}
@@ -433,6 +452,7 @@ export default function LessonPage() {
           >
             <span className="font-serif text-lg">Aa</span>Reading settings
           </button>
+          </div>
         </div>
         {bookmarkError && (
           <p role="alert" className="mt-4 text-sm text-accent-strong">
