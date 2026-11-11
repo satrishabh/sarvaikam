@@ -1,4 +1,4 @@
-import {
+﻿import {
   Children,
   isValidElement,
   ReactNode,
@@ -179,7 +179,7 @@ export default function LessonPage() {
       .catch(() => {
         if (active)
           setSaveError(
-            "Your saved progress could not be loaded. Retry before changing this lesson’s completion.",
+            "Your saved progress could not be loaded. Retry before changing this lessonâ€™s completion.",
           );
       })
       .finally(() => {
@@ -264,7 +264,7 @@ export default function LessonPage() {
       <div className="surface mx-auto max-w-2xl p-9">
         <p className="eyebrow">LESSON UNAVAILABLE</p>
         <h1 className="mt-3 text-3xl font-semibold">
-          Let’s find your next step.
+          Letâ€™s find your next step.
         </h1>
         <p className="mt-4 text-muted">{error}</p>
         <div className="mt-7 flex flex-wrap gap-3">
@@ -414,7 +414,7 @@ export default function LessonPage() {
             <Icon name="clock" className="h-3.5 w-3.5" />
             About {readingMinutes(lesson.contentMd)} min reading
           </span>
-          <span className="badge">{stageName(lesson.stage)}{lesson.stage === "DEEP_DIVE" ? " · Optional" : ""}</span>
+          <span className="badge">{stageName(lesson.stage)}{lesson.stage === "DEEP_DIVE" ? " Â· Optional" : ""}</span>
           {lesson.exclusive && <span className="badge">Exclusive</span>}
         </div>
         <h1 className="mt-5 text-[clamp(2rem,4vw,3rem)] font-semibold leading-[1.15] tracking-tightest">
@@ -468,7 +468,7 @@ export default function LessonPage() {
             className="mt-5 flex min-h-11 items-center gap-2 rounded-xl bg-accent-soft p-4 text-sm font-medium text-accent-strong"
           >
             <Icon name="chevron" className="h-4 w-4 shrink-0" />
-            <span>Continue from “{resumeItem.text}”</span>
+            <span>Continue from â€œ{resumeItem.text}â€</span>
           </a>
         )}
         {saveError && (
@@ -573,9 +573,9 @@ export default function LessonPage() {
               >
                 {completed && <Icon name="check" className="h-4 w-4" />}
                 {saving
-                  ? "Saving…"
+                  ? "Savingâ€¦"
                   : checking
-                    ? "Loading progress…"
+                    ? "Loading progressâ€¦"
                     : completed
                       ? "Lesson complete"
                       : "Mark complete"}

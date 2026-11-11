@@ -374,7 +374,7 @@ export default function HomePage() {
             Reload your saved progress above to view your skill map accurately.
           </p>
         ) : (
-          <LoadState error={error} retry={retry} />
+          <p className="surface p-6 text-sm text-muted">Your skill map appears here once the library loads.</p>
         )}
       </section>
 
@@ -470,7 +470,7 @@ export default function HomePage() {
             )}
           </>
         ) : (
-          <LoadState error={error} retry={retry} />
+          <p className="surface p-6 text-sm text-muted">Topics appear here once the library loads.</p>
         )}
       </section>
       <section className="flex flex-wrap items-center justify-between gap-7 rounded-2xl border border-line bg-accent-soft p-7 sm:p-9">

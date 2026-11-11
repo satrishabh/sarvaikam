@@ -37,7 +37,7 @@
           {
             "slug": "modules-and-workflows",
             "title": "Modules and team workflows",
-            "content": "## Modules and a team workflow\n\nA **module** is a folder of `.tf` files you call with inputs:\n\n```hcl\nmodule \"vpc\" {\n  source  = \"terraform-aws-modules/vpc/aws\"\n  version = \"5.8.1\"\n  name    = \"main\"\n  cidr    = \"10.0.0.0/16\"\n}\n```\n\n## Production workflow\n\nProduction workflow:\n\n1. `terraform fmt` and `terraform validate` in CI\n2. Post `terraform plan` output on pull requests\n3. Apply only from the main branch\n4. Scan with `tflint` / `checkov`\n\nSee `infra/terraform` in this repo for real AWS, Azure and GCP examples.",
+            "content": "## Modules and a team workflow\n\nA **module** is a folder of `.tf` files you call with inputs:\n\n```hcl\nmodule \"vpc\" {\n  source  = \"terraform-aws-modules/vpc/aws\"\n  version = \"5.8.1\"\n  name    = \"main\"\n  cidr    = \"10.0.0.0/16\"\n}\n```\n\n## Production workflow\n\nProduction workflow:\n\n1. `terraform fmt` and `terraform validate` in CI\n2. Post `terraform plan` output on pull requests\n3. Apply only from the main branch\n4. Scan with `tflint` / `checkov`\n\nThe Terraform Registry publishes working AWS, Azure and GCP modules you can study.",
             "stage": "INTERMEDIATE"
           }
         ]
@@ -134,7 +134,7 @@
           {
             "slug": "services-ingress",
             "title": "Services and Ingress",
-            "content": "## Stable names for pods\n\nPods are ephemeral; a **Service** gives them a stable DNS name and load balancing.\n\n```yaml\napiVersion: v1\nkind: Service\nmetadata: { name: web }\nspec:\n  selector: { app: web }\n  ports: [{ port: 80, targetPort: 80 }]\n```\n\n## Route traffic from outside\n\nAn **Ingress** routes external HTTP traffic by host/path to services. See `deploy/k8s/ingress.yaml` in this project.",
+            "content": "## Stable names for pods\n\nPods are ephemeral; a **Service** gives them a stable DNS name and load balancing.\n\n```yaml\napiVersion: v1\nkind: Service\nmetadata: { name: web }\nspec:\n  selector: { app: web }\n  ports: [{ port: 80, targetPort: 80 }]\n```\n\n## Route traffic from outside\n\nAn **Ingress** routes external HTTP traffic by host/path to services. The Kubernetes docs show a complete Ingress example.",
             "stage": "INTERMEDIATE"
           },
           {
@@ -146,7 +146,7 @@
           {
             "slug": "scaling-helm",
             "title": "Autoscaling, Helm and GitOps",
-            "content": "## Scaling and packaging\n\n- **HPA** scales replicas by CPU/memory or custom metrics: `kubectl autoscale deploy web --min=2 --max=10 --cpu-percent=70`\n- **Helm** packages manifests as reusable charts\n- **Kustomize** overlays per environment (used in `deploy/k8s`)\n- **Argo CD / Flux** sync the cluster from Git (GitOps)\n\n## Managed Kubernetes\n\nManaged options: EKS (AWS), AKS (Azure), GKE (GCP).",
+            "content": "## Scaling and packaging\n\n- **HPA** scales replicas by CPU/memory or custom metrics: `kubectl autoscale deploy web --min=2 --max=10 --cpu-percent=70`\n- **Helm** packages manifests as reusable charts\n- **Kustomize** overlays per environment\n- **Argo CD / Flux** sync the cluster from Git (GitOps)\n\n## Managed Kubernetes\n\nManaged options: EKS (AWS), AKS (Azure), GKE (GCP).",
             "stage": "INTERMEDIATE"
           }
         ]
@@ -185,7 +185,7 @@
           {
             "slug": "databases-and-ops",
             "title": "Databases, monitoring and cost",
-            "content": "## Managed data services\n\nManaged data: **RDS/Aurora** (relational), **DynamoDB** (key-value), **ElastiCache** (Redis).\n\n## Operating in production\n\nOperate with **CloudWatch** (metrics, logs, alarms), **CloudTrail** (audit) and **Cost Explorer** + Budgets.\n\nNext: deploy this project with `infra/terraform/aws` (VPC + EKS + RDS + ECR).",
+            "content": "## Managed data services\n\nManaged data: **RDS/Aurora** (relational), **DynamoDB** (key-value), **ElastiCache** (Redis).\n\n## Operating in production\n\nOperate with **CloudWatch** (metrics, logs, alarms), **CloudTrail** (audit) and **Cost Explorer** + Budgets.\n\nNext: provision a VPC, EKS, RDS and ECR with Terraform modules on AWS.",
             "stage": "INTERMEDIATE"
           }
         ]
@@ -217,7 +217,7 @@
           {
             "slug": "data-and-monitoring",
             "title": "Data services and monitoring",
-            "content": "## Data services\n\nData: **Azure Database for PostgreSQL Flexible Server**, **Cosmos DB**, **Blob Storage**, **Azure Databricks** and **Synapse/Fabric**.\n\n## Monitoring\n\nObserve with **Azure Monitor**, Log Analytics and Application Insights.\n\nNext: `infra/terraform/azure` provisions AKS + PostgreSQL + ACR for this project.",
+            "content": "## Data services\n\nData: **Azure Database for PostgreSQL Flexible Server**, **Cosmos DB**, **Blob Storage**, **Azure Databricks** and **Synapse/Fabric**.\n\n## Monitoring\n\nObserve with **Azure Monitor**, Log Analytics and Application Insights.\n\nNext: a Terraform setup on Azure can provision AKS, PostgreSQL and ACR for a project like this one.",
             "stage": "INTERMEDIATE"
           }
         ]
@@ -249,7 +249,7 @@
           {
             "slug": "data-ai",
             "title": "Data and AI services",
-            "content": "## Data and AI services\n\n- **Cloud SQL** (PostgreSQL/MySQL), **Spanner**, **Firestore**\n- **BigQuery**: serverless data warehouse\n- **Vertex AI**: training, deploying and calling models such as Gemini\n\n## Next steps\n\nNext: `infra/terraform/gcp` provisions GKE + Cloud SQL + Artifact Registry.",
+            "content": "## Data and AI services\n\n- **Cloud SQL** (PostgreSQL/MySQL), **Spanner**, **Firestore**\n- **BigQuery**: serverless data warehouse\n- **Vertex AI**: training, deploying and calling models such as Gemini\n\n## Next steps\n\nNext: a Terraform setup on GCP can provision GKE, Cloud SQL and Artifact Registry.",
             "stage": "INTERMEDIATE"
           }
         ]

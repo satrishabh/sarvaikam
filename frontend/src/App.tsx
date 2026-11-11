@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from "react";
+﻿import { lazy, Suspense, useEffect, useState } from "react";
 import { Link, NavLink, Route, Routes, useLocation } from "react-router-dom";
 import { useAuth } from "./auth";
 import { can } from "./api";
@@ -13,6 +13,7 @@ const LoginPage = lazy(() => import("./pages/LoginPage"));
 const SkillsPage = lazy(() => import("./pages/SkillsPage"));
 const TopicPage = lazy(() => import("./pages/TopicPage"));
 const ProfilePage = lazy(() => import("./pages/ProfilePage"));
+const SettingsPage = lazy(() => import("./pages/SettingsPage"));
 const BusinessAccessPage = lazy(() =>
   import("./pages/ProfilePage").then((module) => ({
     default: module.BusinessAccessPage,
@@ -217,6 +218,10 @@ export default function App() {
             <Icon name="user" className="h-4 w-4" />
             {user ? "Your account & access" : "Sign in or register"}
           </NavLink>
+          <NavLink to="/settings" className="workspace-nav">
+            <Icon name="menu" className="h-4 w-4" />
+            Settings
+          </NavLink>
         </nav>
         <div className="mt-6 border-t border-line pt-5 text-sm">
           <p className="font-semibold">Learning details</p>
@@ -249,7 +254,7 @@ export default function App() {
         <Suspense
           fallback={
             <div role="status" className="space-y-5 py-8">
-              <p className="text-sm text-muted">Loading your workspace…</p>
+              <p className="text-sm text-muted">Loading your workspaceâ€¦</p>
               <div className="skeleton h-12 w-2/3" />
               <div className="skeleton h-48" />
             </div>
@@ -269,6 +274,7 @@ export default function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/admin" element={<AdminPage />} />
             <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/settings" element={<SettingsPage />} />
             <Route path="/profile/business" element={<BusinessAccessPage />} />
             <Route path="/admin/users" element={<UsersPage />} />
             <Route path="/privacy" element={<LegalPage kind="privacy" />} />
@@ -280,7 +286,7 @@ export default function App() {
                 <div className="py-24 text-center">
                   <p className="eyebrow">404 / A SMALL DETOUR</p>
                   <h1 className="mt-3 text-4xl font-semibold">
-                    This page doesn’t exist.
+                    This page doesnâ€™t exist.
                   </h1>
                   <Link className="btn mt-7" to="/">
                     Back to learning
@@ -389,3 +395,4 @@ export default function App() {
     </div>
   );
 }
+

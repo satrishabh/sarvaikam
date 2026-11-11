@@ -1,4 +1,4 @@
-import typography from "@tailwindcss/typography";
+﻿import typography from "@tailwindcss/typography";
 import { createRequire } from "node:module";
 const tokens = createRequire(import.meta.url)("./design-tokens.json").Sarvaikam;
 const color = (name) => tokens.color[name].$value;
@@ -29,7 +29,6 @@ export default {
           "Archivo",
           "-apple-system",
           "BlinkMacSystemFont",
-          '"SF Pro Text"',
           '"Segoe UI"',
           "Roboto",
           "sans-serif",

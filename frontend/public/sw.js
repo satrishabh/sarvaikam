@@ -7,6 +7,8 @@ const SHELL = [
   "/manifest.webmanifest",
   "/icons/icon-192.png",
   "/icons/icon-512.png",
+  "/fonts/inter-latin-400-normal.woff2",
+  "/fonts/literata-latin-400-normal.woff2",
 ];
 
 self.addEventListener("install", (event) => {
@@ -42,8 +44,8 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Hashed build assets and the shell are safe to serve from cache.
-  if (url.pathname.startsWith("/assets/") || SHELL.includes(url.pathname)) {
+  // Hashed build assets, reading fonts and the shell are safe to serve from cache.
+  if (url.pathname.startsWith("/assets/") || url.pathname.startsWith("/fonts/") || SHELL.includes(url.pathname)) {
     event.respondWith(
       caches.match(request).then(
         (cached) =>
