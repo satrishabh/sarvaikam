@@ -1,13 +1,8 @@
-﻿import { useEffect, useState } from "react";
+﻿import { useState } from "react";
 import { Link } from "react-router-dom";
-import { api } from "../api";
 import { useAuth } from "../auth";
 import ReaderSettings from "../components/ReaderSettings";
-import {
-  readReaderPreferences,
-  saveReaderPreferences,
-  type ReaderPreferences,
-} from "../readerPreferences";
+import useReaderPreferences from "../useReaderPreferences";
 
 const shortcuts: [string, string][] = [
   ["→ or ↑", "Next section in the swipe deck"],
@@ -18,41 +13,8 @@ const shortcuts: [string, string][] = [
 
 export default function SettingsPage() {
   const { user, logout } = useAuth();
-  const [preferences, setPreferences] = useState<ReaderPreferences>(readReaderPreferences);
-  const [saved, setSaved] = useState(true);
-  const [syncFailed, setSyncFailed] = useState(false);
+  const { preferences, theme, saved, syncFailed, change } = useReaderPreferences();
   const [logoutError, setLogoutError] = useState("");
-
-  useEffect(() => {
-    setSaved(saveReaderPreferences(preferences));
-  }, [preferences]);
-
-  // Account settings win on sign-in; first sign-in copies this device's settings to the account.
-  useEffect(() => {
-    if (!user) return;
-    if (user.readerPreferences) {
-      setPreferences(user.readerPreferences);
-      return;
-    }
-    api.updateReaderPreferences(readReaderPreferences()).catch(() => setSyncFailed(true));
-  }, [user?.id]);
-
-  // Show the chosen page appearance here too, as the lesson reader does.
-  useEffect(() => {
-    const previous = document.documentElement.getAttribute("data-reader-theme");
-    document.documentElement.setAttribute("data-reader-theme", preferences.theme);
-    return () => {
-      if (previous === null) document.documentElement.removeAttribute("data-reader-theme");
-      else document.documentElement.setAttribute("data-reader-theme", previous);
-    };
-  }, [preferences.theme]);
-
-  const change = (next: ReaderPreferences) => {
-    setPreferences(next);
-    setSyncFailed(false);
-    if (!user) return;
-    api.updateReaderPreferences(next).catch(() => setSyncFailed(true));
-  };
 
   const joinedDate = (() => {
     if (!user?.createdAt) return null;
@@ -74,7 +36,7 @@ export default function SettingsPage() {
         <h2 id="settings-reading" className="text-xl font-semibold">Reading and appearance</h2>
         <div className="mt-5">
           <ReaderSettings
-            value={preferences}
+            value={{ ...preferences, theme }}
             onChange={change}
             saved={saved}
             signedIn={!!user}

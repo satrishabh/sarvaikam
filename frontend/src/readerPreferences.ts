@@ -26,6 +26,11 @@ export function themeAvailable(theme: ReaderTheme, signedIn: boolean): boolean {
   const entry = READER_THEMES.find((item) => item.value === theme);
   return !!entry && (signedIn || !entry.signedInOnly);
 }
+
+// The theme the page should show: a signed-in theme falls back to White for signed-out readers.
+export function effectiveTheme(theme: ReaderTheme, signedIn: boolean): ReaderTheme {
+  return themeAvailable(theme, signedIn) ? theme : "day";
+}
 const KEY = "sarvaikam.reader.v1";
 export const defaultReaderPreferences: ReaderPreferences = {
   size: 18,

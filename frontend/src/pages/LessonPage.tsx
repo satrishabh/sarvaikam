@@ -20,12 +20,7 @@ import LessonSearch from "../components/LessonSearch";
 import LessonCards from "../components/LessonCards";
 import ReaderSettings from "../components/ReaderSettings";
 import ReadingPosition from "../components/ReadingPosition";
-import {
-  readReaderPreferences,
-  saveReaderPreferences,
-  themeAvailable,
-  type ReaderPreferences,
-} from "../readerPreferences";
+import useReaderPreferences from "../useReaderPreferences";
 import {
   lessonCards,
   outlineFromMarkdown,
@@ -86,8 +81,13 @@ export default function LessonPage() {
   const [checking, setChecking] = useState(true);
   const [error, setError] = useState("");
   const [saveError, setSaveError] = useState("");
-  const [preferences, setPreferences] = useState(readReaderPreferences);
-  const [preferencesSaved, setPreferencesSaved] = useState(true);
+  const {
+    preferences,
+    theme: activeTheme,
+    saved: preferencesSaved,
+    syncFailed: preferencesSyncFailed,
+    change: changePreferences,
+  } = useReaderPreferences();
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [attempt, setAttempt] = useState(0);
@@ -95,26 +95,9 @@ export default function LessonPage() {
   const [bookmarked, setBookmarked] = useState(false);
   const [bookmarkError, setBookmarkError] = useState("");
   const [cardsOpen, setCardsOpen] = useState(false);
-  const [preferencesSyncFailed, setPreferencesSyncFailed] = useState(false);
-  useEffect(() => {
-    setPreferencesSaved(saveReaderPreferences(preferences));
-  }, [preferences]);
   useEffect(() => {
     setResumeId(lesson ? (readResumePoint(lesson.id)?.id ?? "") : "");
   }, [lesson?.id]);
-  // Signed-out readers see White or Dark even if a signed-in theme was saved on this device.
-  const activeTheme = themeAvailable(preferences.theme, !!user)
-    ? preferences.theme
-    : "day";
-  useEffect(() => {
-    const previous = document.documentElement.getAttribute("data-reader-theme");
-    document.documentElement.setAttribute("data-reader-theme", activeTheme);
-    return () => {
-      if (previous === null)
-        document.documentElement.removeAttribute("data-reader-theme");
-      else document.documentElement.setAttribute("data-reader-theme", previous);
-    };
-  }, [activeTheme]);
   useEffect(() => {
     setDetailsOpen(false);
     setSettingsOpen(false);
@@ -208,27 +191,6 @@ export default function LessonPage() {
       active = false;
     };
   }, [user?.id, lesson?.id]);
-  useEffect(() => {
-    setPreferencesSyncFailed(false);
-    if (!user) return;
-    if (user.readerPreferences) {
-      // The account's saved settings win on sign-in, so they follow the reader across devices.
-      setPreferences(user.readerPreferences);
-      return;
-    }
-    // First time this account has settings: keep this device's settings as the account's settings.
-    api
-      .updateReaderPreferences(readReaderPreferences())
-      .catch(() => setPreferencesSyncFailed(true));
-  }, [user?.id]);
-  const changePreferences = (next: ReaderPreferences) => {
-    setPreferences(next);
-    setPreferencesSyncFailed(false);
-    if (!user) return;
-    api
-      .updateReaderPreferences(next)
-      .catch(() => setPreferencesSyncFailed(true));
-  };
   const toggleBookmark = async () => {
     if (!lesson) return;
     setBookmarkError("");

@@ -7,6 +7,7 @@ interface AuthState {
   error: string;
   login: (email: string, password: string) => Promise<void>;
   refreshUser: () => Promise<void>;
+  applyUser: (next: User) => void;
   logout: () => Promise<void>;
 }
 const AuthContext = createContext<AuthState | null>(null);
@@ -51,6 +52,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return <AuthContext.Provider value={{ user, ready, error,
     login: async (email, password) => { signingOut.current = false; accept(await api.login(email, password)); },
     refreshUser: async () => { setUser(await api.me()); },
+    // Keeps the signed-in user in step after a change, e.g. saved reader preferences.
+    applyUser: (next: User) => setUser(next),
     logout: async () => {
       signingOut.current = true;
       tokenStore.set(null); setUser(null);

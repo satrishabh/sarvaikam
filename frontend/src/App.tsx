@@ -168,6 +168,10 @@ export default function App() {
             {links}
           </nav>
           <div className="flex items-center gap-2">
+            {/* Desktop only: on small screens Settings lives in the More sheet. */}
+            <NavLink to="/settings" className="workspace-nav hidden lg:inline-flex">
+              Settings
+            </NavLink>
             {user ? (
               <NavLink
                 to="/profile"
