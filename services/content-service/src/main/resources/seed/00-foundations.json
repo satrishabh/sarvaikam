@@ -58,25 +58,25 @@
           {
             "slug": "hypervisors",
             "title": "How virtualization works",
-            "content": "A **hypervisor** lets one physical host run many isolated operating systems.\n\n- **Type 1** (bare metal): KVM, VMware ESXi, Hyper-V, AWS Nitro\n- **Type 2** (hosted): VirtualBox, VMware Workstation\n\nEach VM has its own kernel, so isolation is strong but boot time and memory overhead are higher than containers.",
+            "content": "## What a hypervisor does\n\nA **hypervisor** lets one physical host run many isolated operating systems.\n\n## Two kinds of hypervisor\n\n- **Type 1** (bare metal): KVM, VMware ESXi, Hyper-V, AWS Nitro\n- **Type 2** (hosted): VirtualBox, VMware Workstation\n\nEach VM has its own kernel, so isolation is strong but boot time and memory overhead are higher than containers.",
             "stage": "STARTER"
           },
           {
             "slug": "launch-a-vm",
             "title": "Launch and connect to a cloud VM",
-            "content": "Every cloud offers VMs: AWS EC2, Azure Virtual Machines, GCP Compute Engine.\n\n```bash\n# GCP example\ngcloud compute instances create web-1 --machine-type=e2-small --image-family=debian-12 --image-project=debian-cloud\ngcloud compute ssh web-1\n```\n\nAlways use SSH keys, never passwords, and restrict port 22 to your IP.",
+            "content": "## Launch a VM\n\nEvery cloud offers VMs: AWS EC2, Azure Virtual Machines, GCP Compute Engine.\n\n```bash\n# GCP example\ngcloud compute instances create web-1 --machine-type=e2-small --image-family=debian-12 --image-project=debian-cloud\ngcloud compute ssh web-1\n```\n\n## Access and security\n\nAlways use SSH keys, never passwords, and restrict port 22 to your IP.",
             "stage": "STARTER"
           },
           {
             "slug": "images-and-provisioning",
             "title": "Images, cloud-init and Packer",
-            "content": "Do not configure VMs by hand. Options:\n\n- **cloud-init** runs a script on first boot\n- **Packer** bakes a golden image with everything installed\n- **Ansible** configures fleets over SSH\n\n```yaml\n#cloud-config\npackages: [nginx]\nruncmd:\n  - systemctl enable --now nginx\n```",
+            "content": "## Build images, not servers\n\nDo not configure VMs by hand. Options:\n\n## Automate first boot\n\n- **cloud-init** runs a script on first boot\n- **Packer** bakes a golden image with everything installed\n- **Ansible** configures fleets over SSH\n\n```yaml\n#cloud-config\npackages: [nginx]\nruncmd:\n  - systemctl enable --now nginx\n```",
             "stage": "INTERMEDIATE"
           },
           {
             "slug": "scaling-vms",
             "title": "Scaling VMs and when to choose them",
-            "content": "Use auto scaling groups (AWS ASG, Azure VM Scale Sets, GCP Managed Instance Groups) behind a load balancer.\n\nChoose VMs when you need: a custom kernel, legacy software, GPUs with special drivers, or strict tenant isolation. Otherwise containers are usually cheaper and faster to ship.",
+            "content": "## Scale out with groups\n\nUse auto scaling groups (AWS ASG, Azure VM Scale Sets, GCP Managed Instance Groups) behind a load balancer.\n\n## When VMs are the right choice\n\nChoose VMs when you need: a custom kernel, legacy software, GPUs with special drivers, or strict tenant isolation. Otherwise containers are usually cheaper and faster to ship.",
             "stage": "INTERMEDIATE"
           }
         ]
@@ -411,7 +411,7 @@
           {
             "slug": "ml-fundamentals",
             "title": "What is machine learning?",
-            "content": "ML learns patterns from data instead of hand-written rules.\n\n- **Supervised**: labelled data, e.g. regression and classification\n- **Unsupervised**: find structure, e.g. clustering and dimensionality reduction\n- **Reinforcement**: learn by reward\n\nThe workflow: collect data > clean > split > train > evaluate > deploy > monitor.",
+            "content": "## What machine learning is\n\nML learns patterns from data instead of hand-written rules.\n\n## Kinds of learning\n\n- **Supervised**: labelled data, e.g. regression and classification\n- **Unsupervised**: find structure, e.g. clustering and dimensionality reduction\n- **Reinforcement**: learn by reward\n\nThe workflow: collect data > clean > split > train > evaluate > deploy > monitor.",
             "stage": "STARTER"
           },
           {
@@ -423,13 +423,13 @@
           {
             "slug": "evaluation",
             "title": "Evaluation and overfitting",
-            "content": "Accuracy alone misleads on imbalanced data. Use precision, recall, F1 and ROC-AUC for classification, and MAE/RMSE for regression.\n\nUse **cross-validation** and keep a held-out test set. If training is much better than validation, you are overfitting: add data, regularize or simplify.",
+            "content": "## Measure what matters\n\nAccuracy alone misleads on imbalanced data. Use precision, recall, F1 and ROC-AUC for classification, and MAE/RMSE for regression.\n\n## Validate honestly\n\nUse **cross-validation** and keep a held-out test set. If training is much better than validation, you are overfitting: add data, regularize or simplify.",
             "stage": "INTERMEDIATE"
           },
           {
             "slug": "features-pipelines",
             "title": "Feature engineering and pipelines",
-            "content": "```python\nfrom sklearn.pipeline import make_pipeline\nfrom sklearn.preprocessing import StandardScaler\nfrom sklearn.linear_model import LogisticRegression\n\npipe = make_pipeline(StandardScaler(), LogisticRegression())\n```\n\nPipelines prevent data leakage. Track experiments with MLflow, and try gradient boosting (XGBoost/LightGBM) for tabular data.",
+            "content": "## Features and pipelines\n\n```python\nfrom sklearn.pipeline import make_pipeline\nfrom sklearn.preprocessing import StandardScaler\nfrom sklearn.linear_model import LogisticRegression\n\npipe = make_pipeline(StandardScaler(), LogisticRegression())\n```\n\n## Why pipelines matter\n\nPipelines prevent data leakage. Track experiments with MLflow, and try gradient boosting (XGBoost/LightGBM) for tabular data.",
             "stage": "INTERMEDIATE"
           }
         ]
@@ -455,7 +455,7 @@
           {
             "slug": "cnns-rnns",
             "title": "CNNs and sequence models",
-            "content": "- **CNNs** use convolutions for images (ResNet, EfficientNet)\n- **RNNs/LSTMs** process sequences step by step but struggle with long context\n\nTransformers replaced RNNs for most sequence tasks (next roadmap).",
+            "content": "## Sequence and image architectures\n\n- **CNNs** use convolutions for images (ResNet, EfficientNet)\n- **RNNs/LSTMs** process sequences step by step but struggle with long context\n\n## What came next\n\nTransformers replaced RNNs for most sequence tasks (next roadmap).",
             "stage": "INTERMEDIATE"
           },
           {
@@ -475,19 +475,19 @@
           {
             "slug": "attention",
             "title": "Self-attention explained",
-            "content": "Each token creates a **query**, **key** and **value**. Attention weights are `softmax(QK^T / sqrt(d))`, used to mix the values, so every token can look at every other token in parallel.\n\n**Multi-head** attention runs several of these side by side, letting the model learn different relationships.",
+            "content": "## Attention in one idea\n\nEach token creates a **query**, **key** and **value**. Attention weights are `softmax(QK^T / sqrt(d))`, used to mix the values, so every token can look at every other token in parallel.\n\n## Several attention heads at once\n\n**Multi-head** attention runs several of these side by side, letting the model learn different relationships.",
             "stage": "STARTER"
           },
           {
             "slug": "architecture",
             "title": "Encoder, decoder and positional encoding",
-            "content": "- **Encoder-only** (BERT): understanding tasks like classification and embeddings\n- **Decoder-only** (GPT, Llama): text generation\n- **Encoder-decoder** (T5): translation and summarization\n\nBecause attention ignores order, positions are injected with positional encodings (e.g. RoPE).",
+            "content": "## Encoder and decoder models\n\n- **Encoder-only** (BERT): understanding tasks like classification and embeddings\n- **Decoder-only** (GPT, Llama): text generation\n- **Encoder-decoder** (T5): translation and summarization\n\n## Position information\n\nBecause attention ignores order, positions are injected with positional encodings (e.g. RoPE).",
             "stage": "STARTER"
           },
           {
             "slug": "hugging-face",
             "title": "Using Hugging Face Transformers",
-            "content": "```python\nfrom transformers import pipeline\n\nclassifier = pipeline(\"sentiment-analysis\")\nprint(classifier(\"Learning transformers step by step is great!\"))\n```\n\nExplore models on the Hub, and the `tokenizers` and `datasets` libraries.",
+            "content": "## Use a pretrained model\n\n```python\nfrom transformers import pipeline\n\nclassifier = pipeline(\"sentiment-analysis\")\nprint(classifier(\"Learning transformers step by step is great!\"))\n```\n\n## Where to find models\n\nExplore models on the Hub, and the `tokenizers` and `datasets` libraries.",
             "stage": "INTERMEDIATE"
           },
           {
@@ -507,25 +507,25 @@
           {
             "slug": "how-llms-work",
             "title": "How LLMs work",
-            "content": "LLMs are decoder-only transformers trained to predict the next token on huge corpora, then aligned with instruction tuning and RLHF.\n\nKey terms: **tokens**, **context window**, **temperature**, **hallucination**. Popular families include GPT, Claude, Gemini, Llama, Mistral and Qwen.",
+            "content": "## How LLMs work\n\nLLMs are decoder-only transformers trained to predict the next token on huge corpora, then aligned with instruction tuning and RLHF.\n\n## Key terms\n\nKey terms: **tokens**, **context window**, **temperature**, **hallucination**. Popular families include GPT, Claude, Gemini, Llama, Mistral and Qwen.",
             "stage": "STARTER"
           },
           {
             "slug": "prompting",
             "title": "Prompt engineering",
-            "content": "- Give a clear role, task and output format\n- Provide examples (few-shot)\n- Ask for structured output (JSON) and validate it\n- Separate instructions from untrusted input to reduce prompt injection\n\nTreat prompts like code: version them and test them.",
+            "content": "## Write clear prompts\n\n- Give a clear role, task and output format\n- Provide examples (few-shot)\n- Ask for structured output (JSON) and validate it\n- Separate instructions from untrusted input to reduce prompt injection\n\n## Treat prompts as code\n\nTreat prompts like code: version them and test them.",
             "stage": "STARTER"
           },
           {
             "slug": "embeddings-rag",
             "title": "Embeddings and RAG",
-            "content": "**Retrieval-Augmented Generation** grounds answers in your data:\n\n1. Split documents into chunks\n2. Embed the chunks and store them in a vector DB (pgvector, Pinecone, Cortex Search)\n3. Embed the question and retrieve the top-k chunks\n4. Put them in the prompt and generate\n\nEvaluate retrieval quality separately from answer quality.",
+            "content": "## Retrieval-augmented generation\n\n**Retrieval-Augmented Generation** grounds answers in your data:\n\n## How the pipeline works\n\n1. Split documents into chunks\n2. Embed the chunks and store them in a vector DB (pgvector, Pinecone, Cortex Search)\n3. Embed the question and retrieve the top-k chunks\n4. Put them in the prompt and generate\n\nEvaluate retrieval quality separately from answer quality.",
             "stage": "INTERMEDIATE"
           },
           {
             "slug": "agents-production",
             "title": "Agents, tools and production",
-            "content": "Agents let an LLM call **tools** (APIs, SQL, search) in a loop. In production, also handle:\n\n- Guardrails and output validation\n- Cost and latency (caching, smaller models)\n- Observability: trace prompts and responses\n- Evaluation sets that run in CI\n\nRun open models locally with Ollama or vLLM, or use managed APIs.",
+            "content": "## Agents that call tools\n\nAgents let an LLM call **tools** (APIs, SQL, search) in a loop. In production, also handle:\n\n## Running agents in production\n\n- Guardrails and output validation\n- Cost and latency (caching, smaller models)\n- Observability: trace prompts and responses\n- Evaluation sets that run in CI\n\nRun open models locally with Ollama or vLLM, or use managed APIs.",
             "stage": "INTERMEDIATE"
           }
         ]
