@@ -379,8 +379,9 @@ export default function PracticePage() {
     <div className="practice-page space-y-8">
       <header className="flex flex-wrap items-end justify-between gap-5">
         <div>
-          <Link to="/interview-prep" className="link text-xs">
-            Interview prep /
+          <Link to="/interview-prep" className="link inline-flex items-center gap-1 text-xs">
+            <Icon name="chevron" className="h-3 w-3 rotate-180" />
+            Back to interview prep
           </Link>
           <h1 className="mt-3 hidden text-[clamp(2rem,5vw,3.3rem)] font-semibold leading-tight tracking-tightest lg:block">
             A little practice.
