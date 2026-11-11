@@ -226,6 +226,37 @@
   font-size: 15px;
   font-weight: 600;
 }
+.theme-swatch {
+  display: flex;
+  height: auto;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  text-align: left;
+}
+.theme-swatch:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+.theme-swatch-sample {
+  display: grid;
+  height: 44px;
+  place-items: center;
+  border: 1px solid rgb(18 50 90 / 0.12);
+  border-radius: 8px;
+  background: var(--swatch-page);
+  color: var(--swatch-ink);
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: 18px;
+}
+.theme-swatch-label {
+  font-weight: 600;
+}
+.theme-swatch-note {
+  font-size: 12px;
+  font-weight: 400;
+  opacity: 0.75;
+}
 .reader-mobile-tools {
   display: flex;
   align-items: center;
@@ -304,6 +335,26 @@ html[data-reader-theme="night"] {
   --reader-line: #3b4c59;
   --reader-fill: #203442;
   --reader-accent: #ffd1aa;
+}
+/* Warm: cream paper with brown ink, for long reads. Signed-in readers only. */
+html[data-reader-theme="paper"] {
+  color-scheme: light;
+  --reader-page: #f6f0e4;
+  --reader-text: #3b2f24;
+  --reader-muted: #6b5a48;
+  --reader-line: #e0d4bf;
+  --reader-fill: #efe6d4;
+  --reader-accent: #9a4a1f;
+}
+/* Clean: white page with soft grey surfaces and a crisp blue accent. Signed-in readers only. */
+html[data-reader-theme="apple"] {
+  color-scheme: light;
+  --reader-page: #ffffff;
+  --reader-text: #1d1d1f;
+  --reader-muted: #6e6e73;
+  --reader-line: #d2d2d7;
+  --reader-fill: #f5f5f7;
+  --reader-accent: #0066cc;
 }
 html[data-reader-theme] body,
 html[data-reader-theme] .app-header,
