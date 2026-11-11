@@ -5,7 +5,7 @@ export type Role = 'USER' | 'BUSINESS' | 'ADMIN';
 export interface ReaderPreferences {
   size: 16 | 18 | 20 | 22;
   font: 'sans' | 'serif';
-  theme: 'day' | 'paper' | 'night';
+  theme: 'day' | 'paper' | 'slate' | 'night';
   spacing: 'comfortable' | 'compact';
 }
 

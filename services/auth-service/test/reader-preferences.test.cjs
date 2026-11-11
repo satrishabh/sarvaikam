@@ -15,6 +15,10 @@ test('reader preferences accept only the known settings', async () => {
   }
 });
 
+test('the slate theme is an accepted reader theme', async () => {
+  assert.equal((await validate(plainToInstance(ReaderPreferencesDto, { ...valid, theme: 'slate' }))).length, 0);
+});
+
 test('public user returns stored preferences only when every setting is valid', async () => {
   const service = Object.create(AuthService.prototype);
   service.policies = { findOneBy: async () => null };
