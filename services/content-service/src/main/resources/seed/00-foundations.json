@@ -270,31 +270,31 @@
           {
             "slug": "setup-basics",
             "title": "JDK setup and basics",
-            "content": "Install a JDK 21 (Temurin) and verify with `java -version`. Java 21 runs single files directly:\n\n```java\n// Hello.java\nvoid main() {\n    System.out.println(\"Hello, Java 21\");\n}\n```\n\n```bash\njava --enable-preview --source 21 Hello.java\n```\n\nJava is statically typed, compiled to bytecode and runs on the JVM.",
+            "content": "## Install and run Java\n\nInstall a JDK 21 (Temurin) and verify with `java -version`. Java 21 runs single files directly:\n\n```java\n// Hello.java\nvoid main() {\n    System.out.println(\"Hello, Java 21\");\n}\n```\n\n## Run a single file\n\n```bash\njava --enable-preview --source 21 Hello.java\n```\n\nJava is statically typed, compiled to bytecode and runs on the JVM.",
             "stage": "STARTER"
           },
           {
             "slug": "oop-records",
             "title": "Classes, interfaces and records",
-            "content": "```java\npublic sealed interface Shape permits Circle, Square {}\npublic record Circle(double r) implements Shape {}\npublic record Square(double side) implements Shape {}\n\nstatic double area(Shape s) {\n    return switch (s) {\n        case Circle c -> Math.PI * c.r() * c.r();\n        case Square q -> q.side() * q.side();\n    };\n}\n```\n\nRecords are immutable data carriers; sealed types plus pattern matching give exhaustive switches.",
+            "content": "## Records and sealed types\n\n```java\npublic sealed interface Shape permits Circle, Square {}\npublic record Circle(double r) implements Shape {}\npublic record Square(double side) implements Shape {}\n\nstatic double area(Shape s) {\n    return switch (s) {\n        case Circle c -> Math.PI * c.r() * c.r();\n        case Square q -> q.side() * q.side();\n    };\n}\n```\n\n## Why these types help\n\nRecords are immutable data carriers; sealed types plus pattern matching give exhaustive switches.",
             "stage": "INTERMEDIATE"
           },
           {
             "slug": "collections-streams",
             "title": "Collections and streams",
-            "content": "```java\nvar words = List.of(\"kubernetes\", \"java\", \"terraform\", \"go\");\nMap<Integer, List<String>> byLength = words.stream()\n    .filter(w -> w.length() > 2)\n    .collect(Collectors.groupingBy(String::length));\n```\n\nKnow when to use `ArrayList`, `HashMap`, `TreeMap` and `ArrayDeque`.",
+            "content": "## Collections and streams\n\n```java\nvar words = List.of(\"kubernetes\", \"java\", \"terraform\", \"go\");\nMap<Integer, List<String>> byLength = words.stream()\n    .filter(w -> w.length() > 2)\n    .collect(Collectors.groupingBy(String::length));\n```\n\n## Pick the right collection\n\nKnow when to use `ArrayList`, `HashMap`, `TreeMap` and `ArrayDeque`.",
             "stage": "INTERMEDIATE"
           },
           {
             "slug": "concurrency",
             "title": "Concurrency and virtual threads",
-            "content": "Java 21 virtual threads make blocking I/O cheap:\n\n```java\ntry (var executor = Executors.newVirtualThreadPerTaskExecutor()) {\n    IntStream.range(0, 10_000).forEach(i ->\n        executor.submit(() -> { Thread.sleep(Duration.ofSeconds(1)); return i; }));\n}\n```\n\nTen thousand concurrent tasks without a reactive framework.",
+            "content": "## Virtual threads\n\nJava 21 virtual threads make blocking I/O cheap:\n\n```java\ntry (var executor = Executors.newVirtualThreadPerTaskExecutor()) {\n    IntStream.range(0, 10_000).forEach(i ->\n        executor.submit(() -> { Thread.sleep(Duration.ofSeconds(1)); return i; }));\n}\n```\n\n## What this buys you\n\nTen thousand concurrent tasks without a reactive framework.",
             "stage": "INTERMEDIATE"
           },
           {
             "slug": "build-tools",
             "title": "Maven, Gradle and testing",
-            "content": "Use **Maven** or **Gradle** for dependencies and builds, **JUnit 5** + **AssertJ** for tests, and **Testcontainers** for real databases in tests.\n\n```bash\nmvn package\n```\n\nNext step: the Spring Boot roadmap. This project's `content-service` is a working example.",
+            "content": "## Builds and tests\n\nUse **Maven** or **Gradle** for dependencies and builds, **JUnit 5** + **AssertJ** for tests, and **Testcontainers** for real databases in tests.\n\n## Build with one command\n\n```bash\nmvn package\n```\n\nNext step: the Spring Boot roadmap. This project's `content-service` is a working example.",
             "stage": "STARTER"
           }
         ]
@@ -314,13 +314,13 @@
           {
             "slug": "async-await",
             "title": "Promises and async/await",
-            "content": "```js\nimport { readFile } from 'node:fs/promises';\n\nasync function main() {\n  const [a, b] = await Promise.all([\n    readFile('a.txt', 'utf8'),\n    readFile('b.txt', 'utf8'),\n  ]);\n  console.log(a.length + b.length);\n}\nmain().catch(console.error);\n```",
+            "content": "## Promises and async code\n\n```js\nimport { readFile } from 'node:fs/promises';\n\n## Run work in parallel\n\nasync function main() {\n  const [a, b] = await Promise.all([\n    readFile('a.txt', 'utf8'),\n    readFile('b.txt', 'utf8'),\n  ]);\n  console.log(a.length + b.length);\n}\nmain().catch(console.error);\n```",
             "stage": "STARTER"
           },
           {
             "slug": "http-server",
             "title": "Building an HTTP API",
-            "content": "```js\nimport express from 'express';\nconst app = express();\napp.use(express.json());\napp.get('/health', (_req, res) => res.json({ status: 'UP' }));\napp.listen(3000);\n```\n\nFor larger apps use a structured framework such as NestJS (see the TypeScript backend roadmap).",
+            "content": "## A small HTTP server\n\n```js\nimport express from 'express';\nconst app = express();\napp.use(express.json());\napp.get('/health', (_req, res) => res.json({ status: 'UP' }));\napp.listen(3000);\n```\n\n## Beyond a small server\n\nFor larger apps use a structured framework such as NestJS (see the TypeScript backend roadmap).",
             "stage": "INTERMEDIATE"
           },
           {
@@ -340,25 +340,25 @@
           {
             "slug": "basics",
             "title": "Syntax and data structures",
-            "content": "```python\nskills = {\"python\": 3, \"go\": 1}\nskills[\"rust\"] = 0\nadvanced = [name for name, lvl in skills.items() if lvl >= 2]\nprint(advanced)\n```\n\nMaster lists, dicts, sets, tuples, comprehensions and f-strings.",
+            "content": "## Core data structures\n\n```python\nskills = {\"python\": 3, \"go\": 1}\nskills[\"rust\"] = 0\nadvanced = [name for name, lvl in skills.items() if lvl >= 2]\nprint(advanced)\n```\n\n## What to practise\n\nMaster lists, dicts, sets, tuples, comprehensions and f-strings.",
             "stage": "STARTER"
           },
           {
             "slug": "environments",
             "title": "Virtual environments and packaging",
-            "content": "Isolate each project:\n\n```bash\npython -m venv .venv\n.venv/bin/activate        # Windows: .venv\\Scripts\\activate\npip install requests\n```\n\nModern tooling: `uv` or `poetry` with `pyproject.toml`.",
+            "content": "## Isolate each project\n\nIsolate each project:\n\n## Create and activate a venv\n\n```bash\npython -m venv .venv\n.venv/bin/activate        # Windows: .venv\\Scripts\\activate\npip install requests\n```\n\nModern tooling: `uv` or `poetry` with `pyproject.toml`.",
             "stage": "STARTER"
           },
           {
             "slug": "typing-testing",
             "title": "Type hints, dataclasses and pytest",
-            "content": "```python\nfrom dataclasses import dataclass\n\n@dataclass(frozen=True)\nclass Lesson:\n    title: str\n    step: int\n\ndef test_lesson():\n    assert Lesson(\"Intro\", 1).step == 1\n```\n\nCheck types with `mypy`, lint with `ruff`, test with `pytest`.",
+            "content": "## Types and tests\n\n```python\nfrom dataclasses import dataclass\n\n@dataclass(frozen=True)\nclass Lesson:\n    title: str\n    step: int\n\ndef test_lesson():\n    assert Lesson(\"Intro\", 1).step == 1\n```\n\n## Check and test\n\nCheck types with `mypy`, lint with `ruff`, test with `pytest`.",
             "stage": "INTERMEDIATE"
           },
           {
             "slug": "apis-async",
             "title": "APIs with FastAPI and asyncio",
-            "content": "```python\nfrom fastapi import FastAPI\napp = FastAPI()\n\n@app.get(\"/health\")\nasync def health():\n    return {\"status\": \"UP\"}\n```\n\n```bash\nuvicorn main:app --reload\n```\n\nPython is the gateway to the ML, Deep Learning and LLM roadmaps.",
+            "content": "## A small API\n\n```python\nfrom fastapi import FastAPI\napp = FastAPI()\n\n@app.get(\"/health\")\nasync def health():\n    return {\"status\": \"UP\"}\n```\n\n```bash\nuvicorn main:app --reload\n```\n\n## Next steps\n\nPython is the gateway to the ML, Deep Learning and LLM roadmaps.",
             "stage": "INTERMEDIATE"
           }
         ]
@@ -372,25 +372,25 @@
           {
             "slug": "basics",
             "title": "Go basics and modules",
-            "content": "```bash\ngo mod init example.com/hello\n```\n\n```go\npackage main\n\nimport \"fmt\"\n\nfunc main() {\n    fmt.Println(\"Hello, Go\")\n}\n```\n\n```bash\ngo run .\n```\n\nGo compiles to a single static binary, which is why Docker, Kubernetes and Terraform are written in it.",
+            "content": "## Your first Go program\n\n```bash\ngo mod init example.com/hello\n```\n\n```go\npackage main\n\nimport \"fmt\"\n\nfunc main() {\n    fmt.Println(\"Hello, Go\")\n}\n```\n\n```bash\ngo run .\n```\n\n## Why Go binaries are easy to ship\n\nGo compiles to a single static binary, which is why Docker, Kubernetes and Terraform are written in it.",
             "stage": "STARTER"
           },
           {
             "slug": "structs-interfaces",
             "title": "Structs, interfaces and errors",
-            "content": "```go\ntype Store interface {\n    Get(id string) (string, error)\n}\n\nvar ErrNotFound = errors.New(\"not found\")\n\nfunc load(s Store, id string) error {\n    if _, err := s.Get(id); err != nil {\n        return fmt.Errorf(\"load %s: %w\", id, err)\n    }\n    return nil\n}\n```\n\nInterfaces are satisfied implicitly; errors are values, wrapped with `%w`.",
+            "content": "## Interfaces and errors\n\n```go\ntype Store interface {\n    Get(id string) (string, error)\n}\n\nvar ErrNotFound = errors.New(\"not found\")\n\nfunc load(s Store, id string) error {\n    if _, err := s.Get(id); err != nil {\n        return fmt.Errorf(\"load %s: %w\", id, err)\n    }\n    return nil\n}\n```\n\n## Rules to remember\n\nInterfaces are satisfied implicitly; errors are values, wrapped with `%w`.",
             "stage": "STARTER"
           },
           {
             "slug": "concurrency",
             "title": "Goroutines and channels",
-            "content": "```go\nresults := make(chan int)\nvar wg sync.WaitGroup\nfor i := 1; i <= 3; i++ {\n    wg.Add(1)\n    go func(n int) { defer wg.Done(); results <- n * n }(i)\n}\ngo func() { wg.Wait(); close(results) }()\nfor r := range results {\n    fmt.Println(r)\n}\n```\n\nUse `context.Context` for cancellation and timeouts.",
+            "content": "## Goroutines and channels\n\n```go\nresults := make(chan int)\nvar wg sync.WaitGroup\nfor i := 1; i <= 3; i++ {\n    wg.Add(1)\n    go func(n int) { defer wg.Done(); results <- n * n }(i)\n}\ngo func() { wg.Wait(); close(results) }()\nfor r := range results {\n    fmt.Println(r)\n}\n```\n\n## Cancellation and timeouts\n\nUse `context.Context` for cancellation and timeouts.",
             "stage": "INTERMEDIATE"
           },
           {
             "slug": "http-services",
             "title": "HTTP services in Go",
-            "content": "The standard library is production-grade; routers like chi add ergonomics.\n\nThis project's `progress-service` is a complete example with JWT auth, pgx for PostgreSQL and a distroless Docker image. Test with `go test ./...` and table-driven tests.",
+            "content": "## Standard library and routers\n\nThe standard library is production-grade; routers like chi add ergonomics.\n\n## A complete example\n\nThis project's `progress-service` is a complete example with JWT auth, pgx for PostgreSQL and a distroless Docker image. Test with `go test ./...` and table-driven tests.",
             "stage": "INTERMEDIATE"
           }
         ]
@@ -546,19 +546,19 @@
           {
             "slug": "getting-started",
             "title": "Bootstrap a project",
-            "content": "Generate a project at start.spring.io with the **Web**, **Data JPA**, **Validation** and **PostgreSQL** dependencies.\n\nSpring Boot auto-configures beans from what is on the classpath, plus `application.yml`.\n\n```bash\n./mvnw spring-boot:run\n```",
+            "content": "## Create the project\n\nGenerate a project at start.spring.io with the **Web**, **Data JPA**, **Validation** and **PostgreSQL** dependencies.\n\n## How configuration works\n\nSpring Boot auto-configures beans from what is on the classpath, plus `application.yml`.\n\n```bash\n./mvnw spring-boot:run\n```",
             "stage": "STARTER"
           },
           {
             "slug": "rest-controllers",
             "title": "REST controllers and validation",
-            "content": "```java\n@RestController\n@RequestMapping(\"/books\")\nclass BookController {\n    record BookRequest(@NotBlank String title) {}\n\n    @PostMapping\n    @ResponseStatus(HttpStatus.CREATED)\n    Book create(@Valid @RequestBody BookRequest r) { return service.create(r); }\n}\n```\n\nPut business logic in `@Service` classes and keep controllers thin.",
+            "content": "## A REST controller\n\n```java\n@RestController\n@RequestMapping(\"/books\")\nclass BookController {\n    record BookRequest(@NotBlank String title) {}\n\n    @PostMapping\n    @ResponseStatus(HttpStatus.CREATED)\n    Book create(@Valid @RequestBody BookRequest r) { return service.create(r); }\n}\n```\n\n## Keep controllers thin\n\nPut business logic in `@Service` classes and keep controllers thin.",
             "stage": "STARTER"
           },
           {
             "slug": "data-jpa",
             "title": "Spring Data JPA and Flyway",
-            "content": "```java\npublic interface BookRepository extends JpaRepository<Book, Long> {\n    List<Book> findByTitleContainingIgnoreCase(String q);\n}\n```\n\nManage the schema with **Flyway** migrations (`db/migration/V1__init.sql`) rather than `ddl-auto`. Watch for N+1 queries and use `@Transactional(readOnly = true)` for reads.",
+            "content": "## Repositories\n\n```java\npublic interface BookRepository extends JpaRepository<Book, Long> {\n    List<Book> findByTitleContainingIgnoreCase(String q);\n}\n```\n\n## Schema changes with Flyway\n\nManage the schema with **Flyway** migrations (`db/migration/V1__init.sql`) rather than `ddl-auto`. Watch for N+1 queries and use `@Transactional(readOnly = true)` for reads.",
             "stage": "INTERMEDIATE"
           },
           {
@@ -578,13 +578,13 @@
           {
             "slug": "typescript-essentials",
             "title": "TypeScript essentials",
-            "content": "```ts\ninterface Lesson { id: number; title: string; tags?: string[] }\ntype Level = 'BEGINNER' | 'ADVANCED';\n\nfunction first<T>(items: T[]): T | undefined {\n  return items[0];\n}\n```\n\nEnable `strict` mode. Learn unions, generics, narrowing and utility types (`Partial`, `Pick`, `Record`).",
+            "content": "## Types you will use\n\n```ts\ninterface Lesson { id: number; title: string; tags?: string[] }\ntype Level = 'BEGINNER' | 'ADVANCED';\n\nfunction first<T>(items: T[]): T | undefined {\n  return items[0];\n}\n```\n\n## Strict mode and advanced types\n\nEnable `strict` mode. Learn unions, generics, narrowing and utility types (`Partial`, `Pick`, `Record`).",
             "stage": "STARTER"
           },
           {
             "slug": "nest-architecture",
             "title": "NestJS modules, controllers and providers",
-            "content": "NestJS uses decorators and dependency injection:\n\n```ts\n@Controller('lessons')\nexport class LessonsController {\n  constructor(private readonly service: LessonsService) {}\n\n  @Get(':id')\n  find(@Param('id', ParseIntPipe) id: number) {\n    return this.service.find(id);\n  }\n}\n```\n\nGroup features into `@Module`s.",
+            "content": "## Controllers and modules\n\nNestJS uses decorators and dependency injection:\n\n```ts\n@Controller('lessons')\nexport class LessonsController {\n  constructor(private readonly service: LessonsService) {}\n\n  @Get(':id')\n  find(@Param('id', ParseIntPipe) id: number) {\n    return this.service.find(id);\n  }\n}\n```\n\n## Organize by feature\n\nGroup features into `@Module`s.",
             "stage": "STARTER"
           },
           {
