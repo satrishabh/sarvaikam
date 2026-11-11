@@ -579,7 +579,7 @@ export default function LessonPage() {
                       : "Mark complete"}
               </button>
             ) : (
-              <Link to="/login" className="btn px-4 text-xs">
+              <Link to="/login" className="btn-quiet px-3 text-xs text-accent">
                 Sign in to save
               </Link>
             )}
