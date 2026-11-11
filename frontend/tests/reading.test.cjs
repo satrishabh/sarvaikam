@@ -109,6 +109,14 @@ test("warm and clean themes are for signed-in readers; white and dark stay open 
   assert.equal(themeAvailable("slate", true), true);
 });
 
+test("a signed-in theme shows as White for signed-out readers on every page", () => {
+  const { effectiveTheme } = require("../../.cache/learning-tests/readerPreferences.js");
+  assert.equal(effectiveTheme("paper", false), "day");
+  assert.equal(effectiveTheme("slate", false), "day");
+  assert.equal(effectiveTheme("night", false), "night");
+  assert.equal(effectiveTheme("slate", true), "slate");
+});
+
 test("lesson search reports each match with its section and ignores very short queries", () => {
   const { searchLesson } = require("../../.cache/learning-tests/readingOutline.js");
   const markdown = [
