@@ -50,6 +50,7 @@ __ENV_HEADERS__
         # Actuator details are internal only.
         location /api/content/actuator/ { return 404; }
 
+        location = /sw.js { add_header Cache-Control "no-cache"; }
         location = /manifest.webmanifest { types { application/manifest+json webmanifest; } default_type application/manifest+json; add_header Cache-Control "no-cache"; }
         location /assets/ { expires 1y; add_header Cache-Control "public, immutable"; }
         location / { try_files $uri $uri/ /index.html; }

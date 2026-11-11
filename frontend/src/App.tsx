@@ -183,7 +183,7 @@ export default function App() {
               </Link>
             )}
             <button
-              className="btn-quiet px-2 lg:hidden"
+              className={`btn-quiet px-2 lg:hidden ${isReader ? "" : "hidden"}`}
               aria-label={open ? "Close navigation" : "Open navigation"}
               aria-expanded={open}
               aria-controls="mobile-nav"
