@@ -617,7 +617,7 @@
           {
             "slug": "relational-model",
             "title": "Relational modelling",
-            "content": "Tables, rows, primary keys and foreign keys. Normalize to remove duplication, and denormalize deliberately for read performance.\n\n```sql\nCREATE TABLE topics (\n  id BIGSERIAL PRIMARY KEY,\n  name TEXT NOT NULL\n);\nCREATE TABLE lessons (\n  id BIGSERIAL PRIMARY KEY,\n  topic_id BIGINT REFERENCES topics(id),\n  title TEXT NOT NULL\n);\n```",
+            "content": "## Tables, keys and normalization\n\nTables, rows, primary keys and foreign keys. Normalize to remove duplication, and denormalize deliberately for read performance.\n\n## A first schema\n\n```sql\nCREATE TABLE topics (\n  id BIGSERIAL PRIMARY KEY,\n  name TEXT NOT NULL\n);\nCREATE TABLE lessons (\n  id BIGSERIAL PRIMARY KEY,\n  topic_id BIGINT REFERENCES topics(id),\n  title TEXT NOT NULL\n);\n```",
             "stage": "STARTER"
           },
           {
@@ -635,7 +635,7 @@
           {
             "slug": "choosing",
             "title": "OLTP vs OLAP vs NoSQL",
-            "content": "- **OLTP** (PostgreSQL, MySQL): many small transactional writes\n- **OLAP** (Snowflake, BigQuery, Databricks SQL): large analytical scans\n- **NoSQL**: key-value (Redis, DynamoDB), document (MongoDB), vector (pgvector)\n\nMost systems use more than one.",
+            "content": "## Choose a database\n\n- **OLTP** (PostgreSQL, MySQL): many small transactional writes\n- **OLAP** (Snowflake, BigQuery, Databricks SQL): large analytical scans\n- **NoSQL**: key-value (Redis, DynamoDB), document (MongoDB), vector (pgvector)\n\n## One system or several\n\nMost systems use more than one.",
             "stage": "INTERMEDIATE"
           }
         ]
@@ -655,13 +655,13 @@
           {
             "slug": "spark-basics",
             "title": "Apache Spark DataFrames",
-            "content": "```python\ndf = spark.read.json(\"/Volumes/main/raw/events\")\n(df.filter(\"event = 'lesson_complete'\")\n   .groupBy(\"topic\")\n   .count()\n   .orderBy(\"count\", ascending=False)\n   .show())\n```\n\nSpark is lazy: transformations build a plan, and actions such as `show` and `write` execute it across the cluster.",
+            "content": "## Spark in practice\n\n```python\ndf = spark.read.json(\"/Volumes/main/raw/events\")\n(df.filter(\"event = 'lesson_complete'\")\n   .groupBy(\"topic\")\n   .count()\n   .orderBy(\"count\", ascending=False)\n   .show())\n```\n\n## Lazy evaluation\n\nSpark is lazy: transformations build a plan, and actions such as `show` and `write` execute it across the cluster.",
             "stage": "STARTER"
           },
           {
             "slug": "delta-medallion",
             "title": "Delta Lake and the medallion architecture",
-            "content": "Organize data as **Bronze** (raw) > **Silver** (cleaned) > **Gold** (business aggregates).\n\n```sql\nCREATE TABLE silver.events AS SELECT * FROM bronze.events WHERE user_id IS NOT NULL;\nOPTIMIZE silver.events ZORDER BY (user_id);\nSELECT * FROM silver.events VERSION AS OF 3;  -- time travel\n```",
+            "content": "## Medallion layers\n\nOrganize data as **Bronze** (raw) > **Silver** (cleaned) > **Gold** (business aggregates).\n\n## Clean the data\n\n```sql\nCREATE TABLE silver.events AS SELECT * FROM bronze.events WHERE user_id IS NOT NULL;\nOPTIMIZE silver.events ZORDER BY (user_id);\nSELECT * FROM silver.events VERSION AS OF 3;  -- time travel\n```",
             "stage": "INTERMEDIATE"
           },
           {
@@ -687,19 +687,19 @@
           {
             "slug": "loading-data",
             "title": "Databases, stages and loading data",
-            "content": "```sql\nCREATE WAREHOUSE learn_wh WAREHOUSE_SIZE = XSMALL AUTO_SUSPEND = 60;\nCREATE DATABASE learn;\nCREATE STAGE learn.public.raw;\n-- upload files with PUT, then:\nCOPY INTO learn.public.events FROM @learn.public.raw FILE_FORMAT = (TYPE = JSON);\n```\n\nFor continuous loading, use **Snowpipe** or Snowpipe Streaming.",
+            "content": "## Load data into Snowflake\n\n```sql\nCREATE WAREHOUSE learn_wh WAREHOUSE_SIZE = XSMALL AUTO_SUSPEND = 60;\nCREATE DATABASE learn;\nCREATE STAGE learn.public.raw;\n-- upload files with PUT, then:\nCOPY INTO learn.public.events FROM @learn.public.raw FILE_FORMAT = (TYPE = JSON);\n```\n\n## Continuous loading\n\nFor continuous loading, use **Snowpipe** or Snowpipe Streaming.",
             "stage": "STARTER"
           },
           {
             "slug": "pipelines",
             "title": "Transformations: Dynamic Tables, Streams and Tasks",
-            "content": "```sql\nCREATE DYNAMIC TABLE topic_stats\n  TARGET_LAG = '5 minutes'\n  WAREHOUSE = learn_wh\nAS\nSELECT topic, COUNT(*) AS completions\nFROM events\nGROUP BY topic;\n```\n\nUse Time Travel and zero-copy cloning for safe experimentation: `CREATE TABLE events_dev CLONE events;`",
+            "content": "## Pipelines in Snowflake\n\n```sql\nCREATE DYNAMIC TABLE topic_stats\n  TARGET_LAG = '5 minutes'\n  WAREHOUSE = learn_wh\nAS\nSELECT topic, COUNT(*) AS completions\nFROM events\nGROUP BY topic;\n```\n\n## Safe experiments\n\nUse Time Travel and zero-copy cloning for safe experimentation: `CREATE TABLE events_dev CLONE events;`",
             "stage": "INTERMEDIATE"
           },
           {
             "slug": "snowpark-cortex",
             "title": "Snowpark and Cortex AI",
-            "content": "**Snowpark** runs Python, Java and Scala next to the data. **Cortex AI** brings LLMs to SQL:\n\n```sql\nSELECT AI_COMPLETE('claude-3-5-sonnet', 'Summarize: ' || review) FROM reviews;\nSELECT AI_SENTIMENT(review) FROM reviews;\n```\n\nCortex Search powers RAG, and Cortex Analyst answers questions in natural language over semantic views.",
+            "content": "## Code and AI next to the data\n\n**Snowpark** runs Python, Java and Scala next to the data. **Cortex AI** brings LLMs to SQL:\n\n## Call a model from SQL\n\n```sql\nSELECT AI_COMPLETE('claude-3-5-sonnet', 'Summarize: ' || review) FROM reviews;\nSELECT AI_SENTIMENT(review) FROM reviews;\n```\n\nCortex Search powers RAG, and Cortex Analyst answers questions in natural language over semantic views.",
             "stage": "INTERMEDIATE"
           }
         ]
