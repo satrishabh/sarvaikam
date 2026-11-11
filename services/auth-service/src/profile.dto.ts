@@ -51,3 +51,14 @@ export class PolicyDto {
   @IsArray() @ArrayUnique() @IsIn(PERMISSIONS, { each: true })
   permissions: Permission[];
 }
+
+export class ReaderPreferencesDto {
+  @IsIn([16, 18, 20, 22])
+  size: 16 | 18 | 20 | 22;
+  @IsIn(['sans', 'serif'])
+  font: 'sans' | 'serif';
+  @IsIn(['day', 'paper', 'night'])
+  theme: 'day' | 'paper' | 'night';
+  @IsIn(['comfortable', 'compact'])
+  spacing: 'comfortable' | 'compact';
+}

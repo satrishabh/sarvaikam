@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Headers, Param, ParseUUIDPipe, Patch, Post, Put, Query, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { AuthService } from './auth.service';
-import { BusinessApplicationDto, PolicyDto, ReviewDto, UserAccessDto } from './profile.dto';
+import { BusinessApplicationDto, PolicyDto, ReaderPreferencesDto, ReviewDto, UserAccessDto } from './profile.dto';
 
 @Controller()
 export class AuthController {
@@ -32,6 +32,11 @@ export class AuthController {
   @Post('me/business-application')
   async apply(@Headers('authorization') header: string, @Body() dto: BusinessApplicationDto) {
     return this.auth.applyForBusiness(await this.subject(header), dto);
+  }
+
+  @Put('me/reader-preferences')
+  async readerPreferences(@Headers('authorization') header: string, @Body() dto: ReaderPreferencesDto) {
+    return this.auth.updateReaderPreferences(await this.subject(header), dto);
   }
 
   @Get('admin/users')

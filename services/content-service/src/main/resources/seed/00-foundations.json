@@ -13,7 +13,7 @@
           {
             "slug": "what-is-terraform",
             "title": "What is Terraform and why IaC?",
-            "content": "Infrastructure as Code (IaC) means describing servers, networks and databases in versioned files instead of clicking in a console.\n\n**Terraform** reads `.tf` files written in HCL, compares them with the real world, and makes a plan to reconcile the two.\n\nKey ideas:\n\n- **Providers** talk to APIs (aws, azurerm, google, kubernetes...)\n- **Resources** are the things you create\n- **State** records what Terraform manages\n- **Plan / Apply** previews changes, then executes them\n\nInstall it from the HashiCorp website and check the version:\n\n```bash\nterraform -version\n```\n\n**Practice:** Install Terraform and run `terraform -help`.",
+            "content": "## The idea\n\nInfrastructure as Code (IaC) means describing servers, networks and databases in versioned files instead of clicking in a console.\n\n## How Terraform works\n\n**Terraform** reads `.tf` files written in HCL, compares them with the real world, and makes a plan to reconcile the two.\n\n## Key ideas\n\n- **Providers** talk to APIs (aws, azurerm, google, kubernetes...)\n- **Resources** are the things you create\n- **State** records what Terraform manages\n- **Plan / Apply** previews changes, then executes them\n\n## Try it\n\nInstall it from the HashiCorp website and check the version:\n\n```bash\nterraform -version\n```\n\n## Practice\n\n**Practice:** Install Terraform and run `terraform -help`.",
             "stage": "STARTER"
           },
           {

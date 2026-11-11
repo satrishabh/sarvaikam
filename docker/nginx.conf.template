@@ -33,8 +33,8 @@ http {
         add_header Referrer-Policy strict-origin-when-cross-origin always;
         # The SPA uses none of these browser features.
         add_header Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=()" always;
-        # Report-only: logs violations without blocking. Signed content URLs may need their origin added before enforcing.
-        add_header Content-Security-Policy-Report-Only "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'" always;
+        # Admin uploads PUT directly to a signed Google Cloud Storage URL (XHR), so connect-src must allow that origin.
+        add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self' https://storage.googleapis.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'" always;
 __ENV_HEADERS__
 
         # Liveness: the gateway process is up (supervisord restarts any crashed backend).
@@ -50,6 +50,8 @@ __ENV_HEADERS__
         # Actuator details are internal only.
         location /api/content/actuator/ { return 404; }
 
+        location = /sw.js { add_header Cache-Control "no-cache"; }
+        location = /manifest.webmanifest { types { application/manifest+json webmanifest; } default_type application/manifest+json; add_header Cache-Control "no-cache"; }
         location /assets/ { expires 1y; add_header Cache-Control "public, immutable"; }
         location / { try_files $uri $uri/ /index.html; }
     }

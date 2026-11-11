@@ -216,6 +216,69 @@ export function BusinessAccessPage() {
   );
 }
 
+type SavedLesson = { title: string; href: string };
+
+function SavedLessons() {
+  const [lessons, setLessons] = useState<SavedLesson[] | null>(null);
+  const [error, setError] = useState("");
+  useEffect(() => {
+    let active = true;
+    api
+      .bookmarks()
+      .then(async (bookmarks) => {
+        const slugs = [...new Set(bookmarks.map((item) => item.topicSlug))];
+        const topics = await Promise.allSettled(slugs.map((slug) => api.topic(slug)));
+        const known = new Map<number, SavedLesson>();
+        for (const result of topics) {
+          if (result.status !== "fulfilled") continue;
+          for (const lesson of result.value.lessons) {
+            known.set(lesson.id, {
+              title: lesson.title,
+              href: `/topics/${result.value.slug}/${lesson.slug}`,
+            });
+          }
+        }
+        // Lessons that were removed from content are skipped rather than shown broken.
+        const saved = bookmarks.flatMap((item) => known.get(item.lessonId) ?? []);
+        if (active) setLessons(saved);
+      })
+      .catch((cause: Error) => {
+        if (active) setError(cause.message);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+  return (
+    <section className="soft-panel rounded-2xl p-6 sm:p-8" aria-labelledby="saved-heading">
+      <h2 id="saved-heading" className="text-2xl font-semibold">
+        Saved lessons
+      </h2>
+      {error ? (
+        <p role="alert" className="mt-4 text-sm text-accent-strong">
+          Saved lessons could not be loaded: {error}
+        </p>
+      ) : lessons === null ? (
+        <p className="mt-4 text-sm text-muted">Loading saved lessons…</p>
+      ) : lessons.length === 0 ? (
+        <p className="mt-4 text-sm text-muted">
+          Use “Save for later” on any lesson to find it here.
+        </p>
+      ) : (
+        <ul className="mt-4 divide-y divide-line">
+          {lessons.map((lesson) => (
+            <li key={lesson.href}>
+              <Link to={lesson.href} className="link block py-3 text-base">
+                {lesson.title}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
 export default function ProfilePage() {
   const { user, ready } = useAuth();
   if (!ready) return <p role="status">Loading your profile…</p>;
@@ -246,6 +309,7 @@ export default function ProfilePage() {
         <AccountSummary user={user} />
 
         <div className="space-y-6">
+          <SavedLessons />
           <section className="soft-panel rounded-2xl p-6 sm:p-8">
             <h2 className="text-2xl font-semibold">
               Make time for your next skill.

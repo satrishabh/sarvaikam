@@ -163,7 +163,7 @@ export default function TopicPage() {
             </p>
           )}
         </section>
-        <aside className="space-y-5 lg:sticky lg:top-28">
+        <aside className="order-first space-y-5 lg:order-none lg:sticky lg:top-28">
           <div className="surface p-6">
             <span className="icon-tile">
               <Icon name="chart" className="h-6 w-6" />
@@ -223,7 +223,7 @@ export default function TopicPage() {
               </Link>
             )}
           </div>
-          <div className="rounded-2xl bg-accent-soft p-6">
+          <div className="hidden rounded-2xl bg-accent-soft p-6 lg:block">
             <Icon name="target" className="h-6 w-6 text-accent" />
             <h3 className="mt-4 font-semibold">Can you explain the idea?</h3>
             <p className="mt-2 text-sm text-muted">

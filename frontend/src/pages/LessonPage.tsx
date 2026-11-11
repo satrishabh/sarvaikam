@@ -15,12 +15,21 @@ import Icon from "../components/Icon";
 import { stageName } from "../learning";
 import { readingMinutes } from "../engagement";
 import MobileSheet from "../components/MobileSheet";
+import LessonOutline from "../components/LessonOutline";
+import LessonSearch from "../components/LessonSearch";
+import LessonCards from "../components/LessonCards";
 import ReaderSettings from "../components/ReaderSettings";
 import ReadingPosition from "../components/ReadingPosition";
 import {
   readReaderPreferences,
   saveReaderPreferences,
+  type ReaderPreferences,
 } from "../readerPreferences";
+import {
+  lessonCards,
+  outlineFromMarkdown,
+  readResumePoint,
+} from "../readingOutline";
 
 function CodeBlock({ children }: { children?: ReactNode }) {
   const [status, setStatus] = useState("");
@@ -81,9 +90,17 @@ export default function LessonPage() {
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [attempt, setAttempt] = useState(0);
+  const [resumeId, setResumeId] = useState("");
+  const [bookmarked, setBookmarked] = useState(false);
+  const [bookmarkError, setBookmarkError] = useState("");
+  const [cardsOpen, setCardsOpen] = useState(false);
+  const [preferencesSyncFailed, setPreferencesSyncFailed] = useState(false);
   useEffect(() => {
     setPreferencesSaved(saveReaderPreferences(preferences));
   }, [preferences]);
+  useEffect(() => {
+    setResumeId(lesson ? (readResumePoint(lesson.id)?.id ?? "") : "");
+  }, [lesson?.id]);
   useEffect(() => {
     const previous = document.documentElement.getAttribute("data-reader-theme");
     document.documentElement.setAttribute(
@@ -170,6 +187,57 @@ export default function LessonPage() {
       active = false;
     };
   }, [user?.id, lesson?.id, topicSlug, attempt]);
+  useEffect(() => {
+    let active = true;
+    setBookmarkError("");
+    if (!user || !lesson) {
+      setBookmarked(false);
+      return;
+    }
+    api
+      .bookmarks()
+      .then((items) => {
+        if (active) setBookmarked(items.some((item) => item.lessonId === lesson.id));
+      })
+      .catch(() => {
+        if (active) setBookmarked(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [user?.id, lesson?.id]);
+  useEffect(() => {
+    setPreferencesSyncFailed(false);
+    if (!user) return;
+    if (user.readerPreferences) {
+      // The account's saved settings win on sign-in, so they follow the reader across devices.
+      setPreferences(user.readerPreferences);
+      return;
+    }
+    // First time this account has settings: keep this device's settings as the account's settings.
+    api
+      .updateReaderPreferences(readReaderPreferences())
+      .catch(() => setPreferencesSyncFailed(true));
+  }, [user?.id]);
+  const changePreferences = (next: ReaderPreferences) => {
+    setPreferences(next);
+    setPreferencesSyncFailed(false);
+    if (!user) return;
+    api
+      .updateReaderPreferences(next)
+      .catch(() => setPreferencesSyncFailed(true));
+  };
+  const toggleBookmark = async () => {
+    if (!lesson) return;
+    setBookmarkError("");
+    try {
+      if (bookmarked) await api.unbookmark(lesson.id);
+      else await api.bookmark(lesson.id, topicSlug);
+      setBookmarked(!bookmarked);
+    } catch (cause) {
+      setBookmarkError((cause as Error).message);
+    }
+  };
   const toggle = async () => {
     if (!lesson) return;
     setSaving(true);
@@ -226,6 +294,11 @@ export default function LessonPage() {
         ))}
       </div>
     );
+  const outline = outlineFromMarkdown(lesson.contentMd);
+  const headingIds = new Map(outline.map((item) => [item.line, item.id]));
+  const headingId = (node?: { position?: { start: { line: number } } }) =>
+    node?.position ? headingIds.get(node.position.start.line) : undefined;
+  const resumeItem = outline.find((item) => item.id === resumeId);
   const sequence = (
     <nav aria-label="Topic lessons" className="mt-4 space-y-1">
       {topic?.lessons.map((item, i) => (
@@ -250,6 +323,13 @@ export default function LessonPage() {
   return (
     <div className="reader-layout grid items-start gap-9 pb-24 lg:grid-cols-[230px_1fr] xl:gap-14">
       <ReadingPosition lessonId={lesson.id} />
+      {cardsOpen && (
+        <LessonCards
+          cards={lessonCards(lesson.contentMd)}
+          title={lesson.title}
+          onClose={() => setCardsOpen(false)}
+        />
+      )}
       <MobileSheet
         open={detailsOpen}
         title="Lesson details"
@@ -267,6 +347,8 @@ export default function LessonPage() {
           }}
         >
           {sequence}
+          <LessonSearch markdown={lesson.contentMd} />
+          <LessonOutline items={outline} />
           <Link to={`/topics/${topicSlug}`} className="outline-btn mt-5 w-full">
             Topic overview
           </Link>
@@ -279,8 +361,10 @@ export default function LessonPage() {
       >
         <ReaderSettings
           value={preferences}
-          onChange={setPreferences}
+          onChange={changePreferences}
           saved={preferencesSaved}
+          signedIn={!!user}
+          syncFailed={preferencesSyncFailed}
         />
       </MobileSheet>
       <aside className="hidden lg:sticky lg:top-28 lg:block">
@@ -295,6 +379,8 @@ export default function LessonPage() {
           In this topic
         </p>
         {sequence}
+        <LessonSearch markdown={lesson.contentMd} />
+        <LessonOutline items={outline} />
         <Link
           className="mt-7 flex items-center gap-2 rounded-xl border border-line bg-surface p-4 text-xs font-medium text-accent"
           to="/practice"
@@ -339,6 +425,25 @@ export default function LessonPage() {
           >
             {lesson.topicName}
           </Link>
+          <div className="flex flex-wrap items-center gap-5">
+          <button
+            onClick={() => setCardsOpen(true)}
+            aria-haspopup="dialog"
+            className="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-accent"
+          >
+            <Icon name="layers" className="h-4 w-4" />
+            Swipe cards
+          </button>
+          {user && (
+            <button
+              onClick={() => void toggleBookmark()}
+              aria-pressed={bookmarked}
+              className="inline-flex min-h-11 items-center gap-2 text-sm text-accent"
+            >
+              <Icon name="check" className={bookmarked ? "h-4 w-4" : "hidden"} />
+              {bookmarked ? "Saved for later" : "Save for later"}
+            </button>
+          )}
           <button
             className="reader-desktop-settings hidden min-h-11 items-center gap-2 text-sm lg:inline-flex"
             onClick={() => setSettingsOpen(true)}
@@ -347,7 +452,23 @@ export default function LessonPage() {
           >
             <span className="font-serif text-lg">Aa</span>Reading settings
           </button>
+          </div>
         </div>
+        {bookmarkError && (
+          <p role="alert" className="mt-4 text-sm text-accent-strong">
+            Could not update saved lessons: {bookmarkError}
+          </p>
+        )}
+        {resumeItem && resumeItem.id !== outline[0]?.id && (
+          <a
+            href={`#${resumeItem.id}`}
+            onClick={() => setResumeId("")}
+            className="mt-5 flex min-h-11 items-center gap-2 rounded-xl bg-accent-soft p-4 text-sm font-medium text-accent-strong"
+          >
+            <Icon name="chevron" className="h-4 w-4 shrink-0" />
+            <span>Continue from “{resumeItem.text}”</span>
+          </a>
+        )}
         {saveError && (
           <div
             role="alert"
@@ -377,6 +498,12 @@ export default function LessonPage() {
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}
             components={{
+              h2: ({ node, children }) => (
+                <h2 id={headingId(node)}>{children}</h2>
+              ),
+              h3: ({ node, children }) => (
+                <h3 id={headingId(node)}>{children}</h3>
+              ),
               pre: ({ children }) => <CodeBlock>{children}</CodeBlock>,
               table: ({ children }) => (
                 <div
@@ -452,7 +579,7 @@ export default function LessonPage() {
                       : "Mark complete"}
               </button>
             ) : (
-              <Link to="/login" className="btn px-4 text-xs">
+              <Link to="/login" className="btn-quiet px-3 text-xs text-accent">
                 Sign in to save
               </Link>
             )}

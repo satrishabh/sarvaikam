@@ -33,9 +33,12 @@ export default function PathsPage() {
           practice.
         </p>
       </header>
-      <nav aria-label="Choose a learning path" className="flex flex-wrap gap-3">
+      <nav
+        aria-label="Choose a learning path"
+        className="-mx-4 flex snap-x scroll-px-4 gap-3 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:scroll-px-0"
+      >
         {learningPaths.map((path) => (
-          <a key={path.slug} className="outline-btn" href={`#${path.slug}`}>
+          <a key={path.slug} className="outline-btn shrink-0 snap-start whitespace-nowrap" href={`#${path.slug}`}>
             <Icon name={path.icon} className="h-4 w-4" />
             {path.name}
           </a>
