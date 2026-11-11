@@ -1,4 +1,4 @@
-import {
+﻿import {
   Children,
   isValidElement,
   ReactNode,
@@ -23,6 +23,7 @@ import ReadingPosition from "../components/ReadingPosition";
 import {
   readReaderPreferences,
   saveReaderPreferences,
+  themeAvailable,
   type ReaderPreferences,
 } from "../readerPreferences";
 import {
@@ -101,18 +102,19 @@ export default function LessonPage() {
   useEffect(() => {
     setResumeId(lesson ? (readResumePoint(lesson.id)?.id ?? "") : "");
   }, [lesson?.id]);
+  // Signed-out readers see White or Dark even if a signed-in theme was saved on this device.
+  const activeTheme = themeAvailable(preferences.theme, !!user)
+    ? preferences.theme
+    : "day";
   useEffect(() => {
     const previous = document.documentElement.getAttribute("data-reader-theme");
-    document.documentElement.setAttribute(
-      "data-reader-theme",
-      preferences.theme,
-    );
+    document.documentElement.setAttribute("data-reader-theme", activeTheme);
     return () => {
       if (previous === null)
         document.documentElement.removeAttribute("data-reader-theme");
       else document.documentElement.setAttribute("data-reader-theme", previous);
     };
-  }, [preferences.theme]);
+  }, [activeTheme]);
   useEffect(() => {
     setDetailsOpen(false);
     setSettingsOpen(false);
@@ -177,7 +179,7 @@ export default function LessonPage() {
       .catch(() => {
         if (active)
           setSaveError(
-            "Your saved progress could not be loaded. Retry before changing this lesson’s completion.",
+            "Your saved progress could not be loaded. Retry before changing this lessonâ€™s completion.",
           );
       })
       .finally(() => {
@@ -262,7 +264,7 @@ export default function LessonPage() {
       <div className="surface mx-auto max-w-2xl p-9">
         <p className="eyebrow">LESSON UNAVAILABLE</p>
         <h1 className="mt-3 text-3xl font-semibold">
-          Let’s find your next step.
+          Letâ€™s find your next step.
         </h1>
         <p className="mt-4 text-muted">{error}</p>
         <div className="mt-7 flex flex-wrap gap-3">
@@ -360,7 +362,7 @@ export default function LessonPage() {
         onClose={() => setSettingsOpen(false)}
       >
         <ReaderSettings
-          value={preferences}
+          value={{ ...preferences, theme: activeTheme }}
           onChange={changePreferences}
           saved={preferencesSaved}
           signedIn={!!user}
@@ -412,7 +414,7 @@ export default function LessonPage() {
             <Icon name="clock" className="h-3.5 w-3.5" />
             About {readingMinutes(lesson.contentMd)} min reading
           </span>
-          <span className="badge">{stageName(lesson.stage)}{lesson.stage === "DEEP_DIVE" ? " · Optional" : ""}</span>
+          <span className="badge">{stageName(lesson.stage)}{lesson.stage === "DEEP_DIVE" ? " Â· Optional" : ""}</span>
           {lesson.exclusive && <span className="badge">Exclusive</span>}
         </div>
         <h1 className="mt-5 text-[clamp(2rem,4vw,3rem)] font-semibold leading-[1.15] tracking-tightest">
@@ -466,7 +468,7 @@ export default function LessonPage() {
             className="mt-5 flex min-h-11 items-center gap-2 rounded-xl bg-accent-soft p-4 text-sm font-medium text-accent-strong"
           >
             <Icon name="chevron" className="h-4 w-4 shrink-0" />
-            <span>Continue from “{resumeItem.text}”</span>
+            <span>Continue from â€œ{resumeItem.text}â€</span>
           </a>
         )}
         {saveError && (
@@ -490,7 +492,7 @@ export default function LessonPage() {
             lineHeight: preferences.spacing === "comfortable" ? 1.85 : 1.65,
             fontFamily:
               preferences.font === "serif"
-                ? 'Literata, Georgia, "Times New Roman", serif'
+                ? '"Playfair Display", Georgia, "Times New Roman", serif'
                 : "inherit",
           }}
           className="reader-copy prose mt-8 max-w-none leading-[1.85] prose-headings:font-semibold prose-headings:tracking-tight prose-headings:text-ink prose-p:text-ink/90 prose-a:text-accent prose-strong:text-ink prose-code:rounded prose-code:bg-track prose-code:px-1 prose-code:font-normal prose-code:text-ink prose-code:before:content-none prose-code:after:content-none prose-pre:rounded-xl prose-li:text-ink/90 prose-blockquote:border-accent prose-blockquote:font-normal prose-blockquote:text-muted prose-table:text-sm [&_pre_code]:bg-transparent [&_pre_code]:p-0 [&_pre_code]:text-white [&_img]:max-w-full"
@@ -571,9 +573,9 @@ export default function LessonPage() {
               >
                 {completed && <Icon name="check" className="h-4 w-4" />}
                 {saving
-                  ? "Saving…"
+                  ? "Savingâ€¦"
                   : checking
-                    ? "Loading progress…"
+                    ? "Loading progressâ€¦"
                     : completed
                       ? "Lesson complete"
                       : "Mark complete"}

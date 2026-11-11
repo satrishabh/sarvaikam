@@ -1,4 +1,4 @@
-import typography from "@tailwindcss/typography";
+﻿import typography from "@tailwindcss/typography";
 import { createRequire } from "node:module";
 const tokens = createRequire(import.meta.url)("./design-tokens.json").Sarvaikam;
 const color = (name) => tokens.color[name].$value;
@@ -26,14 +26,14 @@ export default {
       },
       fontFamily: {
         sans: [
-          "Inter",
+          "Archivo",
           "-apple-system",
           "BlinkMacSystemFont",
           '"Segoe UI"',
           "Roboto",
           "sans-serif",
         ],
-        serif: ["Literata", "Georgia", '"Times New Roman"', "serif"],
+        serif: ["Playfair Display", "Georgia", '"Times New Roman"', "serif"],
         display: [
           "-apple-system",
           "BlinkMacSystemFont",
@@ -43,6 +43,7 @@ export default {
           "sans-serif",
         ],
         mono: [
+          '"IBM Plex Mono"',
           "ui-monospace",
           '"SF Mono"',
           '"Cascadia Code"',

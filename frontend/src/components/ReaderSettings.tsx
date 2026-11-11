@@ -1,6 +1,9 @@
+import type { CSSProperties } from "react";
 import {
   defaultReaderPreferences,
+  READER_THEMES,
   ReaderPreferences,
+  themeAvailable,
 } from "../readerPreferences";
 
 export default function ReaderSettings({
@@ -56,21 +59,33 @@ export default function ReaderSettings({
       <fieldset>
         <legend>Page appearance</legend>
         <div className="mt-3 grid grid-cols-2 gap-2">
-          {(
-            [
-              ["day", "White"],
-              ["night", "Dark"],
-            ] as const
-          ).map(([theme, label]) => (
-            <button
-              key={theme}
-              className="reader-option"
-              aria-pressed={value.theme === theme}
-              onClick={() => onChange({ ...value, theme })}
-            >
-              {label}
-            </button>
-          ))}
+          {READER_THEMES.map((item) => {
+            const available = themeAvailable(item.value, signedIn);
+            return (
+              <button
+                key={item.value}
+                className="reader-option theme-swatch"
+                disabled={!available}
+                aria-pressed={value.theme === item.value}
+                aria-label={`${item.label} page${available ? "" : ", sign in to unlock"}`}
+                style={
+                  {
+                    "--swatch-page": item.page,
+                    "--swatch-ink": item.ink,
+                  } as CSSProperties
+                }
+                onClick={() => onChange({ ...value, theme: item.value })}
+              >
+                <span className="theme-swatch-sample" aria-hidden="true">
+                  Aa
+                </span>
+                <span className="theme-swatch-label">{item.label}</span>
+                <span className="theme-swatch-note">
+                  {available ? item.note : "Sign in to unlock"}
+                </span>
+              </button>
+            );
+          })}
         </div>
       </fieldset>
       <fieldset>

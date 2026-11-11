@@ -1,18 +1,19 @@
-import React from 'react';
+﻿import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import App from './App';
 import { AuthProvider } from './auth';
-import '@fontsource/inter/400.css';
-import '@fontsource/inter/400-italic.css';
-import '@fontsource/inter/500.css';
-import '@fontsource/inter/600.css';
-import '@fontsource/inter/700.css';
-import '@fontsource/literata/400.css';
-import '@fontsource/literata/400-italic.css';
-import '@fontsource/literata/500.css';
-import '@fontsource/literata/600.css';
-import '@fontsource/literata/700.css';
+import '@fontsource/archivo/400.css';
+import '@fontsource/archivo/500.css';
+import '@fontsource/archivo/600.css';
+import '@fontsource/archivo/700.css';
+import '@fontsource/playfair-display/400.css';
+import '@fontsource/playfair-display/400-italic.css';
+import '@fontsource/playfair-display/600.css';
+import '@fontsource/playfair-display/600-italic.css';
+import '@fontsource/playfair-display/700.css';
+import '@fontsource/ibm-plex-mono/400.css';
+import '@fontsource/ibm-plex-mono/500.css';
 import './index.css';
 
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {

@@ -1,16 +1,4 @@
-/* Self-hosted reading fonts (SIL Open Font License, see public/fonts/). Served from our own origin, so the CSP needs no changes. */
-@font-face { font-family: "Inter"; font-style: normal; font-weight: 400; font-display: swap; src: url("/fonts/inter-latin-400-normal.woff2") format("woff2"); }
-@font-face { font-family: "Inter"; font-style: normal; font-weight: 500; font-display: swap; src: url("/fonts/inter-latin-500-normal.woff2") format("woff2"); }
-@font-face { font-family: "Inter"; font-style: normal; font-weight: 600; font-display: swap; src: url("/fonts/inter-latin-600-normal.woff2") format("woff2"); }
-@font-face { font-family: "Inter"; font-style: normal; font-weight: 700; font-display: swap; src: url("/fonts/inter-latin-700-normal.woff2") format("woff2"); }
-@font-face { font-family: "Inter"; font-style: italic; font-weight: 400; font-display: swap; src: url("/fonts/inter-latin-400-italic.woff2") format("woff2"); }
-@font-face { font-family: "Literata"; font-style: normal; font-weight: 400; font-display: swap; src: url("/fonts/literata-latin-400-normal.woff2") format("woff2"); }
-@font-face { font-family: "Literata"; font-style: normal; font-weight: 500; font-display: swap; src: url("/fonts/literata-latin-500-normal.woff2") format("woff2"); }
-@font-face { font-family: "Literata"; font-style: normal; font-weight: 600; font-display: swap; src: url("/fonts/literata-latin-600-normal.woff2") format("woff2"); }
-@font-face { font-family: "Literata"; font-style: normal; font-weight: 700; font-display: swap; src: url("/fonts/literata-latin-700-normal.woff2") format("woff2"); }
-@font-face { font-family: "Literata"; font-style: italic; font-weight: 400; font-display: swap; src: url("/fonts/literata-latin-400-italic.woff2") format("woff2"); }
-
-@tailwind base;
+﻿@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
@@ -238,6 +226,37 @@
   font-size: 15px;
   font-weight: 600;
 }
+.theme-swatch {
+  display: flex;
+  height: auto;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  text-align: left;
+}
+.theme-swatch:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+.theme-swatch-sample {
+  display: grid;
+  height: 44px;
+  place-items: center;
+  border: 1px solid rgb(18 50 90 / 0.12);
+  border-radius: 8px;
+  background: var(--swatch-page);
+  color: var(--swatch-ink);
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: 18px;
+}
+.theme-swatch-label {
+  font-weight: 600;
+}
+.theme-swatch-note {
+  font-size: 12px;
+  font-weight: 400;
+  opacity: 0.75;
+}
 .reader-mobile-tools {
   display: flex;
   align-items: center;
@@ -316,6 +335,26 @@ html[data-reader-theme="night"] {
   --reader-line: #3b4c59;
   --reader-fill: #203442;
   --reader-accent: #ffd1aa;
+}
+/* Warm: cream paper with brown ink, for long reads. Signed-in readers only. */
+html[data-reader-theme="paper"] {
+  color-scheme: light;
+  --reader-page: #f6f0e4;
+  --reader-text: #3b2f24;
+  --reader-muted: #6b5a48;
+  --reader-line: #e0d4bf;
+  --reader-fill: #efe6d4;
+  --reader-accent: #9a4a1f;
+}
+/* Slate: white page with cool grey surfaces (Tailwind Slate, MIT) and a blue accent. Signed-in readers only. */
+html[data-reader-theme="slate"] {
+  color-scheme: light;
+  --reader-page: #ffffff;
+  --reader-text: #0f172a;
+  --reader-muted: #64748b;
+  --reader-line: #e2e8f0;
+  --reader-fill: #f8fafc;
+  --reader-accent: #2563eb;
 }
 html[data-reader-theme] body,
 html[data-reader-theme] .app-header,
