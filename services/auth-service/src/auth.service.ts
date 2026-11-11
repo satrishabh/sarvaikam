@@ -32,7 +32,7 @@ export interface PublicUser {
 function storedPreferences(value: Partial<ReaderPreferences> | null | undefined): ReaderPreferences | null {
   if (!value || typeof value !== 'object') return null;
   const valid = [16, 18, 20, 22].includes(value.size as number) && ['sans', 'serif'].includes(value.font as string)
-    && ['day', 'paper', 'night'].includes(value.theme as string) && ['comfortable', 'compact'].includes(value.spacing as string);
+    && ['day', 'paper', 'slate', 'night'].includes(value.theme as string) && ['comfortable', 'compact'].includes(value.spacing as string);
   return valid ? { size: value.size!, font: value.font!, theme: value.theme!, spacing: value.spacing! } : null;
 }
 
