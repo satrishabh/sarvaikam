@@ -1,0 +1,53 @@
+[
+  {
+    "slug": "forward-deployed-engineering",
+    "name": "Forward Deployed Engineering",
+    "description": "Work with customers on site, turn messy problems into working software, and carry what you learn back to the product.",
+    "topics": [
+      {
+        "slug": "forward-deployed-engineer",
+        "name": "Forward Deployed Engineer (FDE)",
+        "summary": "Scope real customer problems, prototype quickly, ship safely, and communicate trade-offs clearly.",
+        "level": "INTERMEDIATE",
+        "lessons": [
+          {
+            "slug": "role-overview",
+            "title": "What a forward deployed engineer does",
+            "content": "A forward deployed engineer (FDE) sits between a software product and the customers who use it. The role combines engineering, consulting, and product thinking.\n\n## Where the role fits\n\nFDEs work closely with customers, often on their own systems and data. They are not account managers. They write code, configure integrations, and make the product work for a specific environment.\n\n## What the work looks like\n\n- **Discovery**: learn how the customer's process really works, not how the documentation says it works\n- **Build**: deliver a first working version in days or weeks, not months\n- **Feedback loop**: send what you learn back to the product team as concrete requests and examples\n\n## What makes an FDE effective\n\nStrong FDEs can read unfamiliar code, explain technical choices to non-engineers, and decide what to build now versus what to leave for later.",
+            "stage": "STARTER"
+          },
+          {
+            "slug": "customer-discovery",
+            "title": "Discovery: scoping the real problem",
+            "content": "The first version of a customer problem is rarely the real one. Discovery is the work of finding the problem worth solving.\n\n## Ask about the workflow\n\nAsk the people who do the work to walk you through the last time they did it. Note the inputs, the handoffs, the workarounds, and the places where things go wrong.\n\n## Define success in measurable terms\n\nTurn vague goals into numbers the customer already tracks, such as time per case, error rate, or backlog size. Agree on what \"done\" means before you build.\n\n## Separate must-haves from nice-to-haves\n\n- **Must-have**: the workflow cannot run without it\n- **Should-have**: it saves real time but has a workaround\n- **Later**: interesting, but not tied to the success measure\n\nWrite the scope down and get it confirmed in writing. Revisit it at each checkpoint.",
+            "stage": "STARTER"
+          },
+          {
+            "slug": "building-prototypes",
+            "title": "Prototype fast, then harden",
+            "content": "A prototype proves that the approach works with the customer's real data. Keep it small, visible, and disposable until it earns the right to become production code.\n\n## Use real data early\n\nSynthetic data hides the problems that matter: missing fields, inconsistent formats, and edge cases nobody documented. Get a small sample of real data as early as the customer's rules allow.\n\n## Show something every few days\n\nA working screen or a sample output gets better feedback than a slide. Demo the rough version and record what changed afterward.\n\n## Know when to harden\n\nMove a prototype toward production when:\n\n- the customer has agreed on the success measure\n- the core flow works on real data\n- the team can name the failure modes they still need to handle\n\nAt that point, add tests, logging, configuration, and error handling before the next release.",
+            "stage": "INTERMEDIATE"
+          },
+          {
+            "slug": "evaluation-and-guardrails",
+            "title": "Evaluate AI solutions before customers rely on them",
+            "content": "When a solution uses a language model or another probabilistic component, you need evidence that it is good enough for the task, and a plan for when it is not.\n\n## Build a small evaluation set\n\nCollect 30 to 100 real examples with the expected answer or the expected decision. Include hard cases and examples where the correct result is \"not enough information\".\n\n## Measure what matters to the workflow\n\nTrack accuracy on the decisions the customer cares about, the rate of answers that need human review, and the cost of a wrong answer. A single overall score hides the failures that hurt most.\n\n## Add guardrails\n\n- **Validate outputs** against a schema before they reach another system\n- **Route uncertain cases** to a person with the context they need\n- **Log inputs and outputs** so issues can be reproduced and reviewed\n\nRe-run the evaluation set whenever the prompt, model, or data source changes.",
+            "stage": "INTERMEDIATE"
+          },
+          {
+            "slug": "production-handoff",
+            "title": "Deployment, support, and handoff to product",
+            "content": "Shipping to a customer is the start of operating the solution, not the end of the project. Plan how it runs, who owns it, and how knowledge moves back to the product team.\n\n## Deploy in a repeatable way\n\nUse the same pipeline, configuration, and secrets handling the product team uses. Customer-specific settings belong in configuration, not in code branches.\n\n## Define support and ownership\n\nWrite down who responds to an incident, how fast, and through which channel. Agree on what the customer can change themselves and what needs an engineer.\n\n## Hand off what you learned\n\n- Document the customer's integration points and their quirks\n- Turn repeated customizations into product features or configuration options\n- Share the evaluation set and failure cases with the product team\n\nA handoff is complete when someone else can run the solution without you in the room.",
+            "stage": "ADVANCED"
+          },
+          {
+            "slug": "communicating-trade-offs",
+            "title": "Communicating trade-offs and risks",
+            "content": "FDEs make decisions in front of customers. Clear communication keeps those decisions trusted and makes the risks visible early.\n\n## Explain the options, not just the answer\n\nFor each decision, present two or three options with their cost, timeline, and risk. Recommend one and say why. Let the customer choose with full information.\n\n## Write short, regular updates\n\nA weekly update with progress, decisions made, open risks, and what you need from the customer is more useful than a long report. Keep it factual and specific.\n\n## Escalate early\n\nIf a deadline, data quality issue, or scope change threatens the success measure, raise it the same week. Bring a proposed fix with the problem.\n\n## Say what you do not know\n\nState assumptions and their confidence. A stated uncertainty is easier to plan around than a surprise.",
+            "stage": "ADVANCED"
+          }
+        ]
+      }
+    ]
+  }
+]
