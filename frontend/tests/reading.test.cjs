@@ -96,7 +96,7 @@ test("reader settings from storage or the account are used only when every value
   assert.equal(normalizeReaderPreferences({ ...valid, size: "20" }), null);
   assert.equal(normalizeReaderPreferences({ ...valid, theme: "sepia" }), null);
   assert.deepEqual(normalizeReaderPreferences({ ...valid, theme: "paper" }), { ...valid, theme: "paper" });
-  assert.deepEqual(normalizeReaderPreferences({ ...valid, theme: "apple" }), { ...valid, theme: "apple" });
+  assert.deepEqual(normalizeReaderPreferences({ ...valid, theme: "slate" }), { ...valid, theme: "slate" });
 });
 
 test("warm and clean themes are for signed-in readers; white and dark stay open to everyone", () => {
@@ -104,9 +104,9 @@ test("warm and clean themes are for signed-in readers; white and dark stay open 
   assert.equal(themeAvailable("day", false), true);
   assert.equal(themeAvailable("night", false), true);
   assert.equal(themeAvailable("paper", false), false);
-  assert.equal(themeAvailable("apple", false), false);
+  assert.equal(themeAvailable("slate", false), false);
   assert.equal(themeAvailable("paper", true), true);
-  assert.equal(themeAvailable("apple", true), true);
+  assert.equal(themeAvailable("slate", true), true);
 });
 
 test("lesson search reports each match with its section and ignores very short queries", () => {
