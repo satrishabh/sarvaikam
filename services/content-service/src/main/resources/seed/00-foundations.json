@@ -314,7 +314,7 @@
           {
             "slug": "async-await",
             "title": "Promises and async/await",
-            "content": "## Promises and async code\n\n```js\nimport { readFile } from 'node:fs/promises';\n\n## Run work in parallel\n\nasync function main() {\n  const [a, b] = await Promise.all([\n    readFile('a.txt', 'utf8'),\n    readFile('b.txt', 'utf8'),\n  ]);\n  console.log(a.length + b.length);\n}\nmain().catch(console.error);\n```",
+            "content": "## Promises and async code\n\n```js\nimport { readFile } from 'node:fs/promises';\n\nasync function main() {\n  const [a, b] = await Promise.all([\n    readFile('a.txt', 'utf8'),\n    readFile('b.txt', 'utf8'),\n  ]);\n  console.log(a.length + b.length);\n}\nmain().catch(console.error);\n```\n\n## Run work in parallel\n\nUse `Promise.all` to start independent reads together and wait for both results.",
             "stage": "STARTER"
           },
           {
