@@ -490,7 +490,7 @@ export default function LessonPage() {
             lineHeight: preferences.spacing === "comfortable" ? 1.85 : 1.65,
             fontFamily:
               preferences.font === "serif"
-                ? 'Georgia, "Times New Roman", serif'
+                ? 'Literata, Georgia, "Times New Roman", serif'
                 : "inherit",
           }}
           className="reader-copy prose mt-8 max-w-none leading-[1.85] prose-headings:font-semibold prose-headings:tracking-tight prose-headings:text-ink prose-p:text-ink/90 prose-a:text-accent prose-strong:text-ink prose-code:rounded prose-code:bg-track prose-code:px-1 prose-code:font-normal prose-code:text-ink prose-code:before:content-none prose-code:after:content-none prose-pre:rounded-xl prose-li:text-ink/90 prose-blockquote:border-accent prose-blockquote:font-normal prose-blockquote:text-muted prose-table:text-sm [&_pre_code]:bg-transparent [&_pre_code]:p-0 [&_pre_code]:text-white [&_img]:max-w-full"

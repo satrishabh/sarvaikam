@@ -26,14 +26,14 @@ export default {
       },
       fontFamily: {
         sans: [
+          "Inter",
           "-apple-system",
           "BlinkMacSystemFont",
-          '"SF Pro Text"',
           '"Segoe UI"',
-          "Inter",
           "Roboto",
           "sans-serif",
         ],
+        serif: ["Literata", "Georgia", '"Times New Roman"', "serif"],
         display: [
           "-apple-system",
           "BlinkMacSystemFont",
