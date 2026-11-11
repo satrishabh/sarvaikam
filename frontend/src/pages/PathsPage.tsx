@@ -101,7 +101,7 @@ export default function PathsPage() {
                     ))}
                   </ul>
                   <p className="mt-7 text-xs text-muted">
-                    {topics.length} available topics · {total} guided lessons
+                    {topics.length} available {topics.length === 1 ? "topic" : "topics"} · {total} guided {total === 1 ? "lesson" : "lessons"}
                   </p>
                   {signedIn && !progressError && !progressLoading && (
                     <div className="mt-3">

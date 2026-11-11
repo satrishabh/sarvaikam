@@ -130,8 +130,8 @@ export function PathCard({
         ))}
       </div>
       <p className="path-card-count mt-6 border-t border-line pt-4 text-sm font-medium">
-        {topics.length} topics <span className="mx-2 text-line">/</span>{" "}
-        {topics.reduce((n, t) => n + t.lessonCount, 0)} lessons
+        {topics.length} {topics.length === 1 ? "topic" : "topics"} <span className="mx-2 text-line">/</span>{" "}
+        {topics.reduce((n, t) => n + t.lessonCount, 0)} {topics.reduce((n, t) => n + t.lessonCount, 0) === 1 ? "lesson" : "lessons"}
       </p>
     </Link>
   );
