@@ -1,7 +1,7 @@
 export interface ReaderPreferences {
   size: number;
   font: "sans" | "serif";
-  theme: "day" | "paper" | "night";
+  theme: "day" | "night";
   spacing: "comfortable" | "compact";
 }
 const KEY = "sarvaikam.reader.v1";
@@ -18,7 +18,7 @@ export function normalizeReaderPreferences(raw: unknown): ReaderPreferences | nu
   const valid =
     [16, 18, 20, 22].includes(value.size as number) &&
     ["sans", "serif"].includes(value.font as string) &&
-    ["day", "paper", "night"].includes(value.theme as string) &&
+    ["day", "night"].includes(value.theme as string) &&
     ["comfortable", "compact"].includes(value.spacing as string);
   return valid ? (value as ReaderPreferences) : null;
 }

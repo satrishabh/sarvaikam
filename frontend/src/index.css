@@ -110,10 +110,10 @@
   }
   .soft-panel {
     border: 1px solid #e6e7eb;
-    background: linear-gradient(135deg, #ffffff 25%, #fffaf6 70%, #ffe8d6 100%);
+    background: #ffffff;
   }
   .mobile-start {
-    background: linear-gradient(145deg, #ffffff 40%, #fff3ea 100%);
+    background: #ffffff;
   }
   .workspace-nav {
     @apply inline-flex min-h-11 items-center gap-2 rounded-lg px-3 text-sm font-medium text-muted transition-colors hover:bg-track hover:text-ink;
@@ -295,14 +295,6 @@ html[data-reader-theme] {
   --reader-line: #dde4e9;
   --reader-fill: #f1f5f6;
   --reader-accent: #a74412;
-}
-html[data-reader-theme="paper"] {
-  --reader-page: #f6f0e3;
-  --reader-text: #3f362d;
-  --reader-muted: #6c5e4d;
-  --reader-line: #dfd4c0;
-  --reader-fill: #efe6d3;
-  --reader-accent: #925223;
 }
 html[data-reader-theme="night"] {
   color-scheme: dark;
