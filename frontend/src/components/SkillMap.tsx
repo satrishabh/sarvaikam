@@ -132,7 +132,7 @@ function SubjectCard({
             {subject.name}
           </h3>
           <p className="mt-0.5 text-xs text-muted">
-            {subject.topics.length} topics · {subject.total} lessons
+            {subject.topics.length} {subject.topics.length === 1 ? "topic" : "topics"} · {subject.total} {subject.total === 1 ? "lesson" : "lessons"}
           </p>
         </div>
         {signedIn && (
@@ -145,7 +145,7 @@ function SubjectCard({
             <span>
               {subject.done} of {subject.total} lessons complete
             </span>
-            <span>{finished} topics finished</span>
+            <span>{finished} {finished === 1 ? "topic" : "topics"} finished</span>
           </div>
           <ProgressBar
             done={subject.done}

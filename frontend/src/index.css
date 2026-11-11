@@ -852,3 +852,71 @@ html[data-reader-theme] :focus-visible {
   width: 20px;
   background: var(--reader-accent, #b84a14);
 }
+
+/* Learn motion: a gentle entrance and a looping swipe preview. */
+@keyframes reveal-up {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 14px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes swipe-cycle {
+  0%,
+  40% {
+    transform: none;
+    opacity: 1;
+  }
+  60% {
+    transform: translate3d(115%, 0, 0) rotate(8deg);
+    opacity: 0;
+  }
+  61% {
+    transform: translate3d(-10%, 0, 0);
+    opacity: 0;
+  }
+  100% {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+.reveal {
+  animation: reveal-up 640ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.swipe-demo {
+  position: relative;
+  height: 150px;
+}
+
+.swipe-under,
+.swipe-card {
+  position: absolute;
+  inset: 0;
+  border-radius: 14px;
+  padding: 16px;
+  background: #fff;
+  border: 1px solid rgba(31, 41, 51, 0.1);
+  box-shadow: 0 6px 18px rgba(31, 41, 51, 0.08);
+}
+
+.swipe-under {
+  transform: translate3d(0, 10px, 0) scale(0.94);
+  opacity: 0.6;
+}
+
+.swipe-card {
+  animation: swipe-cycle 6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal,
+  .swipe-card {
+    animation: none;
+  }
+}

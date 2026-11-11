@@ -63,12 +63,13 @@ export default function HomePage() {
             ? `Welcome back, ${user.name.split(" ")[0]}.`
             : "Your engineering notebook"}
         </p>
-        <h1 className="mt-2 text-[clamp(1.9rem,7.5vw,2.6rem)] font-semibold leading-tight tracking-tightest">
+        <h1 className="reveal mt-2 text-[clamp(1.9rem,7.5vw,2.6rem)] font-semibold leading-tight tracking-tightest">
           What will you learn next?
         </h1>
-        <p className="mt-3 text-base text-muted">
-          Build a skill, work through a lesson, or practise an interview
-          question.
+        <p className="reveal mt-3 text-base text-muted" style={{ animationDelay: "120ms" }}>
+          {user
+            ? "Build a skill, work through a lesson, or practise an interview question."
+            : "Read it like a story. Swipe through each section. Explain it out loud until it sticks."}
         </p>
         <div className="mt-5 grid grid-cols-2 gap-3">
           <Link to="/paths" className="btn px-3">
@@ -91,7 +92,7 @@ export default function HomePage() {
               <span className="h-1.5 w-1.5 rounded-full bg-accent" />A WORKSPACE
               FOR YOUR NEXT CHAPTER
             </p>
-            <h1 className="mt-6 max-w-xl text-[clamp(2.6rem,5vw,4.5rem)] font-semibold leading-[1.06] tracking-tightest text-ink">
+            <h1 className="reveal mt-6 max-w-xl text-[clamp(2.6rem,5vw,4.5rem)] font-semibold leading-[1.06] tracking-tightest text-ink">
               Learn deeply.
               <br />
               Build confidently.
@@ -99,9 +100,8 @@ export default function HomePage() {
               <span className="text-accent">Interview clearly.</span>
             </h1>
             <p className="mt-6 max-w-lg text-base leading-relaxed text-muted sm:text-lg">
-              A deliberate path from “I’ve read about it” to “I can explain it.”
-              Build engineering skills, practise the hard questions, and see
-              your next step.
+              Read it like a story. Swipe through each section. Explain it out
+              loud until it sticks.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link className="btn" to="/paths">
@@ -134,7 +134,10 @@ export default function HomePage() {
             </div>
           </div>
           <div className="relative mx-auto w-full max-w-[420px]">
-            <div className="rounded-2xl border border-line bg-white/90 p-5 shadow-lg shadow-ink/5 sm:p-7">
+            <div
+              className="reveal rounded-2xl border border-line bg-white/90 p-5 shadow-lg shadow-ink/5 sm:p-7"
+              style={{ animationDelay: "160ms" }}
+            >
               <div className="flex items-center justify-between border-b border-line pb-5">
                 <span className="text-xs font-medium text-muted">
                   YOUR ENGINEERING JOURNEY
@@ -199,6 +202,29 @@ export default function HomePage() {
                   You choose the pace. We make the next step clear.
                 </p>
               </div>
+            </div>
+            <div
+              className="reveal mt-5 rounded-2xl border border-line bg-white/90 p-5 shadow-lg shadow-ink/5"
+              style={{ animationDelay: "320ms" }}
+            >
+              <p className="text-xs font-medium text-muted">TRY IT · SWIPE A LESSON</p>
+              <div className="swipe-demo mt-4" aria-hidden>
+                <div className="swipe-under" />
+                <div className="swipe-card">
+                  <p className="text-[11px] font-semibold uppercase tracking-[.15em] text-accent">
+                    Section 2 of 6
+                  </p>
+                  <p className="mt-2 text-base font-semibold text-ink">Your first configuration</p>
+                  <div className="mt-4 space-y-2">
+                    <span className="block h-2 w-full rounded bg-line" />
+                    <span className="block h-2 w-5/6 rounded bg-line" />
+                    <span className="block h-2 w-2/3 rounded bg-line" />
+                  </div>
+                </div>
+              </div>
+              <p className="mt-4 text-xs text-muted">
+                Swipe right or up to continue. Every section becomes a card.
+              </p>
             </div>
           </div>
         </div>
