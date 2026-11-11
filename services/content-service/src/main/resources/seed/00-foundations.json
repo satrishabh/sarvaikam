@@ -19,25 +19,25 @@
           {
             "slug": "first-configuration",
             "title": "Your first configuration",
-            "content": "Create `main.tf`:\n\n```hcl\nterraform {\n  required_providers {\n    aws = { source = \"hashicorp/aws\", version = \"~> 5.0\" }\n  }\n}\n\nprovider \"aws\" {\n  region = \"us-east-1\"\n}\n\nresource \"aws_s3_bucket\" \"notes\" {\n  bucket = \"my-unique-notes-bucket-12345\"\n}\n```\n\nThen run the core workflow:\n\n```bash\nterraform init     # download providers\nterraform plan     # preview\nterraform apply    # create\nterraform destroy  # clean up\n```\n\n**Practice:** Create and destroy a bucket, then read the generated `terraform.tfstate`.",
+            "content": "## Write your first configuration\n\nCreate `main.tf`:\n\n```hcl\nterraform {\n  required_providers {\n    aws = { source = \"hashicorp/aws\", version = \"~> 5.0\" }\n  }\n}\n\nprovider \"aws\" {\n  region = \"us-east-1\"\n}\n\nresource \"aws_s3_bucket\" \"notes\" {\n  bucket = \"my-unique-notes-bucket-12345\"\n}\n```\n\n## Run the core workflow\n\nThen run the core workflow:\n\n```bash\nterraform init     # download providers\nterraform plan     # preview\nterraform apply    # create\nterraform destroy  # clean up\n```\n\n**Practice:** Create and destroy a bucket, then read the generated `terraform.tfstate`.",
             "stage": "STARTER"
           },
           {
             "slug": "variables-outputs",
             "title": "Variables, outputs and locals",
-            "content": "Hard-coded values do not scale. Use inputs and outputs:\n\n```hcl\nvariable \"env\" {\n  type    = string\n  default = \"dev\"\n}\n\nlocals {\n  name = \"app-${var.env}\"\n}\n\noutput \"bucket_arn\" {\n  value = aws_s3_bucket.notes.arn\n}\n```\n\nSet values with `-var env=prod`, a `terraform.tfvars` file, or `TF_VAR_env` environment variables.\n\nUse `count` and `for_each` to create many similar resources:\n\n```hcl\nresource \"aws_s3_bucket\" \"logs\" {\n  for_each = toset([\"web\", \"api\"])\n  bucket   = \"${local.name}-${each.key}-logs\"\n}\n```",
+            "content": "## Inputs, outputs and reuse\n\nHard-coded values do not scale. Use inputs and outputs:\n\n```hcl\nvariable \"env\" {\n  type    = string\n  default = \"dev\"\n}\n\nlocals {\n  name = \"app-${var.env}\"\n}\n\noutput \"bucket_arn\" {\n  value = aws_s3_bucket.notes.arn\n}\n```\n\nSet values with `-var env=prod`, a `terraform.tfvars` file, or `TF_VAR_env` environment variables.\n\n## Create many similar resources\n\nUse `count` and `for_each` to create many similar resources:\n\n```hcl\nresource \"aws_s3_bucket\" \"logs\" {\n  for_each = toset([\"web\", \"api\"])\n  bucket   = \"${local.name}-${each.key}-logs\"\n}\n```",
             "stage": "INTERMEDIATE"
           },
           {
             "slug": "state-and-backends",
             "title": "Remote state and backends",
-            "content": "Local state breaks as soon as a team shares infrastructure. Store it remotely with locking:\n\n```hcl\nterraform {\n  backend \"s3\" {\n    bucket         = \"my-tf-state\"\n    key            = \"prod/network.tfstate\"\n    region         = \"us-east-1\"\n    dynamodb_table = \"tf-locks\"\n    encrypt        = true\n  }\n}\n```\n\nEquivalent backends exist for Azure (`azurerm` storage account) and GCP (`gcs` bucket).\n\nUseful commands: `terraform state list`, `terraform import`, `terraform state mv`.\n\nNever commit state files: they can contain secrets.",
+            "content": "## Remote state and locking\n\nLocal state breaks as soon as a team shares infrastructure. Store it remotely with locking:\n\n```hcl\nterraform {\n  backend \"s3\" {\n    bucket         = \"my-tf-state\"\n    key            = \"prod/network.tfstate\"\n    region         = \"us-east-1\"\n    dynamodb_table = \"tf-locks\"\n    encrypt        = true\n  }\n}\n```\n\nEquivalent backends exist for Azure (`azurerm` storage account) and GCP (`gcs` bucket).\n\n## Commands and safety\n\nUseful commands: `terraform state list`, `terraform import`, `terraform state mv`.\n\nNever commit state files: they can contain secrets.",
             "stage": "INTERMEDIATE"
           },
           {
             "slug": "modules-and-workflows",
             "title": "Modules and team workflows",
-            "content": "A **module** is a folder of `.tf` files you call with inputs:\n\n```hcl\nmodule \"vpc\" {\n  source  = \"terraform-aws-modules/vpc/aws\"\n  version = \"5.8.1\"\n  name    = \"main\"\n  cidr    = \"10.0.0.0/16\"\n}\n```\n\nProduction workflow:\n\n1. `terraform fmt` and `terraform validate` in CI\n2. Post `terraform plan` output on pull requests\n3. Apply only from the main branch\n4. Scan with `tflint` / `checkov`\n\nSee `infra/terraform` in this repo for real AWS, Azure and GCP examples.",
+            "content": "## Modules and a team workflow\n\nA **module** is a folder of `.tf` files you call with inputs:\n\n```hcl\nmodule \"vpc\" {\n  source  = \"terraform-aws-modules/vpc/aws\"\n  version = \"5.8.1\"\n  name    = \"main\"\n  cidr    = \"10.0.0.0/16\"\n}\n```\n\n## Production workflow\n\nProduction workflow:\n\n1. `terraform fmt` and `terraform validate` in CI\n2. Post `terraform plan` output on pull requests\n3. Apply only from the main branch\n4. Scan with `tflint` / `checkov`\n\nSee `infra/terraform` in this repo for real AWS, Azure and GCP examples.",
             "stage": "INTERMEDIATE"
           }
         ]
