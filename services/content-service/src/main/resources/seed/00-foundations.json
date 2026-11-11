@@ -308,7 +308,7 @@
           {
             "slug": "event-loop",
             "title": "The event loop",
-            "content": "Node runs JavaScript on a single thread with a non-blocking **event loop**. I/O is handed to libuv, and callbacks or promises resume when it completes. Never block the loop with heavy CPU work; use worker threads for that.",
+            "content": "## How Node runs your code\n\nNode runs JavaScript on a single thread with a non-blocking **event loop**. I/O is handed to libuv, and callbacks or promises resume when it completes. Never block the loop with heavy CPU work; use worker threads for that.\n\n## Keep the loop free\n\nEach callback should finish quickly. A long synchronous task delays every pending request, timer and I/O event. Measure event-loop lag in production, and move heavy work to worker threads or a separate service.",
             "stage": "STARTER"
           },
           {
@@ -326,7 +326,7 @@
           {
             "slug": "npm-production",
             "title": "npm and production readiness",
-            "content": "- Pin dependencies with a lockfile and `npm ci`\n- Run `npm audit` regularly\n- Validate all input, set timeouts, handle `SIGTERM` for graceful shutdown\n- Use structured logging (pino) and run behind a reverse proxy",
+            "content": "## Ship Node.js safely\n\n- Pin dependencies with a lockfile and `npm ci`\n- Run `npm audit` regularly\n- Validate all input, set timeouts, handle `SIGTERM` for graceful shutdown\n- Use structured logging (pino) and run behind a reverse proxy\n\n## Check before every release\n\nRun `npm ci` in CI, run `npm audit` on every build, and keep tests for your input validation. Keep secrets in environment variables or a secret manager, never in the repository.",
             "stage": "INTERMEDIATE"
           }
         ]
@@ -417,7 +417,7 @@
           {
             "slug": "first-model",
             "title": "Train your first model",
-            "content": "```python\nfrom sklearn.datasets import load_iris\nfrom sklearn.model_selection import train_test_split\nfrom sklearn.ensemble import RandomForestClassifier\n\nX, y = load_iris(return_X_y=True)\nX_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.2, random_state=42)\nmodel = RandomForestClassifier().fit(X_tr, y_tr)\nprint(model.score(X_te, y_te))\n```",
+            "content": "## Train a first classifier\n\n```python\nfrom sklearn.datasets import load_iris\nfrom sklearn.model_selection import train_test_split\nfrom sklearn.ensemble import RandomForestClassifier\n\nX, y = load_iris(return_X_y=True)\nX_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.2, random_state=42)\nmodel = RandomForestClassifier().fit(X_tr, y_tr)\nprint(model.score(X_te, y_te))\n```\n\n## Read the result\n\nThe score is accuracy on data the model did not see during training. Change `random_state` or `test_size` and run again. If the score moves a lot, the estimate is unstable, and you need more data or cross-validation.",
             "stage": "STARTER"
           },
           {
@@ -443,13 +443,13 @@
           {
             "slug": "neural-networks",
             "title": "Neurons, layers and activations",
-            "content": "A neural network stacks layers of `y = activation(Wx + b)`. Non-linear activations (ReLU, GELU) let it model complex functions. Training minimizes a **loss** using **gradient descent**, and **backpropagation** computes gradients with the chain rule.",
+            "content": "## How a network learns\n\nA neural network stacks layers of `y = activation(Wx + b)`. Non-linear activations (ReLU, GELU) let it model complex functions. Training minimizes a **loss** using **gradient descent**, and **backpropagation** computes gradients with the chain rule.\n\n## Why activations matter\n\nEach layer transforms the output of the layer before it. Without non-linear activations, stacked linear layers collapse into a single linear map, so the activation function is what gives depth its power.",
             "stage": "STARTER"
           },
           {
             "slug": "pytorch-basics",
             "title": "PyTorch training loop",
-            "content": "```python\nimport torch, torch.nn as nn\n\nmodel = nn.Sequential(nn.Linear(4, 32), nn.ReLU(), nn.Linear(32, 3))\nopt = torch.optim.Adam(model.parameters(), lr=1e-3)\nloss_fn = nn.CrossEntropyLoss()\n\nfor epoch in range(100):\n    opt.zero_grad()\n    loss = loss_fn(model(X), y)\n    loss.backward()\n    opt.step()\n```",
+            "content": "## Write a training loop\n\n```python\nimport torch, torch.nn as nn\n\nmodel = nn.Sequential(nn.Linear(4, 32), nn.ReLU(), nn.Linear(32, 3))\nopt = torch.optim.Adam(model.parameters(), lr=1e-3)\nloss_fn = nn.CrossEntropyLoss()\n\nfor epoch in range(100):\n    opt.zero_grad()\n    loss = loss_fn(model(X), y)\n    loss.backward()\n    opt.step()\n```\n\n## The steps in each epoch\n\nClear the old gradients, run the forward pass, compute the loss, call `backward()` to compute gradients, then call `step()` to update the weights. Forgetting `zero_grad()` makes gradients accumulate across batches.",
             "stage": "STARTER"
           },
           {
@@ -461,7 +461,7 @@
           {
             "slug": "training-tips",
             "title": "Training at scale",
-            "content": "Regularize with dropout, weight decay and data augmentation. Use learning-rate schedules, mixed precision (`torch.autocast`) and GPUs. Scale out with DDP/FSDP, and use **transfer learning**: fine-tune a pretrained model instead of training from scratch.",
+            "content": "## Train better, faster\n\nRegularize with dropout, weight decay and data augmentation. Use learning-rate schedules, mixed precision (`torch.autocast`) and GPUs. Scale out with DDP/FSDP, and use **transfer learning**: fine-tune a pretrained model instead of training from scratch.\n\n## Start with a baseline\n\nBefore you tune anything, train a simple baseline and record its validation score. Change one thing at a time, so you know what helped.",
             "stage": "INTERMEDIATE"
           }
         ]
@@ -493,7 +493,7 @@
           {
             "slug": "fine-tuning",
             "title": "Fine-tuning and LoRA",
-            "content": "Full fine-tuning updates every weight, which is expensive. **LoRA/QLoRA** (via the `peft` library) trains small adapter matrices instead, often on a single GPU. Always evaluate against a held-out set and a baseline.",
+            "content": "## Adapt a pretrained model\n\nFull fine-tuning updates every weight, which is expensive. **LoRA/QLoRA** (via the `peft` library) trains small adapter matrices instead, often on a single GPU. Always evaluate against a held-out set and a baseline.\n\n## Choose the smallest change that works\n\nTry better prompts or retrieval first. Fine-tune when you need a consistent output format or domain behaviour that prompts cannot reliably produce.",
             "stage": "INTERMEDIATE"
           }
         ]
@@ -564,7 +564,7 @@
           {
             "slug": "security-testing",
             "title": "Security, testing and observability",
-            "content": "- **Spring Security**: stateless JWT filter + `hasRole` rules (see `content-service/security`)\n- **Tests**: `@WebMvcTest`, `@DataJpaTest`, Testcontainers\n- **Actuator**: `/actuator/health` for Kubernetes probes, Micrometer for metrics",
+            "content": "## Secure and test the service\n\n- **Spring Security**: stateless JWT filter + `hasRole` rules (see `content-service/security`)\n- **Tests**: `@WebMvcTest`, `@DataJpaTest`, Testcontainers\n- **Actuator**: `/actuator/health` for Kubernetes probes, Micrometer for metrics\n\n## What to test first\n\nTest authorization rules with `@WebMvcTest`, so a role change cannot silently open an endpoint. Use Testcontainers for database behaviour, because an in-memory database can behave differently from PostgreSQL.",
             "stage": "INTERMEDIATE"
           }
         ]
@@ -590,13 +590,13 @@
           {
             "slug": "validation-persistence",
             "title": "DTO validation and persistence",
-            "content": "Validate input with `class-validator` DTOs and a global `ValidationPipe({ whitelist: true })`. Persist with TypeORM or Prisma. This project's `auth-service` shows a TypeORM entity, bcrypt password hashing and JWT issuing.",
+            "content": "## Validate and store data\n\nValidate input with `class-validator` DTOs and a global `ValidationPipe({ whitelist: true })`. Persist with TypeORM or Prisma. This project's `auth-service` shows a TypeORM entity, bcrypt password hashing and JWT issuing.\n\n## Reject bad input early\n\nA DTO with validators rejects malformed requests before they reach business logic. `whitelist: true` strips properties the DTO does not declare, so clients cannot set fields they should not control.",
             "stage": "INTERMEDIATE"
           },
           {
             "slug": "auth-testing",
             "title": "Auth, guards and testing",
-            "content": "Protect routes with **Guards** (e.g. a JWT guard), transform responses with **Interceptors**, and centralize errors with **Exception Filters**. Test with Jest and `@nestjs/testing`, and end-to-end with supertest.",
+            "content": "## Guards, interceptors and tests\n\nProtect routes with **Guards** (e.g. a JWT guard), transform responses with **Interceptors**, and centralize errors with **Exception Filters**. Test with Jest and `@nestjs/testing`, and end-to-end with supertest.\n\n## Test the unhappy paths\n\nTest that a request without a token gets a 401, a request with the wrong role gets a 403, and an invalid payload gets a 400. These are the cases that protect users.",
             "stage": "INTERMEDIATE"
           }
         ]
@@ -623,13 +623,13 @@
           {
             "slug": "sql-queries",
             "title": "Joins, aggregates and window functions",
-            "content": "```sql\nSELECT t.name,\n       COUNT(l.id) AS lessons,\n       RANK() OVER (ORDER BY COUNT(l.id) DESC) AS rnk\nFROM topics t\nLEFT JOIN lessons l ON l.topic_id = t.id\nGROUP BY t.name;\n```",
+            "content": "## Summarize data with SQL\n\n```sql\nSELECT t.name,\n       COUNT(l.id) AS lessons,\n       RANK() OVER (ORDER BY COUNT(l.id) DESC) AS rnk\nFROM topics t\nLEFT JOIN lessons l ON l.topic_id = t.id\nGROUP BY t.name;\n```\n\n## Read the query\n\n`LEFT JOIN` keeps every topic even when it has no lessons, so its count is 0 rather than the topic disappearing. `RANK()` gives topics with equal counts the same rank.",
             "stage": "STARTER"
           },
           {
             "slug": "indexes-transactions",
             "title": "Indexes and transactions",
-            "content": "B-tree indexes speed up lookups and sorts; read plans with `EXPLAIN ANALYZE`. Transactions give **ACID** guarantees; understand isolation levels and avoid long-running transactions.",
+            "content": "## Speed up queries and protect data\n\nB-tree indexes speed up lookups and sorts; read plans with `EXPLAIN ANALYZE`. Transactions give **ACID** guarantees; understand isolation levels and avoid long-running transactions.\n\n## Check the plan\n\nRun `EXPLAIN ANALYZE` before and after adding an index. If the plan still scans the whole table, the index is not used for that query shape.",
             "stage": "INTERMEDIATE"
           },
           {
@@ -649,7 +649,7 @@
           {
             "slug": "lakehouse",
             "title": "The lakehouse concept",
-            "content": "A **lakehouse** combines cheap data-lake storage (Parquet files in S3/ADLS/GCS) with warehouse features such as ACID transactions and schemas, through **Delta Lake**. Databricks runs on AWS, Azure and GCP.",
+            "content": "## What a lakehouse is\n\nA **lakehouse** combines cheap data-lake storage (Parquet files in S3/ADLS/GCS) with warehouse features such as ACID transactions and schemas, through **Delta Lake**. Databricks runs on AWS, Azure and GCP.\n\n## When to choose one\n\nUse a lakehouse when you need large-scale file-based data and reliable tables for analytics and machine learning on one platform.",
             "stage": "STARTER"
           },
           {
@@ -667,7 +667,7 @@
           {
             "slug": "governance-ml",
             "title": "Unity Catalog, workflows and ML",
-            "content": "- **Unity Catalog**: catalog.schema.table governance, lineage and permissions\n- **Workflows / Lakeflow**: schedule jobs and declarative pipelines\n- **MLflow**: track experiments and serve models\n- **Databricks SQL**: warehouses for BI",
+            "content": "## Govern and operate data\n\n- **Unity Catalog**: catalog.schema.table governance, lineage and permissions\n- **Workflows / Lakeflow**: schedule jobs and declarative pipelines\n- **MLflow**: track experiments and serve models\n- **Databricks SQL**: warehouses for BI\n\n## Start with permissions\n\nGrant access to groups rather than to individuals. Use Unity Catalog to see who can read each table and where its data came from.",
             "stage": "INTERMEDIATE"
           }
         ]
@@ -681,7 +681,7 @@
           {
             "slug": "architecture",
             "title": "Snowflake architecture",
-            "content": "Snowflake separates **storage** (compressed micro-partitions) from **compute** (virtual warehouses) and **cloud services** (metadata, security, optimization). Warehouses scale independently, auto-suspend when idle, and many can query the same data without contention.",
+            "content": "## How Snowflake is built\n\nSnowflake separates **storage** (compressed micro-partitions) from **compute** (virtual warehouses) and **cloud services** (metadata, security, optimization). Warehouses scale independently, auto-suspend when idle, and many can query the same data without contention.\n\n## Why it matters for cost\n\nBecause storage and compute are separate, you pay for compute while a warehouse runs. Auto-suspend and right-sized warehouses are the first cost controls to set.",
             "stage": "STARTER"
           },
           {
