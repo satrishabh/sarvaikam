@@ -51,7 +51,7 @@
           {
             "slug": "helm-vs-kustomize",
             "title": "Helm vs Kustomize",
-            "content": "## Helm or Kustomize\n\n- **Helm**: templating + packaging + release history. Great for distributing apps to others\n- **Kustomize**: template-free overlays built into `kubectl`. Great for your own apps across environments\n\n```text\ndeploy/k8s/            # base (this repo)\noverlays/\n  dev/kustomization.yaml    # replicas: 1, small resources\n  prod/kustomization.yaml   # replicas: 3, HPA, real image tags\n```\n\n```yaml\n# overlays/prod/kustomization.yaml\nresources: [../../deploy/k8s]\nreplicas:\n  - { name: content-service, count: 3 }\nimages:\n  - { name: sarvaikam/content-service, newName: 123.dkr.ecr.us-east-1.amazonaws.com/sarvaikam/content-service, newTag: 1a2b3c }\n```\n\n## Using both\n\nMany teams use both: Helm for third-party charts, Kustomize for their own services.",
+            "content": "## Helm or Kustomize\n\n- **Helm**: templating + packaging + release history. Great for distributing apps to others\n- **Kustomize**: template-free overlays built into `kubectl`. Great for your own apps across environments\n\n```text\ndeploy/k8s/            # base manifests\noverlays/\n  dev/kustomization.yaml    # replicas: 1, small resources\n  prod/kustomization.yaml   # replicas: 3, HPA, real image tags\n```\n\n```yaml\n# overlays/prod/kustomization.yaml\nresources: [../../deploy/k8s]\nreplicas:\n  - { name: content-service, count: 3 }\nimages:\n  - { name: sarvaikam/content-service, newName: 123.dkr.ecr.us-east-1.amazonaws.com/sarvaikam/content-service, newTag: 1a2b3c }\n```\n\n## Using both\n\nMany teams use both: Helm for third-party charts, Kustomize for their own services.",
             "stage": "STARTER"
           },
           {
@@ -191,7 +191,7 @@
           {
             "slug": "communication",
             "title": "Sync vs async communication",
-            "content": "## How services talk\n\n| Style | Tech | Use when |\n|---|---|---|\n| Sync request/response | REST, gRPC | caller needs the answer now |\n| Async events | Kafka, RabbitMQ, SNS/SQS | notify others something happened |\n| Async commands | queues | hand off work to be done later |\n\n## Rules of thumb\n\nRules of thumb:\n\n- Avoid long synchronous chains (A > B > C > D); availability multiplies down\n- Publish **events** about facts (`LessonCompleted`) rather than calling every interested service\n- Use an **API gateway** for external clients (routing, auth, rate limiting); see `frontend/nginx.conf` and `deploy/k8s/ingress.yaml`\n- Define contracts with OpenAPI or Protobuf and version them",
+            "content": "## How services talk\n\n| Style | Tech | Use when |\n|---|---|---|\n| Sync request/response | REST, gRPC | caller needs the answer now |\n| Async events | Kafka, RabbitMQ, SNS/SQS | notify others something happened |\n| Async commands | queues | hand off work to be done later |\n\n## Rules of thumb\n\nRules of thumb:\n\n- Avoid long synchronous chains (A > B > C > D); availability multiplies down\n- Publish **events** about facts (`LessonCompleted`) rather than calling every interested service\n- Use an **API gateway** for external clients (routing, auth, rate limiting); see NGINX or Kong as a gateway, and a Kubernetes Ingress\n- Define contracts with OpenAPI or Protobuf and version them",
             "stage": "STARTER"
           },
           {

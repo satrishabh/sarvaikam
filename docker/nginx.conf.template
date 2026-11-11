@@ -53,6 +53,7 @@ __ENV_HEADERS__
         location = /sw.js { add_header Cache-Control "no-cache"; }
         location = /manifest.webmanifest { types { application/manifest+json webmanifest; } default_type application/manifest+json; add_header Cache-Control "no-cache"; }
         location /assets/ { expires 1y; add_header Cache-Control "public, immutable"; }
+        location /fonts/ { expires 30d; add_header Cache-Control "public, max-age=2592000"; }
         location / { try_files $uri $uri/ /index.html; }
     }
 }
