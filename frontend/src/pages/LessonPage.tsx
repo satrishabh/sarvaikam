@@ -23,6 +23,7 @@ import ReadingPosition from "../components/ReadingPosition";
 import {
   readReaderPreferences,
   saveReaderPreferences,
+  themeAvailable,
   type ReaderPreferences,
 } from "../readerPreferences";
 import {
@@ -101,18 +102,19 @@ export default function LessonPage() {
   useEffect(() => {
     setResumeId(lesson ? (readResumePoint(lesson.id)?.id ?? "") : "");
   }, [lesson?.id]);
+  // Signed-out readers see White or Dark even if a signed-in theme was saved on this device.
+  const activeTheme = themeAvailable(preferences.theme, !!user)
+    ? preferences.theme
+    : "day";
   useEffect(() => {
     const previous = document.documentElement.getAttribute("data-reader-theme");
-    document.documentElement.setAttribute(
-      "data-reader-theme",
-      preferences.theme,
-    );
+    document.documentElement.setAttribute("data-reader-theme", activeTheme);
     return () => {
       if (previous === null)
         document.documentElement.removeAttribute("data-reader-theme");
       else document.documentElement.setAttribute("data-reader-theme", previous);
     };
-  }, [preferences.theme]);
+  }, [activeTheme]);
   useEffect(() => {
     setDetailsOpen(false);
     setSettingsOpen(false);
@@ -360,7 +362,7 @@ export default function LessonPage() {
         onClose={() => setSettingsOpen(false)}
       >
         <ReaderSettings
-          value={preferences}
+          value={{ ...preferences, theme: activeTheme }}
           onChange={changePreferences}
           saved={preferencesSaved}
           signedIn={!!user}
