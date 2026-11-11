@@ -794,6 +794,8 @@ html[data-reader-theme] :focus-visible {
   background: var(--reader-page, #f7f8fa);
   color: var(--reader-text, #12325a);
   padding: max(12px, env(safe-area-inset-top)) 0 max(12px, env(safe-area-inset-bottom));
+  /* Stops a sideways swipe from triggering the browser's back navigation and closing the deck. */
+  overscroll-behavior: none;
 }
 .lesson-deck-top {
   display: flex;
@@ -833,6 +835,8 @@ html[data-reader-theme] :focus-visible {
   padding: 28px 24px 32px;
   user-select: text;
   cursor: auto;
+  /* The card scrolls its own text during a vertical drag, so the browser must not pan it natively. */
+  touch-action: none;
 }
 .lesson-deck-bottom {
   display: flex;
