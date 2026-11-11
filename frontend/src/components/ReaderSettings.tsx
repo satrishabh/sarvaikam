@@ -55,12 +55,11 @@ export default function ReaderSettings({
       </fieldset>
       <fieldset>
         <legend>Page appearance</legend>
-        <div className="mt-3 grid grid-cols-3 gap-2">
+        <div className="mt-3 grid grid-cols-2 gap-2">
           {(
             [
-              ["day", "Day"],
-              ["paper", "Paper"],
-              ["night", "Night"],
+              ["day", "White"],
+              ["night", "Dark"],
             ] as const
           ).map(([theme, label]) => (
             <button

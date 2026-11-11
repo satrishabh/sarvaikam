@@ -151,12 +151,13 @@ export default function App() {
             aria-label="Sarvaikam home"
             className="mr-auto flex shrink-0 items-center gap-2.5 lg:mr-3"
           >
-            <img src="/logo-mark.png" alt="" className="h-9 w-9 rounded-xl" />
-            <span className="text-xl font-semibold tracking-tight">
+            <svg viewBox="0 0 40 40" fill="none" aria-hidden="true" className="h-8 w-8 text-[#10231e]">
+              <path d="M7 25 17 7l5 9-7 12H7Zm13 6 9-15 5 9-4 6H20Z" fill="currentColor" />
+              <circle cx="30" cy="8" r="3" fill="currentColor" />
+            </svg>
+            <span className="flex items-baseline gap-1.5 text-xl font-semibold tracking-tight">
               Sarvaikam
-              <span className="ml-2 hidden rounded border border-line px-1.5 py-0.5 align-middle text-[9px] font-medium tracking-[.12em] text-muted xl:inline">
-                LEARN
-              </span>
+              <span className="text-xs font-medium text-muted">Learn</span>
             </span>
           </Link>
           <nav
@@ -333,7 +334,10 @@ export default function App() {
         <div className="mx-auto flex max-w-[1240px] flex-wrap items-center justify-between gap-7 px-5 py-9 sm:px-8">
           <div>
             <Link to="/" className="flex items-center gap-2 font-semibold">
-              <img src="/logo-mark.png" alt="" className="h-6 w-6" />
+              <svg viewBox="0 0 40 40" fill="none" aria-hidden="true" className="h-6 w-6 text-[#10231e]">
+                <path d="M7 25 17 7l5 9-7 12H7Zm13 6 9-15 5 9-4 6H20Z" fill="currentColor" />
+                <circle cx="30" cy="8" r="3" fill="currentColor" />
+              </svg>
               Sarvaikam
             </Link>
             <p className="mt-2 text-xs text-muted">

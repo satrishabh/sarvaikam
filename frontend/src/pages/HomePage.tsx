@@ -230,6 +230,29 @@ export default function HomePage() {
         </div>
       </section>
 
+      <Link
+        to="/topics/forward-deployed-engineer"
+        className="surface group grid gap-5 p-6 transition-colors hover:border-accent/40 sm:grid-cols-[1fr_auto] sm:items-center sm:p-8"
+      >
+        <div>
+          <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[.18em] text-accent">
+            <span className="h-1.5 w-1.5 rounded-full bg-accent" />
+            New course
+          </p>
+          <h2 className="mt-3 text-2xl font-semibold tracking-tight text-ink sm:text-3xl">
+            Forward Deployed Engineering
+          </h2>
+          <p className="mt-2 max-w-xl text-sm text-muted sm:text-base">
+            Discovery, prototypes, evaluation, production handoff and the trade-offs
+            you will face with real customers. Eight lessons.
+          </p>
+        </div>
+        <span className="btn w-fit">
+          Start the course
+          <Icon name="arrow" className="h-4 w-4" />
+        </span>
+      </Link>
+
       {user && !progressLoading && !progressError && (
         <Momentum items={items} name={user.name} />
       )}
