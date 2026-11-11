@@ -26,14 +26,15 @@ export default {
       },
       fontFamily: {
         sans: [
+          "Archivo",
           "-apple-system",
           "BlinkMacSystemFont",
           '"SF Pro Text"',
           '"Segoe UI"',
-          "Inter",
           "Roboto",
           "sans-serif",
         ],
+        serif: ["Playfair Display", "Georgia", '"Times New Roman"', "serif"],
         display: [
           "-apple-system",
           "BlinkMacSystemFont",
@@ -43,6 +44,7 @@ export default {
           "sans-serif",
         ],
         mono: [
+          '"IBM Plex Mono"',
           "ui-monospace",
           '"SF Mono"',
           '"Cascadia Code"',
