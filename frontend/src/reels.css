@@ -48,7 +48,7 @@
 .reel-lines {
   display: grid;
   gap: 16px;
-  margin: 0;
+  margin: 24px 0 0;
   padding: 0;
   list-style: none;
   font-size: 1.125rem;
@@ -78,6 +78,37 @@
     max-width: 680px;
     height: 78svh;
     margin: 0 auto;
+  }
+}
+
+/* Phones: the reels fill the whole screen. The floating bar sits over the bottom of each reel. */
+@media (max-width: 1023px) {
+  .app-shell.is-reels {
+    padding-bottom: 0;
+  }
+  .app-shell.is-reels .app-header,
+  .app-shell.is-reels .app-footer {
+    display: none;
+  }
+  .app-shell.is-reels .app-main {
+    max-width: none;
+    padding: 0;
+  }
+  .app-shell.is-reels .reels-page,
+  .app-shell.is-reels .reels-feed {
+    height: 100svh;
+    min-height: 0;
+  }
+  .app-shell.is-reels .reels-page > header {
+    display: none;
+  }
+  .app-shell.is-reels .reels-feed {
+    border-radius: 0;
+  }
+  .app-shell.is-reels .reel {
+    border: 0;
+    border-radius: 0;
+    padding: 36px 22px 112px;
   }
 }
 

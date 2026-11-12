@@ -38,6 +38,7 @@ export default function App() {
   const [logoutError, setLogoutError] = useState("");
   const location = useLocation();
   const isReader = /^\/topics\/[^/]+\/[^/]+\/?$/.test(location.pathname);
+  const isReels = location.pathname === "/reels";
   const [keyboardOpen, setKeyboardOpen] = useState(false);
   const barHidden = useScrollHidden();
   useEffect(() => {
@@ -142,7 +143,7 @@ export default function App() {
   );
   return (
     <div
-      className={`app-shell flex min-h-screen flex-col ${isReader ? "is-reader" : ""}`}
+      className={`app-shell flex min-h-screen flex-col ${isReader ? "is-reader" : ""} ${isReels ? "is-reels" : ""}`}
     >
       <a
         href="#main-content"
