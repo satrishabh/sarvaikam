@@ -30,6 +30,7 @@
   scroll-snap-align: start;
   scroll-snap-stop: always;
   touch-action: pan-y;
+  overflow-wrap: anywhere;
 }
 
 .reel-kicker {
@@ -48,7 +49,7 @@
 .reel-lines {
   display: grid;
   gap: 16px;
-  margin: 0;
+  margin: 24px 0 0;
   padding: 0;
   list-style: none;
   font-size: 1.125rem;
@@ -69,8 +70,11 @@
   border-top: 1px solid #e3e7ed;
 }
 .reel-source {
+  flex: 1 1 140px;
+  min-width: 0;
   font-size: 13px;
   color: #526579;
+  overflow-wrap: anywhere;
 }
 
 @media (min-width: 1024px) {
@@ -78,6 +82,91 @@
     max-width: 680px;
     height: 78svh;
     margin: 0 auto;
+  }
+}
+
+.reels-count {
+  display: none;
+}
+
+.reels-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  margin-bottom: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #10231e;
+}
+
+/* Phones: the reels fill the whole screen and the bottom bar is hidden on this page. */
+@media (max-width: 1023px) {
+  .app-shell.is-reels {
+    padding-bottom: 0;
+  }
+  .app-shell.is-reels .reels-back {
+    position: fixed;
+    top: max(14px, env(safe-area-inset-top));
+    left: 14px;
+    z-index: 45;
+    margin: 0;
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: rgb(255 255 255 / 0.92);
+    box-shadow: 0 6px 20px rgb(16 35 30 / 0.15);
+  }
+  .app-shell.is-reels .reel > div:first-child {
+    margin: auto 0;
+    min-width: 0;
+  }
+  .app-shell.is-reels .reel {
+    padding: 76px 20px 116px;
+  }
+  .app-shell.is-reels .reels-count {
+    display: block;
+    position: fixed;
+    top: max(18px, env(safe-area-inset-top));
+    right: 16px;
+    z-index: 45;
+    margin: 0;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: rgb(16 35 30 / 0.7);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+  .app-shell.is-reels .reel-title {
+    font-size: clamp(1.625rem, 8vw, 2.25rem);
+  }
+  .app-shell.is-reels .reel-lines {
+    font-size: clamp(1.0625rem, 4.6vw, 1.25rem);
+  }
+  .app-shell.is-reels .app-header,
+  .app-shell.is-reels .app-footer {
+    display: none;
+  }
+  .app-shell.is-reels .app-main {
+    max-width: none;
+    padding: 0;
+  }
+  .app-shell.is-reels .reels-page,
+  .app-shell.is-reels .reels-feed {
+    height: 100svh;
+    min-height: 0;
+  }
+  .app-shell.is-reels .reels-page > header {
+    display: none;
+  }
+  .app-shell.is-reels .reels-feed {
+    border-radius: 0;
+  }
+  .app-shell.is-reels .reel {
+    border: 0;
+    border-radius: 0;
+    padding: 36px 22px 112px;
   }
 }
 

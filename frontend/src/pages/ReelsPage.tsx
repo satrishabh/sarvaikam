@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { api, Category } from "../api";
 import { useAuth } from "../auth";
+import Icon from "../components/Icon";
 import { LoadState } from "../components/LearningUI";
 import { plainText } from "../readingOutline";
 import "../reels.css";
@@ -103,6 +104,10 @@ export default function ReelsPage() {
 
   return (
     <div className="reels-page">
+      <Link to="/" className="reels-back">
+        <Icon name="chevron" className="h-4 w-4" style={{ transform: "rotate(180deg)" }} />
+        Back to home
+      </Link>
       <header className="mb-5">
         <p className="eyebrow">Reels</p>
         <h1 className="mt-2 text-3xl font-semibold">Recent lessons in short bites</h1>
@@ -128,8 +133,20 @@ export default function ReelsPage() {
 }
 
 function ReelFeed({ reels }: { reels: Reel[] }) {
+  const [index, setIndex] = useState(0);
   return (
-    <div className="reels-feed" tabIndex={0} aria-label="Recent lessons">
+    <div
+      className="reels-feed"
+      tabIndex={0}
+      aria-label="Recent lessons"
+      onScroll={(event) => {
+        const { scrollTop, clientHeight } = event.currentTarget;
+        if (clientHeight > 0) setIndex(Math.round(scrollTop / clientHeight));
+      }}
+    >
+      <p className="reels-count" aria-hidden="true">
+        {Math.min(index + 1, reels.length)} / {reels.length}
+      </p>
       {reels.map((reel) => (
         <ReelCard key={reel.key} reel={reel} />
       ))}
