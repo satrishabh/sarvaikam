@@ -437,6 +437,8 @@ html[data-reader-theme] .reading-controls .outline-btn {
 @media (max-width: 1023px) {
   html {
     scroll-padding-top: calc(80px + env(safe-area-inset-top));
+    /* Keeps a focused control above the floating bottom bar (WCAG 2.4.11). */
+    scroll-padding-bottom: calc(104px + env(safe-area-inset-bottom));
   }
   .app-shell {
     padding-bottom: calc(104px + env(safe-area-inset-bottom));
