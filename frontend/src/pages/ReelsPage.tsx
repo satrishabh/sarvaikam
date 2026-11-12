@@ -133,8 +133,20 @@ export default function ReelsPage() {
 }
 
 function ReelFeed({ reels }: { reels: Reel[] }) {
+  const [index, setIndex] = useState(0);
   return (
-    <div className="reels-feed" tabIndex={0} aria-label="Recent lessons">
+    <div
+      className="reels-feed"
+      tabIndex={0}
+      aria-label="Recent lessons"
+      onScroll={(event) => {
+        const { scrollTop, clientHeight } = event.currentTarget;
+        if (clientHeight > 0) setIndex(Math.round(scrollTop / clientHeight));
+      }}
+    >
+      <p className="reels-count" aria-hidden="true">
+        {Math.min(index + 1, reels.length)} / {reels.length}
+      </p>
       {reels.map((reel) => (
         <ReelCard key={reel.key} reel={reel} />
       ))}
