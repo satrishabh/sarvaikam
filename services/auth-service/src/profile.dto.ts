@@ -57,8 +57,8 @@ export class ReaderPreferencesDto {
   size: 16 | 18 | 20 | 22;
   @IsIn(['sans', 'serif'])
   font: 'sans' | 'serif';
-  @IsIn(['day', 'paper', 'slate', 'night'])
-  theme: 'day' | 'paper' | 'slate' | 'night';
+  @IsIn(['device', 'day', 'paper', 'slate', 'night'])
+  theme: 'device' | 'day' | 'paper' | 'slate' | 'night';
   @IsIn(['comfortable', 'compact'])
   spacing: 'comfortable' | 'compact';
 }

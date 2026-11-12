@@ -4,7 +4,6 @@ import { useAuth } from "./auth";
 import { can } from "./api";
 import Icon from "./components/Icon";
 import MobileSheet from "./components/MobileSheet";
-import useScrollHidden from "./useScrollHidden";
 import HomePage from "./pages/HomePage";
 import LegalPage from "./pages/LegalPage";
 const AdminPage = lazy(() => import("./pages/AdminPage"));
@@ -40,7 +39,6 @@ export default function App() {
   const isReader = /^\/topics\/[^/]+\/[^/]+\/?$/.test(location.pathname);
   const isReels = location.pathname === "/reels";
   const [keyboardOpen, setKeyboardOpen] = useState(false);
-  const barHidden = useScrollHidden();
   useEffect(() => {
     const viewport = window.visualViewport;
     const measure = () => {
@@ -311,7 +309,7 @@ export default function App() {
       {!isReader && !isReels && (
         <nav
           aria-label="Mobile primary navigation"
-          className={`mobile-tabs ${keyboardOpen ? "keyboard-open" : ""} ${barHidden ? "is-hidden" : ""}`}
+          className={`mobile-tabs ${keyboardOpen ? "keyboard-open" : ""}`}
         >
           {/* Skills lives in the More sheet; Reels takes the slot Prep used to have. */}
           {[

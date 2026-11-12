@@ -1,4 +1,4 @@
-export type ReaderTheme = "day" | "paper" | "slate" | "night";
+export type ReaderTheme = "device" | "day" | "paper" | "slate" | "night";
 
 export interface ReaderPreferences {
   size: number;
@@ -16,6 +16,7 @@ export const READER_THEMES: {
   ink: string;
   signedInOnly: boolean;
 }[] = [
+  { value: "device", label: "Device", note: "Follows your device's light or dark setting", page: "#ffffff", ink: "#20384e", signedInOnly: false },
   { value: "day", label: "White", note: "The original page", page: "#ffffff", ink: "#20384e", signedInOnly: false },
   { value: "night", label: "Dark", note: "Easy on the eyes at night", page: "#14212c", ink: "#e2eaf0", signedInOnly: false },
   { value: "paper", label: "Warm", note: "Cream paper for long reads", page: "#f6f0e4", ink: "#3b2f24", signedInOnly: true },
@@ -27,9 +28,19 @@ export function themeAvailable(theme: ReaderTheme, signedIn: boolean): boolean {
   return !!entry && (signedIn || !entry.signedInOnly);
 }
 
-// The theme the page should show: a signed-in theme falls back to White for signed-out readers.
-export function effectiveTheme(theme: ReaderTheme, signedIn: boolean): ReaderTheme {
+// The theme the page should show: a signed-in theme falls back to White for signed-out readers,
+// and Device becomes White or Dark depending on the device's light or dark setting.
+export function effectiveTheme(theme: ReaderTheme, signedIn: boolean, prefersDark = false): ReaderTheme {
+  if (theme === "device") return prefersDark ? "night" : "day";
   return themeAvailable(theme, signedIn) ? theme : "day";
+}
+
+export function devicePrefersDark(): boolean {
+  try {
+    return window.matchMedia("(prefers-color-scheme: dark)").matches;
+  } catch {
+    return false;
+  }
 }
 const KEY = "sarvaikam.reader.v1";
 export const defaultReaderPreferences: ReaderPreferences = {

@@ -117,6 +117,16 @@ test("a signed-in theme shows as White for signed-out readers on every page", ()
   assert.equal(effectiveTheme("slate", true), "slate");
 });
 
+test("device theme follows the device's light or dark setting for every reader", () => {
+  const { effectiveTheme, normalizeReaderPreferences, themeAvailable } = require("../../.cache/learning-tests/readerPreferences.js");
+  assert.equal(effectiveTheme("device", false, false), "day");
+  assert.equal(effectiveTheme("device", false, true), "night");
+  assert.equal(effectiveTheme("device", true, true), "night");
+  assert.equal(themeAvailable("device", false), true);
+  const valid = { size: 20, font: "serif", theme: "device", spacing: "compact" };
+  assert.deepEqual(normalizeReaderPreferences(valid), valid);
+});
+
 test("lesson search reports each match with its section and ignores very short queries", () => {
   const { searchLesson } = require("../../.cache/learning-tests/readingOutline.js");
   const markdown = [

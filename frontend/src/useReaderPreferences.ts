@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { api } from "./api";
 import { useAuth } from "./auth";
 import {
+  devicePrefersDark,
   effectiveTheme,
   readReaderPreferences,
   saveReaderPreferences,
@@ -34,8 +35,22 @@ export default function useReaderPreferences() {
       .catch(() => setSyncFailed(true));
   }, [user?.id]); // Runs when the signed-in account changes, not on every settings change.
 
+  // Tracks the device's light or dark setting, so the Device theme follows it while the page is open.
+  const [prefersDark, setPrefersDark] = useState(devicePrefersDark);
+  useEffect(() => {
+    let query: MediaQueryList | null = null;
+    try {
+      query = window.matchMedia("(prefers-color-scheme: dark)");
+    } catch {
+      return;
+    }
+    const update = () => setPrefersDark(query!.matches);
+    query.addEventListener("change", update);
+    return () => query?.removeEventListener("change", update);
+  }, []);
+
   // A signed-in-only theme falls back to White for signed-out readers, on every page that uses this hook.
-  const theme = effectiveTheme(preferences.theme, !!user);
+  const theme = effectiveTheme(preferences.theme, !!user, prefersDark);
 
   useEffect(() => {
     const previous = document.documentElement.getAttribute("data-reader-theme");

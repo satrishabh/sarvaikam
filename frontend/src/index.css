@@ -481,7 +481,7 @@ html[data-reader-theme] .reading-controls .outline-btn {
   .page-stack > :not([hidden]) ~ :not([hidden]) {
     margin-top: 0;
   }
-  /* Floating pill, like the bottom bar of short-video apps. It slides away while the page scrolls. */
+  /* Floating pill navigation. It stays on screen on every page; the reels page hides it. */
   .mobile-tabs {
     display: grid;
     grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -493,14 +493,13 @@ html[data-reader-theme] .reading-controls .outline-btn {
     max-width: 480px;
     margin: 0 auto;
     padding: 6px;
-    border: 1px solid #dce3ea;
+    border: 1px solid rgb(16 35 30 / 0.08);
     border-radius: 999px;
-    background: rgb(255 255 255 / 0.94);
-    box-shadow: 0 10px 30px rgb(16 35 30 / 0.16);
-    backdrop-filter: blur(16px);
-    transition:
-      transform 220ms ease,
-      opacity 220ms ease;
+    background: rgb(255 255 255 / 0.92);
+    box-shadow:
+      0 12px 32px rgb(16 35 30 / 0.16),
+      0 2px 6px rgb(16 35 30 / 0.06);
+    backdrop-filter: blur(18px) saturate(1.4);
   }
   .mobile-tabs a,
   .mobile-tabs button {
@@ -515,21 +514,30 @@ html[data-reader-theme] .reading-controls .outline-btn {
     font-size: 11px;
     font-weight: 500;
     color: #526579;
+    transition:
+      background-color 180ms ease,
+      color 180ms ease,
+      transform 120ms ease;
   }
+  .mobile-tabs a:active,
+  .mobile-tabs button:active {
+    transform: scale(0.94);
+  }
+  .mobile-tabs a:focus-visible,
+  .mobile-tabs button:focus-visible {
+    outline: 2px solid #a74412;
+    outline-offset: 2px;
+  }
+  /* The active tab is a dark pill, matching the logo colour. */
   .mobile-tabs [aria-current="page"] {
-    color: #a74412;
-    background: #fff3ea;
+    color: #ffffff;
+    background: #10231e;
     font-weight: 600;
-  }
-  .mobile-tabs.is-hidden {
-    transform: translateY(calc(100% + 24px));
-    opacity: 0;
-    pointer-events: none;
   }
   .mobile-tabs.keyboard-open {
     display: none;
   }
-  /* Tablets: a wider bar with labels always visible. */
+  /* Tablets: a wider bar with icons and labels side by side. */
   @media (min-width: 640px) {
     .mobile-tabs {
       max-width: 620px;
@@ -542,7 +550,8 @@ html[data-reader-theme] .reading-controls .outline-btn {
     }
   }
   @media (prefers-reduced-motion: reduce) {
-    .mobile-tabs {
+    .mobile-tabs a,
+    .mobile-tabs button {
       transition: none;
     }
   }
