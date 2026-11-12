@@ -439,7 +439,7 @@ html[data-reader-theme] .reading-controls .outline-btn {
     scroll-padding-top: calc(80px + env(safe-area-inset-top));
   }
   .app-shell {
-    padding-bottom: calc(78px + env(safe-area-inset-bottom));
+    padding-bottom: calc(104px + env(safe-area-inset-bottom));
   }
   .app-shell.is-reader {
     padding-bottom: 0;
@@ -481,28 +481,38 @@ html[data-reader-theme] .reading-controls .outline-btn {
   .page-stack > :not([hidden]) ~ :not([hidden]) {
     margin-top: 0;
   }
+  /* Floating pill, like the bottom bar of short-video apps. It slides away while the page scrolls. */
   .mobile-tabs {
     display: grid;
     grid-template-columns: repeat(5, minmax(0, 1fr));
     position: fixed;
-    inset: auto 0 0;
+    left: 12px;
+    right: 12px;
+    bottom: max(12px, env(safe-area-inset-bottom));
     z-index: 40;
-    padding: 6px max(8px, env(safe-area-inset-right))
-      max(6px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
-    border-top: 1px solid #dce3ea;
-    background: #fff;
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 6px;
+    border: 1px solid #dce3ea;
+    border-radius: 999px;
+    background: rgb(255 255 255 / 0.94);
+    box-shadow: 0 10px 30px rgb(16 35 30 / 0.16);
+    backdrop-filter: blur(16px);
+    transition:
+      transform 220ms ease,
+      opacity 220ms ease;
   }
   .mobile-tabs a,
   .mobile-tabs button {
     display: flex;
-    min-height: 58px;
+    min-height: 52px;
     min-width: 0;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 5px;
-    border-radius: 10px;
-    font-size: 12px;
+    gap: 3px;
+    border-radius: 999px;
+    font-size: 11px;
     font-weight: 500;
     color: #526579;
   }
@@ -511,8 +521,30 @@ html[data-reader-theme] .reading-controls .outline-btn {
     background: #fff3ea;
     font-weight: 600;
   }
+  .mobile-tabs.is-hidden {
+    transform: translateY(calc(100% + 24px));
+    opacity: 0;
+    pointer-events: none;
+  }
   .mobile-tabs.keyboard-open {
     display: none;
+  }
+  /* Tablets: a wider bar with labels always visible. */
+  @media (min-width: 640px) {
+    .mobile-tabs {
+      max-width: 620px;
+    }
+    .mobile-tabs a,
+    .mobile-tabs button {
+      flex-direction: row;
+      gap: 8px;
+      font-size: 14px;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .mobile-tabs {
+      transition: none;
+    }
   }
   .app-footer {
     display: none;
