@@ -77,6 +77,26 @@
   overflow-wrap: anywhere;
 }
 
+/* Top bar: the way back and, on phones, the position. Desktop shows only the link. */
+.reels-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.reels-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #10231e;
+}
+.reels-count {
+  display: none;
+}
+
 @media (min-width: 1024px) {
   .reels-feed {
     max-width: 680px;
@@ -85,64 +105,10 @@
   }
 }
 
-.reels-count {
-  display: none;
-}
-
-.reels-back {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  align-self: flex-start;
-  margin-bottom: 12px;
-  font-size: 14px;
-  font-weight: 600;
-  color: #10231e;
-}
-
 /* Phones: the reels fill the whole screen and the bottom bar is hidden on this page. */
 @media (max-width: 1023px) {
   .app-shell.is-reels {
     padding-bottom: 0;
-  }
-  .app-shell.is-reels .reels-back {
-    position: fixed;
-    top: max(14px, env(safe-area-inset-top));
-    left: 14px;
-    z-index: 45;
-    margin: 0;
-    padding: 8px 14px;
-    border-radius: 999px;
-    background: rgb(255 255 255 / 0.92);
-    box-shadow: 0 6px 20px rgb(16 35 30 / 0.15);
-  }
-  .app-shell.is-reels .reel > div:first-child {
-    margin: auto 0;
-    min-width: 0;
-  }
-  .app-shell.is-reels .reel {
-    padding: 76px 20px 116px;
-  }
-  .app-shell.is-reels .reels-count {
-    display: block;
-    position: fixed;
-    top: max(18px, env(safe-area-inset-top));
-    right: 16px;
-    z-index: 45;
-    margin: 0;
-    padding: 6px 12px;
-    border-radius: 999px;
-    background: rgb(16 35 30 / 0.7);
-    color: #fff;
-    font-size: 12px;
-    font-weight: 600;
-    font-variant-numeric: tabular-nums;
-  }
-  .app-shell.is-reels .reel-title {
-    font-size: clamp(1.625rem, 8vw, 2.25rem);
-  }
-  .app-shell.is-reels .reel-lines {
-    font-size: clamp(1.0625rem, 4.6vw, 1.25rem);
   }
   .app-shell.is-reels .app-header,
   .app-shell.is-reels .app-footer {
@@ -152,21 +118,70 @@
     max-width: none;
     padding: 0;
   }
+  .app-shell.is-reels .reels-page > header {
+    display: none;
+  }
   .app-shell.is-reels .reels-page,
   .app-shell.is-reels .reels-feed {
     height: 100svh;
     min-height: 0;
   }
-  .app-shell.is-reels .reels-page > header {
-    display: none;
-  }
   .app-shell.is-reels .reels-feed {
     border-radius: 0;
   }
+
+  /* The top bar floats over the feed on a solid band, so text scrolls underneath it, not through it. */
+  .app-shell.is-reels .reels-topbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 45;
+    margin: 0;
+    padding: calc(env(safe-area-inset-top) + 12px) 16px 22px;
+    background: linear-gradient(to bottom, rgb(255 255 255 / 0.96) 70%, rgb(255 255 255 / 0));
+    pointer-events: none;
+  }
+  .app-shell.is-reels .reels-topbar > * {
+    pointer-events: auto;
+  }
+  .app-shell.is-reels .reels-back {
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: #ffffff;
+    box-shadow: 0 6px 20px rgb(16 35 30 / 0.15);
+    white-space: nowrap;
+  }
+  .app-shell.is-reels .reels-count {
+    display: block;
+    margin: 0;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: rgb(16 35 30 / 0.78);
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  /* Room for the top bar above and the floating bottom bar below. */
   .app-shell.is-reels .reel {
     border: 0;
     border-radius: 0;
-    padding: 36px 22px 112px;
+    padding: calc(env(safe-area-inset-top) + 104px) 22px 120px;
+    overflow-y: auto;
+    overscroll-behavior: auto;
+  }
+  .app-shell.is-reels .reel > div:first-child {
+    margin: auto 0;
+    min-width: 0;
+  }
+  .app-shell.is-reels .reel-title {
+    font-size: clamp(1.625rem, 8vw, 2.25rem);
+  }
+  .app-shell.is-reels .reel-lines {
+    font-size: clamp(1.0625rem, 4.6vw, 1.25rem);
   }
 }
 

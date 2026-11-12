@@ -45,6 +45,8 @@ export default function ReelsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [attempt, setAttempt] = useState(0);
+  const [index, setIndex] = useState(0);
+  const showFeed = !loading && !error && reels.length > 0;
 
   useEffect(() => {
     let active = true;
@@ -104,10 +106,18 @@ export default function ReelsPage() {
 
   return (
     <div className="reels-page">
-      <Link to="/" className="reels-back">
-        <Icon name="chevron" className="h-4 w-4" style={{ transform: "rotate(180deg)" }} />
-        Back to home
-      </Link>
+      {/* One bar holds the way back and the position, so neither can cover lesson text. */}
+      <div className="reels-topbar">
+        <Link to="/" className="reels-back">
+          <Icon name="chevron" className="h-4 w-4" style={{ transform: "rotate(180deg)" }} />
+          Back to home
+        </Link>
+        {showFeed && (
+          <p className="reels-count">
+            Lesson {Math.min(index + 1, reels.length)} of {reels.length}
+          </p>
+        )}
+      </div>
       <header className="mb-5">
         <p className="eyebrow">Reels</p>
         <h1 className="mt-2 text-3xl font-semibold">Recent lessons in short bites</h1>
@@ -126,14 +136,21 @@ export default function ReelsPage() {
           <p className="mt-2 text-muted">Recent lessons will appear here once they are published.</p>
         </div>
       ) : (
-        <ReelFeed reels={reels} />
+        <ReelFeed reels={reels} index={index} setIndex={setIndex} />
       )}
     </div>
   );
 }
 
-function ReelFeed({ reels }: { reels: Reel[] }) {
-  const [index, setIndex] = useState(0);
+function ReelFeed({
+  reels,
+  index,
+  setIndex,
+}: {
+  reels: Reel[];
+  index: number;
+  setIndex: (value: number) => void;
+}) {
   const feed = useRef<HTMLDivElement>(null);
   // Keyboard users move one reel at a time with the arrow keys or Page Up and Page Down.
   const goTo = (next: number) => {
@@ -162,9 +179,6 @@ function ReelFeed({ reels }: { reels: Reel[] }) {
         if (clientHeight > 0) setIndex(Math.round(scrollTop / clientHeight));
       }}
     >
-      <p className="reels-count">
-        Lesson {Math.min(index + 1, reels.length)} of {reels.length}
-      </p>
       {reels.map((reel) => (
         <ReelCard key={reel.key} reel={reel} />
       ))}
