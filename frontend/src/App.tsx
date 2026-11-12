@@ -308,7 +308,7 @@ export default function App() {
           </Routes>
         </Suspense>
       </main>
-      {!isReader && (
+      {!isReader && !isReels && (
         <nav
           aria-label="Mobile primary navigation"
           className={`mobile-tabs ${keyboardOpen ? "keyboard-open" : ""} ${barHidden ? "is-hidden" : ""}`}

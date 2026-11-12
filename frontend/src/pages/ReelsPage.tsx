@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { api, Category } from "../api";
 import { useAuth } from "../auth";
+import Icon from "../components/Icon";
 import { LoadState } from "../components/LearningUI";
 import { plainText } from "../readingOutline";
 import "../reels.css";
@@ -103,6 +104,10 @@ export default function ReelsPage() {
 
   return (
     <div className="reels-page">
+      <Link to="/" className="reels-back">
+        <Icon name="chevron" className="h-4 w-4" style={{ transform: "rotate(180deg)" }} />
+        Back to home
+      </Link>
       <header className="mb-5">
         <p className="eyebrow">Reels</p>
         <h1 className="mt-2 text-3xl font-semibold">Recent lessons in short bites</h1>

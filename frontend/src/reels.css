@@ -81,10 +81,41 @@
   }
 }
 
-/* Phones: the reels fill the whole screen. The floating bar sits over the bottom of each reel. */
+.reels-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  margin-bottom: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #10231e;
+}
+
+/* Phones: the reels fill the whole screen and the bottom bar is hidden on this page. */
 @media (max-width: 1023px) {
   .app-shell.is-reels {
     padding-bottom: 0;
+  }
+  .app-shell.is-reels .reels-back {
+    position: fixed;
+    top: max(14px, env(safe-area-inset-top));
+    left: 14px;
+    z-index: 45;
+    margin: 0;
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: rgb(255 255 255 / 0.92);
+    box-shadow: 0 6px 20px rgb(16 35 30 / 0.15);
+  }
+  .app-shell.is-reels .reel > div:first-child {
+    margin: auto 0;
+  }
+  .app-shell.is-reels .reel-title {
+    font-size: 2.25rem;
+  }
+  .app-shell.is-reels .reel-lines {
+    font-size: 1.25rem;
   }
   .app-shell.is-reels .app-header,
   .app-shell.is-reels .app-footer {
