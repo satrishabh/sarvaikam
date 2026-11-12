@@ -4,6 +4,7 @@ import { useAuth } from "./auth";
 import { can } from "./api";
 import Icon from "./components/Icon";
 import MobileSheet from "./components/MobileSheet";
+import useScrollHidden from "./useScrollHidden";
 import HomePage from "./pages/HomePage";
 import LegalPage from "./pages/LegalPage";
 const AdminPage = lazy(() => import("./pages/AdminPage"));
@@ -22,10 +23,12 @@ const BusinessAccessPage = lazy(() =>
 const UsersPage = lazy(() => import("./pages/UsersPage"));
 const PathsPage = lazy(() => import("./pages/PathsPage"));
 const PracticePage = lazy(() => import("./pages/PracticePage"));
+const ReelsPage = lazy(() => import("./pages/ReelsPage"));
 
 const navigation = [
   { to: "/", name: "Overview", icon: "book" },
   { to: "/paths", name: "Learning paths", icon: "layers" },
+  { to: "/reels", name: "Reels", icon: "play" },
   { to: "/interview-prep", name: "Interview prep", icon: "target" },
   { to: "/skills", name: "My skills", icon: "chart" },
 ];
@@ -36,6 +39,7 @@ export default function App() {
   const location = useLocation();
   const isReader = /^\/topics\/[^/]+\/[^/]+\/?$/.test(location.pathname);
   const [keyboardOpen, setKeyboardOpen] = useState(false);
+  const barHidden = useScrollHidden();
   useEffect(() => {
     const viewport = window.visualViewport;
     const measure = () => {
@@ -68,6 +72,7 @@ export default function App() {
         {
           "/": "Learn. Build. Prepare.",
           "/paths": "Learning paths",
+          "/reels": "Reels",
           "/skills": "Skill map",
           "/practice": "Practice room",
           "/interview-prep": "Interview prep",
@@ -267,6 +272,7 @@ export default function App() {
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/paths" element={<PathsPage />} />
+            <Route path="/reels" element={<ReelsPage />} />
             <Route path="/interview-prep" element={<InterviewPrepPage />} />
             <Route path="/practice" element={<PracticePage />} />
             <Route path="/skills" element={<SkillsPage />} />
@@ -304,13 +310,14 @@ export default function App() {
       {!isReader && (
         <nav
           aria-label="Mobile primary navigation"
-          className={`mobile-tabs ${keyboardOpen ? "keyboard-open" : ""}`}
+          className={`mobile-tabs ${keyboardOpen ? "keyboard-open" : ""} ${barHidden ? "is-hidden" : ""}`}
         >
+          {/* Skills lives in the More sheet; Reels takes the slot Prep used to have. */}
           {[
             { to: "/", label: "Home", icon: "book" },
             { to: "/paths", label: "Paths", icon: "layers" },
+            { to: "/reels", label: "Reels", icon: "play" },
             { to: "/interview-prep", label: "Prep", icon: "target" },
-            { to: "/skills", label: "Skills", icon: "chart" },
           ].map((item) => (
             <Link
               key={item.to}

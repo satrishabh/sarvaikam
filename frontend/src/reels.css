@@ -1,0 +1,88 @@
+/* Reels feed: one lesson per screen, snapping vertically like short-video apps. */
+.reels-feed {
+  height: calc(100svh - 300px);
+  min-height: 420px;
+  overflow-y: auto;
+  scroll-snap-type: y mandatory;
+  overscroll-behavior: contain;
+  overscroll-behavior-x: none;
+  scrollbar-width: none;
+  border-radius: 22px;
+}
+.reels-feed::-webkit-scrollbar {
+  display: none;
+}
+.reels-feed:focus-visible {
+  outline: 2px solid #a74412;
+  outline-offset: 4px;
+}
+
+.reel {
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 28px 24px;
+  border: 1px solid #e3e7ed;
+  border-radius: 22px;
+  background: linear-gradient(160deg, #ffffff 0%, #fff6ef 100%);
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  touch-action: pan-y;
+}
+
+.reel-kicker {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #526579;
+}
+.reel-title {
+  font-size: 1.75rem;
+  line-height: 1.2;
+  font-weight: 600;
+  color: #10231e;
+}
+.reel-lines {
+  display: grid;
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 1.125rem;
+  line-height: 1.55;
+  color: #1f2d3d;
+}
+.reel-lines li {
+  padding-left: 14px;
+  border-left: 3px solid #a74412;
+}
+.reel-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 1px solid #e3e7ed;
+}
+.reel-source {
+  font-size: 13px;
+  color: #526579;
+}
+
+@media (min-width: 1024px) {
+  .reels-feed {
+    max-width: 680px;
+    height: 78svh;
+    margin: 0 auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reels-feed {
+    scroll-behavior: auto;
+  }
+}
