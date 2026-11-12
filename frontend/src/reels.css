@@ -30,6 +30,7 @@
   scroll-snap-align: start;
   scroll-snap-stop: always;
   touch-action: pan-y;
+  overflow-wrap: anywhere;
 }
 
 .reel-kicker {
@@ -69,8 +70,11 @@
   border-top: 1px solid #e3e7ed;
 }
 .reel-source {
+  flex: 1 1 140px;
+  min-width: 0;
   font-size: 13px;
   color: #526579;
+  overflow-wrap: anywhere;
 }
 
 @media (min-width: 1024px) {
@@ -110,12 +114,16 @@
   }
   .app-shell.is-reels .reel > div:first-child {
     margin: auto 0;
+    min-width: 0;
+  }
+  .app-shell.is-reels .reel {
+    padding: 76px 20px 116px;
   }
   .app-shell.is-reels .reel-title {
-    font-size: 2.25rem;
+    font-size: clamp(1.625rem, 8vw, 2.25rem);
   }
   .app-shell.is-reels .reel-lines {
-    font-size: 1.25rem;
+    font-size: clamp(1.0625rem, 4.6vw, 1.25rem);
   }
   .app-shell.is-reels .app-header,
   .app-shell.is-reels .app-footer {
