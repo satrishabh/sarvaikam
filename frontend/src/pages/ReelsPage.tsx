@@ -134,18 +134,36 @@ export default function ReelsPage() {
 
 function ReelFeed({ reels }: { reels: Reel[] }) {
   const [index, setIndex] = useState(0);
+  const feed = useRef<HTMLDivElement>(null);
+  // Keyboard users move one reel at a time with the arrow keys or Page Up and Page Down.
+  const goTo = (next: number) => {
+    const element = feed.current;
+    if (!element) return;
+    const target = Math.max(0, Math.min(reels.length - 1, next));
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    element.scrollTo({ top: target * element.clientHeight, behavior: reduce ? "auto" : "smooth" });
+  };
   return (
     <div
+      ref={feed}
       className="reels-feed"
+      role="region"
       tabIndex={0}
-      aria-label="Recent lessons"
+      aria-label="Recent lessons. Use the arrow keys or swipe up for the next lesson."
+      onKeyDown={(event) => {
+        const keys: Record<string, number> = { ArrowDown: 1, PageDown: 1, ArrowUp: -1, PageUp: -1 };
+        const step = keys[event.key];
+        if (step === undefined) return;
+        event.preventDefault();
+        goTo(index + step);
+      }}
       onScroll={(event) => {
         const { scrollTop, clientHeight } = event.currentTarget;
         if (clientHeight > 0) setIndex(Math.round(scrollTop / clientHeight));
       }}
     >
-      <p className="reels-count" aria-hidden="true">
-        {Math.min(index + 1, reels.length)} / {reels.length}
+      <p className="reels-count">
+        Lesson {Math.min(index + 1, reels.length)} of {reels.length}
       </p>
       {reels.map((reel) => (
         <ReelCard key={reel.key} reel={reel} />
