@@ -13,7 +13,8 @@ Last updated: 2026-11-12
 
 ## Waiting on others
 
-- **Settings consistency** (branch `fix/settings-consistency`, commit `673e484`): pushed, PR not yet raised. Link: https://github.com/satrishabh/sarvaikam/pull/new/fix/settings-consistency
+- **Settings consistency:** merged to `main` as PR #16 (commit `673e484`). Nothing left to raise.
+- **Reels follow-up:** PR #17 merged only the first reels commit (`f723479`). The later commits on `feat/reels-floating-nav` (full-screen reels, bar hidden on reels, small-screen text, position counter) are not in `main` yet. Open a PR from `feat/reels-floating-nav` to `main`: https://github.com/satrishabh/sarvaikam/compare/main...feat/reels-floating-nav
 - **Remote branch cleanup:** deleting merged remote branches was blocked by the permission checker. Needs a manual run or a permission rule.
 - **Member date:** "Member since" can show today's date. Code looks correct; needs this query run against the database: `SELECT id, email, created_at, oidc_sub FROM users ORDER BY email, created_at;`
 
