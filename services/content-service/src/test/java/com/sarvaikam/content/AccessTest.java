@@ -4,6 +4,8 @@ import com.sarvaikam.content.domain.*;
 import com.sarvaikam.content.security.ContentAccess;
 import com.sarvaikam.content.service.AssetService;
 import com.sarvaikam.content.service.ContentService;
+import com.sarvaikam.content.service.BodyStorage;
+import com.sarvaikam.content.service.GcsObjectStore;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -19,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class AccessTest {
+    static final String SECRET = "test-secret-test-secret-test-secret-1234";
     @AfterEach void clear() { SecurityContextHolder.clearContext(); }
     void permissions(String... permissions) {
         SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken("user", null,
@@ -43,7 +46,7 @@ class AccessTest {
         var lessons = mock(LessonRepository.class);
         var lesson = new Lesson(); lesson.setExclusive(true); lesson.setContentMd("private lesson body");
         when(lessons.findByTopicSlugAndSlug("topic", "lesson")).thenReturn(Optional.of(lesson));
-        var service = new ContentService(mock(CategoryRepository.class), mock(TopicRepository.class), lessons, mock(AssetService.class));
+        var service = new ContentService(mock(CategoryRepository.class), mock(TopicRepository.class), lessons, mock(AssetService.class), mock(BodyStorage.class));
         assertThrows(ResponseStatusException.class, () -> service.getLesson("topic", "lesson"));
     }
     @Test void exclusiveResourceListChecksLessonAccessBeforeReadingMetadata() {
@@ -51,7 +54,7 @@ class AccessTest {
         var db = mock(JdbcTemplate.class);
         var lesson = new Lesson(); lesson.setExclusive(true);
         when(lessons.findById(1L)).thenReturn(Optional.of(lesson));
-        var service = new AssetService(db, lessons, "bucket", 100, "");
+        var service = new AssetService(db, lessons, new GcsObjectStore("bucket", ""), 100, SECRET, "");
         assertThrows(ResponseStatusException.class, () -> service.list(1L));
         verifyNoInteractions(db);
     }
@@ -59,14 +62,14 @@ class AccessTest {
         permissions("content.manage");
         var lessons = mock(LessonRepository.class);
         when(lessons.findById(1L)).thenReturn(Optional.of(new Lesson()));
-        var service = new AssetService(mock(JdbcTemplate.class), lessons, "bucket", 100, "");
+        var service = new AssetService(mock(JdbcTemplate.class), lessons, new GcsObjectStore("bucket", ""), 100, SECRET, "");
         assertThrows(ResponseStatusException.class, () -> service.upload(1, new AssetService.UploadRequest("file.zip", "application/zip", 101)));
         assertThrows(ResponseStatusException.class, () -> service.upload(1, new AssetService.UploadRequest("../secret.zip", "application/zip", 10)));
         assertThrows(ResponseStatusException.class, () -> service.upload(1, new AssetService.UploadRequest("bad\nfile.zip", "application/zip", 10)));
     }
     @Test void downloadsAlwaysRequireDownloadPermission() {
         var db = mock(JdbcTemplate.class);
-        var service = new AssetService(db, mock(LessonRepository.class), "bucket", 100, "");
+        var service = new AssetService(db, mock(LessonRepository.class), new GcsObjectStore("bucket", ""), 100, SECRET, "");
         assertThrows(ResponseStatusException.class, () -> service.download(java.util.UUID.randomUUID()));
         verifyNoInteractions(db);
     }
@@ -74,13 +77,14 @@ class AccessTest {
         permissions("content.manage");
         var lessons = mock(LessonRepository.class);
         when(lessons.findById(1L)).thenReturn(Optional.of(new Lesson()));
-        var service = new AssetService(mock(JdbcTemplate.class), lessons, "private-content", 100, "");
+        var store = new GcsObjectStore("private-content", "");
+        var service = new AssetService(mock(JdbcTemplate.class), lessons, store, 100, SECRET, "");
         var keys = java.security.KeyPairGenerator.getInstance("RSA"); keys.initialize(2048);
         var credentials = ServiceAccountCredentials.newBuilder()
                 .setClientId("test-client").setClientEmail("test@example.iam.gserviceaccount.com")
                 .setPrivateKey(keys.generateKeyPair().getPrivate()).setPrivateKeyId("test-key").build();
-        var field = AssetService.class.getDeclaredField("storage"); field.setAccessible(true);
-        field.set(service, StorageOptions.newBuilder().setCredentials(credentials).build().getService());
+        var field = GcsObjectStore.class.getDeclaredField("storage"); field.setAccessible(true);
+        field.set(store, StorageOptions.newBuilder().setCredentials(credentials).build().getService());
         var upload = service.upload(1, new AssetService.UploadRequest("guide.pdf", "application/pdf", 42));
         String query = java.net.URLDecoder.decode(java.net.URI.create(upload.url()).getRawQuery(), java.nio.charset.StandardCharsets.UTF_8);
         assertTrue(query.contains("X-Goog-SignedHeaders=content-length;content-type;host"), query);

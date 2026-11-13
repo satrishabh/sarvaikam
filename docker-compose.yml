@@ -12,6 +12,19 @@ services:
       interval: 5s
       retries: 10
 
+  reels-postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: sarvaikam_reels
+      POSTGRES_USER: ${REELS_DB_USER:-sarvaikam}
+      POSTGRES_PASSWORD: ${REELS_DB_PASSWORD:-sarvaikam}
+    ports: ["5433:5432"]
+    volumes: [reelsdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${REELS_DB_USER:-sarvaikam} -d sarvaikam_reels"]
+      interval: 5s
+      retries: 10
+
   content-service:
     build: ./services/content-service
     environment:
@@ -22,7 +35,10 @@ services:
       AUTH_SERVICE_URL: http://auth-service:8082
       GCP_CONTENT_BUCKET: ${GCP_CONTENT_BUCKET:-}
       GCP_SIGNING_SERVICE_ACCOUNT: ${GCP_SIGNING_SERVICE_ACCOUNT:-}
-    depends_on: { postgres: { condition: service_healthy } }
+      REELS_DB_URL: jdbc:postgresql://reels-postgres:5432/sarvaikam_reels
+      REELS_DB_USER: ${REELS_DB_USER:-sarvaikam}
+      REELS_DB_PASSWORD: ${REELS_DB_PASSWORD:-sarvaikam}
+    depends_on: { postgres: { condition: service_healthy }, reels-postgres: { condition: service_healthy } }
 
   auth-service:
     build: ./services/auth-service
@@ -57,3 +73,4 @@ services:
 
 volumes:
   pgdata:
+  reelsdata:

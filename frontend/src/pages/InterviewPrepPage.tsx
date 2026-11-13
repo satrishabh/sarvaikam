@@ -7,7 +7,7 @@ import {
   SectionHeading,
 } from "../components/LearningUI";
 import { useSkills } from "../components/SkillMap";
-import { practiceQuestions } from "../practice";
+import { usePracticeQuestions } from "../usePracticeQuestions";
 import useCatalogue from "../useCatalogue";
 
 const details: Record<
@@ -88,6 +88,7 @@ const warmup = [
   },
 ];
 export default function InterviewPrepPage() {
+  const { questions: practiceQuestions } = usePracticeQuestions();
   const { categories, error, retry } = useCatalogue();
   const { skills, signedIn, progressLoading, progressError } = useSkills(
     categories ?? [],

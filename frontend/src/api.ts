@@ -1,5 +1,12 @@
 import type { ReaderPreferences } from './readerPreferences';
+import type { PracticeQuestion } from './practice';
+import type { LearningPath } from './learning';
 
+export interface Reel {
+  slug: string; courseSlug: string; courseName: string; lessonSlug: string;
+  step: number; heading: string; content: string; sourceName: string; sourceUrl: string; published: boolean;
+}
+export type ReelInput = Omit<Reel, 'courseName' | 'step'>;
 export interface TopicSummary {
   id: number;
   slug: string;
@@ -103,6 +110,17 @@ const enc = encodeURIComponent;
 const fileType = (file: File) => ({ pdf: 'application/pdf', zip: 'application/zip', mp4: 'video/mp4', webm: 'video/webm', txt: 'text/plain' }[file.name.split('.').pop()?.toLowerCase() ?? ''] ?? 'application/octet-stream');
 
 export const api = {
+  savePath: (path: LearningPath) => request<void>('/api/content/admin/paths', { method: 'PUT', body: JSON.stringify(path) }),
+  saveCategory: (category: { slug: string; name: string; description: string; icon: string; sortOrder: number }) =>
+    request<Category>('/api/content/admin/categories', { method: 'PUT', body: JSON.stringify(category) }),
+  saveCourse: (course: { categorySlug: string; slug: string; name: string; summary: string; level: string; sortOrder: number }) =>
+    request<TopicSummary>('/api/content/admin/topics', { method: 'PUT', body: JSON.stringify(course) }),
+  paths: () => request<LearningPath[]>('/api/content/paths'),
+  practiceQuestions: () => request<PracticeQuestion[]>('/api/content/practice'),
+  reels: () => request<Reel[]>('/api/content/reels'),
+  adminReels: () => request<Reel[]>('/api/content/admin/reels'),
+  saveReel: (reel: ReelInput) => request<void>('/api/content/admin/reels', { method: 'PUT', body: JSON.stringify(reel) }),
+  deleteReel: (slug: string) => request<void>(`/api/content/admin/reels/${enc(slug)}`, { method: 'DELETE' }),
   categories: () => request<Category[]>('/api/content/categories'),
   topic: (slug: string) => request<Topic>(`/api/content/topics/${enc(slug)}`),
   lesson: (topic: string, lesson: string) =>

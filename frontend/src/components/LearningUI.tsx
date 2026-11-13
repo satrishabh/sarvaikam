@@ -118,7 +118,7 @@ export function PathCard({
         />
       </div>
       <p className="path-card-label mt-7 text-xs font-semibold uppercase tracking-widest text-muted">
-        CAREER PATH
+        PATH {String(path.priority).padStart(2, "0")}
       </p>
       <h3 className="mt-2 text-2xl font-semibold">{path.name}</h3>
       <p className="mt-2 text-sm text-muted">{path.subtitle}</p>

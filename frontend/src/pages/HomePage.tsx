@@ -10,10 +10,11 @@ import {
   SectionHeading,
   TopicCard,
 } from "../components/LearningUI";
-import { learningPaths } from "../learning";
+import useLearningPaths from "../useLearningPaths";
 import useCatalogue from "../useCatalogue";
 
 export default function HomePage() {
+  const { paths, error: pathsError, retry: retryPaths } = useLearningPaths();
   const { categories, error, retry } = useCatalogue();
   const {
     skills,
@@ -272,7 +273,7 @@ export default function HomePage() {
         <SectionHeading
           kicker="A DIRECTION, NOT A GUESS"
           title="Start with where you want to go."
-          description="Three practical paths for software engineers. Follow the sequence or make it your own."
+          description="Explore Gen AI, AI / ML, cloud platform, full stack, backend, and forward deployed engineering, in that priority order."
           action={
             <Link
               className="link inline-flex min-h-11 items-center gap-2 text-sm"
@@ -283,14 +284,14 @@ export default function HomePage() {
             </Link>
           }
         />
-        {categories ? (
+        {categories && paths ? (
           <div className="grid gap-5 md:grid-cols-3">
-            {learningPaths.map((path) => (
+            {paths.map((path) => (
               <PathCard key={path.slug} path={path} categories={categories} />
             ))}
           </div>
         ) : (
-          <LoadState error={error} retry={retry} />
+          <LoadState error={error || pathsError} retry={() => { retry(); retryPaths(); }} />
         )}
       </section>
 

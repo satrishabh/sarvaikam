@@ -1,5 +1,9 @@
 # Sarvaikam - Learn Trending Tech, Step by Step
 
+Lesson and practice bodies now use the private GCP bucket when configured; metadata stays in PostgreSQL. Reels have a dedicated database, backend feed, and Reel studio with course, step, heading, content, and source attribution. See [backend content storage and rollout](docs/backend-content.md).
+
+Engineering paths load from the backend in this order: Gen AI, AI / ML, Cloud Platform, Full Stack, Backend, and Forward Deployed. See the [visual database and bucket map](docs/content-storage-map.html) and [direct-authoring guide](docs/content-storage-structure.md).
+
 A full-stack learning platform with step-by-step roadmaps for trending technology and interview preparation:
 Terraform, VMs, Docker, Kubernetes, AWS / Azure / GCP, Java, Node.js, Python, Go, ML, Deep Learning,
 Transformers, LLMs, MLOps, vector databases, Spring Boot, TypeScript/NestJS, microservices, Redis,
@@ -136,6 +140,58 @@ File format:
    "topics": [{ "slug": "topic-slug", "name": "...", "summary": "...", "level": "BEGINNER",
                 "lessons": [{ "slug": "lesson-slug", "title": "...", "content": "markdown" }] }] }]
 ```
+
+## File storage (Google Cloud Storage or Google Drive)
+
+Lesson, practice and reel bodies and lesson attachments (PDF, ZIP, video) are stored outside PostgreSQL.
+`STORAGE_BACKEND` picks the store; the database only keeps object references.
+
+| `STORAGE_BACKEND` | Where files live | Settings |
+|---|---|---|
+| `gcs` (default) | Private bucket; browser uploads/downloads use short-lived signed URLs | `GCP_CONTENT_BUCKET`, `GCP_SIGNING_SERVICE_ACCOUNT` (Workload Identity, no keys) |
+| `drive` | A "Sarvaikam content" folder in your personal Google Drive | `DRIVE_CLIENT_ID`, `DRIVE_CLIENT_SECRET`, `DRIVE_REFRESH_TOKEN`; optional `DRIVE_FOLDER_ID` / `DRIVE_FOLDER_NAME` |
+
+With neither configured (local dev), bodies stay in PostgreSQL and attachments are disabled.
+Choose the backend before content is migrated: switching later needs the files copied too.
+
+### Using Google Drive
+
+The app signs in as you with the `drive.file` scope, so it can see **only the files it creates**, never the
+rest of your Drive. Uploads go from the browser straight to Drive (resumable upload session). Downloads keep
+the normal permission checks, then stream through content-service behind a 5-minute signed link, because
+Drive has no signed URLs.
+
+One-time setup:
+
+1. In Google Cloud console, enable the **Google Drive API**.
+2. **OAuth consent screen**: External, add your Gmail as a test user, then **Publish app** (In production).
+   In Testing mode Google expires refresh tokens after 7 days. `drive.file` needs no Google verification.
+3. **Credentials > Create OAuth client ID > Desktop app**; note the client ID and secret.
+4. Authorize and store the credentials in Kubernetes (prompts for the secret, opens the browser, prints no tokens):
+
+   ```powershell
+   ./deploy/drive/authorize-drive.ps1 -ClientId <id>.apps.googleusercontent.com -Namespace dev
+   ```
+
+5. In the environment's Helm values, set `STORAGE_BACKEND=drive` and add the secret:
+
+   ```yaml
+   env:
+     - {name: STORAGE_BACKEND, value: drive}
+   envFrom:
+     - secretRef: {name: sarvaikam-drive}
+   ```
+
+   The container refuses to start if any `DRIVE_*` credential is missing.
+
+Keep in mind:
+
+- Files count against your Drive quota, and Drive API rate limits apply (shown as "try again shortly").
+- Large videos stream through the pod, so they use its bandwidth.
+- Don't move, edit or delete the app's files in Drive; the lessons reference them.
+- Revoking the app at https://myaccount.google.com/permissions stops reads and uploads until step 4 is rerun.
+
+More detail: [docs/backend-content.md](docs/backend-content.md#google-drive-storage-personal-account).
 
 ## Kubernetes
 

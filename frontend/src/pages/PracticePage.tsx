@@ -2,7 +2,9 @@
 import { Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "../auth";
 import Icon from "../components/Icon";
-import { PracticeQuestion, practiceQuestions } from "../practice";
+import { PracticeQuestion } from "../practice";
+import { usePracticeQuestions } from "../usePracticeQuestions";
+import { LoadState } from "../components/LearningUI";
 
 function Session({
   question,
@@ -364,6 +366,12 @@ function Session({
   );
 }
 export default function PracticePage() {
+  const { questions, loading, error, retry } = usePracticeQuestions();
+  if (loading || error) return <LoadState error={error} retry={retry} />;
+  if (!questions.length) return <p>No practice exercises published yet.</p>;
+  return <PracticeRoom practiceQuestions={questions} />;
+}
+function PracticeRoom({ practiceQuestions }: { practiceQuestions: PracticeQuestion[] }) {
   const { user } = useAuth();
   const [params, setParams] = useSearchParams();
   const requested = params.get("question");

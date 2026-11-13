@@ -13,7 +13,7 @@ class LearningStagesTest {
     private final CategoryRepository categories = mock(CategoryRepository.class);
     private final TopicRepository topics = mock(TopicRepository.class);
     private final LessonRepository lessons = mock(LessonRepository.class);
-    private final ContentService service = new ContentService(categories, topics, lessons, mock(AssetService.class));
+    private final ContentService service = new ContentService(categories, topics, lessons, mock(AssetService.class), mock(BodyStorage.class));
 
     private Lesson lesson(Topic topic, String slug, String stage, int step) {
         Lesson lesson = new Lesson();
