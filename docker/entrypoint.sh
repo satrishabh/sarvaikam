@@ -129,6 +129,15 @@ if [ "$EMBEDDED_DB" = "true" ]; then
     PGPASSWORD="$POSTGRES_PASSWORD" createdb -h 127.0.0.1 -U "$POSTGRES_USER" "$POSTGRES_DB"
     pg_ctl -D "$PGDATA" -m fast -w stop >/dev/null
   fi
+  # A separate logical database for reels, including existing embedded volumes.
+  pg_ctl -D "$PGDATA" -o "-c listen_addresses=127.0.0.1 -c unix_socket_directories=$RUNTIME" -w start >/dev/null
+  if ! PGPASSWORD="$POSTGRES_PASSWORD" psql -h 127.0.0.1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -tAc "SELECT 1 FROM pg_database WHERE datname = 'sarvaikam_reels'" | grep -q 1; then
+    PGPASSWORD="$POSTGRES_PASSWORD" createdb -h 127.0.0.1 -U "$POSTGRES_USER" sarvaikam_reels
+  fi
+  pg_ctl -D "$PGDATA" -m fast -w stop >/dev/null
+  export REELS_DB_URL="${REELS_DB_URL:-jdbc:postgresql://127.0.0.1:$DB_PORT/sarvaikam_reels?sslmode=$DB_SSLMODE}"
+  export REELS_DB_USER="${REELS_DB_USER:-$POSTGRES_USER}"
+  export REELS_DB_PASSWORD="${REELS_DB_PASSWORD:-$POSTGRES_PASSWORD}"
 fi
 
 echo "[$APP_ENV] starting: embedded_db=$EMBEDDED_DB db_host=$DB_HOST sslmode=$DB_SSLMODE port=$PORT"

@@ -129,7 +129,7 @@ export default function App() {
       ))}
       {can(user, "content.manage") && (
         <NavLink to="/admin" end className="workspace-nav">
-          Content
+          Content studio
         </NavLink>
       )}
       {can(user, "candidates.view") && (

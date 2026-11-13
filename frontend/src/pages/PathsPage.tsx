@@ -7,10 +7,12 @@ import {
   SectionHeading,
 } from "../components/LearningUI";
 import { useSkills } from "../components/SkillMap";
-import { learningPaths, pathTopics, topicState } from "../learning";
+import { pathTopics, topicState } from "../learning";
+import useLearningPaths from "../useLearningPaths";
 import useCatalogue from "../useCatalogue";
 
 export default function PathsPage() {
+  const { paths, error: pathsError, retry: retryPaths } = useLearningPaths();
   const { categories, error, retry } = useCatalogue();
   const { skills, signedIn, progressError, progressLoading } = useSkills(
     categories ?? [],
@@ -37,21 +39,21 @@ export default function PathsPage() {
         aria-label="Choose a learning path"
         className="-mx-4 flex snap-x scroll-px-4 gap-3 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:scroll-px-0"
       >
-        {learningPaths.map((path) => (
+        {paths?.map((path) => (
           <a key={path.slug} className="outline-btn shrink-0 snap-start whitespace-nowrap" href={`#${path.slug}`}>
             <Icon name={path.icon} className="h-4 w-4" />
             {path.name}
           </a>
         ))}
       </nav>
-      {!categories && <LoadState error={error} retry={retry} />}
+      {(!categories || !paths) && <LoadState error={error || pathsError} retry={() => { retry(); retryPaths(); }} />}
       {progressError && (
         <p role="alert" className="surface p-4 text-sm text-muted">
           {progressError}
         </p>
       )}
       {categories &&
-        learningPaths.map((path, index) => {
+        paths?.map((path) => {
           const topics = pathTopics(path, categories);
           const total = topics.reduce((n, t) => n + t.lessonCount, 0);
           const done = topics.reduce(
@@ -75,7 +77,7 @@ export default function PathsPage() {
                     <span className="icon-tile">
                       <Icon name={path.icon} className="h-6 w-6" />
                     </span>
-                    <p className="eyebrow">PATH 0{index + 1}</p>
+                    <p className="eyebrow">PATH {String(path.priority).padStart(2, "0")}</p>
                   </div>
                   <h2 className="mt-6 text-3xl font-semibold leading-tight">
                     {path.name}

@@ -24,6 +24,7 @@ import java.util.*;
  * inserted, so new seed content reaches existing databases without overwriting edits made in the admin CMS.
  */
 @Component
+@org.springframework.core.annotation.Order(0)
 public class SeedLoader implements ApplicationRunner {
     private static final Logger log = LoggerFactory.getLogger(SeedLoader.class);
 

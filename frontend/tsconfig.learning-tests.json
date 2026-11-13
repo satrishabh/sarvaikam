@@ -10,6 +10,7 @@
   },
   "include": [
     "src/learning.ts",
+    "src/authoring.ts",
     "src/practice.ts",
     "src/readerPreferences.ts",
     "src/readingOutline.ts"

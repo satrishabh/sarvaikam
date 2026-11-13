@@ -40,7 +40,7 @@ public class AssetService {
         this.db = db; this.lessons = lessons; this.bucket = bucket; this.maxSize = maxSize; this.signingAccount = signingAccount;
     }
 
-    private synchronized Storage storage() {
+    synchronized Storage storage() {
         if (bucket.isBlank()) throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "File storage is not configured yet");
         if (storage == null) {
             try {

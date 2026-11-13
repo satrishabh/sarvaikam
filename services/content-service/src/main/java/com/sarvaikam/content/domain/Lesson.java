@@ -22,6 +22,10 @@ public class Lesson {
     @Column(name = "content_md", columnDefinition = "TEXT")
     private String contentMd;
 
+    private String contentObject;
+    public String getContentObject() { return contentObject; }
+    public void setContentObject(String contentObject) { this.contentObject = contentObject; }
+
     private boolean exclusive;
 
     private String stage = "STARTER";

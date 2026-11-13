@@ -1,5 +1,9 @@
 # Sarvaikam - Learn Trending Tech, Step by Step
 
+Lesson and practice bodies now use the private GCP bucket when configured; metadata stays in PostgreSQL. Reels have a dedicated database, backend feed, and Reel studio with course, step, heading, content, and source attribution. See [backend content storage and rollout](docs/backend-content.md).
+
+Engineering paths load from the backend in this order: Gen AI, AI / ML, Cloud Platform, Full Stack, Backend, and Forward Deployed. See the [visual database and bucket map](docs/content-storage-map.html) and [direct-authoring guide](docs/content-storage-structure.md).
+
 A full-stack learning platform with step-by-step roadmaps for trending technology and interview preparation:
 Terraform, VMs, Docker, Kubernetes, AWS / Azure / GCP, Java, Node.js, Python, Go, ML, Deep Learning,
 Transformers, LLMs, MLOps, vector databases, Spring Boot, TypeScript/NestJS, microservices, Redis,

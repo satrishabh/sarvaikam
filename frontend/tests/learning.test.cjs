@@ -3,7 +3,6 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
 const {
-  learningPaths,
   pathTopics,
   progressPercent,
   topicState,
@@ -26,12 +25,11 @@ test("levels preserve lessons and sequence while keeping deep dives optional", (
   assert.equal(new Set(groups.flatMap(g => g.lessons.map(l => l.id))).size, lessons.length);
   assert.equal(lessons[0].slug, "internals");
 });
-const {
-  practiceQuestions,
-} = require("../../.cache/learning-tests/practice.js");
+const learningPaths = require('../../services/content-service/src/main/resources/engineering-paths.json');
+const practiceQuestions = require('../../services/content-service/src/main/resources/practice-questions.json');
 
 test("a learning path preserves its sequence while omitting unpublished and empty topics", () => {
-  const path = learningPaths[0];
+  const path = learningPaths.find(p => p.slug === "backend");
   const java = { slug: "java", lessonCount: 4 };
   const sql = { slug: "databases-sql", lessonCount: 3 };
   const empty = { slug: "spring-boot", lessonCount: 0 };
@@ -176,4 +174,9 @@ test("blocked browser storage does not break the reader", (t) => {
   });
   assert.deepEqual(readReaderPreferences(), defaultReaderPreferences);
   assert.equal(saveReaderPreferences(defaultReaderPreferences), false);
+});
+
+test("backend path seed follows the requested engineering priority", () => {
+  assert.deepEqual(learningPaths.map(p => p.slug), ['gen-ai', 'ai-ml', 'cloud', 'full-stack', 'backend', 'forward-deployed']);
+  assert.deepEqual(learningPaths.map(p => p.priority), [1, 2, 3, 4, 5, 6]);
 });

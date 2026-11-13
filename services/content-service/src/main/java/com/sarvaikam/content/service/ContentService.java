@@ -16,12 +16,14 @@ public class ContentService {
     private final TopicRepository topics;
     private final LessonRepository lessons;
     private final AssetService assets;
+    private final BodyStorage bodies;
 
-    public ContentService(CategoryRepository categories, TopicRepository topics, LessonRepository lessons, AssetService assets) {
+    public ContentService(CategoryRepository categories, TopicRepository topics, LessonRepository lessons, AssetService assets, BodyStorage bodies) {
         this.categories = categories;
         this.topics = topics;
         this.lessons = lessons;
         this.assets = assets;
+        this.bodies = bodies;
     }
 
     @Transactional(readOnly = true)
@@ -49,7 +51,7 @@ public class ContentService {
         int idx = all.indexOf(l);
         LessonSummary prev = idx > 0 ? summary(all.get(idx - 1)) : null;
         LessonSummary next = idx >= 0 && idx < all.size() - 1 ? summary(all.get(idx + 1)) : null;
-        return new LessonView(l.getId(), l.getSlug(), l.getTitle(), l.getStepNumber(), l.getContentMd(),
+        return new LessonView(l.getId(), l.getSlug(), l.getTitle(), l.getStepNumber(), l.getContentObject() == null ? l.getContentMd() : bodies.read(l.getContentObject()),
                 topicSlug, l.getTopic().getName(), all.size(), prev, next, l.isExclusive(), l.getStage());
     }
 
@@ -101,7 +103,13 @@ public class ContentService {
         l.setSlug(r.slug());
         l.setTitle(r.title());
         l.setStepNumber(r.stepNumber());
-        l.setContentMd(r.contentMd());
+        if (bodies.enabled()) {
+            l.setContentObject(bodies.write("lesson-bodies", r.contentMd()));
+            l.setContentMd(null);
+        } else {
+            if (l.getContentObject() != null) throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Content bucket is not configured");
+            l.setContentMd(r.contentMd());
+        }
         l.setExclusive(r.exclusive());
         if (r.stage() != null) l.setStage(r.stage());
         return summary(lessons.save(l));

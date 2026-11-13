@@ -1,75 +1,9 @@
 import { Category, TopicSummary, LessonSummary, LearningStage } from "./api";
 
-export const learningPaths = [
-  {
-    slug: "backend",
-    name: "Backend engineer",
-    subtitle: "Build services that hold up.",
-    icon: "layers",
-    tone: "teal",
-    description:
-      "Connect language fundamentals, APIs, data, and distributed systems. Then practise explaining your decisions.",
-    topics: [
-      "java",
-      "spring-boot",
-      "databases-sql",
-      "redis",
-      "microservices",
-      "system-design-interviews",
-    ],
-    outcomes: [
-      "Build and reason about APIs",
-      "Choose data and caching strategies",
-      "Explain system trade-offs",
-    ],
-  },
-  {
-    slug: "full-stack",
-    name: "Full-stack foundations",
-    subtitle: "Start with the application core.",
-    icon: "code",
-    tone: "violet",
-    description:
-      "Start with server-side foundations: TypeScript, Node.js, storage, and delivery. Frontend lessons can be added as the catalogue grows.",
-    topics: [
-      "nodejs",
-      "typescript-nestjs",
-      "databases-sql",
-      "docker",
-      "coding-interviews",
-      "behavioral-interviews",
-    ],
-    outcomes: [
-      "Understand service boundaries",
-      "Work with typed application code",
-      "Solve and communicate clearly",
-    ],
-  },
-  {
-    slug: "cloud",
-    name: "Cloud & platform engineer",
-    subtitle: "Make reliable delivery a skill.",
-    icon: "cloud",
-    tone: "blue",
-    description:
-      "Follow infrastructure from containers to orchestration, cloud, automation, and operating production systems.",
-    topics: [
-      "docker",
-      "kubernetes",
-      "terraform",
-      "aws",
-      "ci-cd",
-      "observability",
-      "devops-cloud-interviews",
-    ],
-    outcomes: [
-      "Understand delivery pipelines",
-      "Design repeatable infrastructure",
-      "Talk through production incidents",
-    ],
-  },
-] as const;
-export type LearningPath = (typeof learningPaths)[number];
+export interface LearningPath {
+  slug: string; name: string; subtitle: string; icon: string; tone: string;
+  description: string; topics: string[]; outcomes: string[]; priority: number;
+}
 export function pathTopics(
   path: LearningPath,
   categories: Category[],

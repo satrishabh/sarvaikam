@@ -1,0 +1,139 @@
+[
+  {
+    "slug": "gen-ai",
+    "name": "Gen AI Engineering",
+    "subtitle": "Build useful generative AI applications.",
+    "icon": "spark",
+    "tone": "violet",
+    "description": "Learn language model foundations, retrieval, evaluation, and production delivery. Build applications whose outputs you can inspect and improve.",
+    "topics": [
+      "python",
+      "transformers",
+      "llms",
+      "vector-databases",
+      "mlops"
+    ],
+    "outcomes": [
+      "Build retrieval and language model workflows",
+      "Evaluate outputs and handle uncertain results",
+      "Deploy and observe AI applications"
+    ],
+    "priority": 1
+  },
+  {
+    "slug": "ai-ml",
+    "name": "AI / ML Engineering",
+    "subtitle": "Turn data into dependable models.",
+    "icon": "chart",
+    "tone": "teal",
+    "description": "Connect Python, machine learning, deep learning, and MLOps. Practise building models, measuring errors, and operating the full model lifecycle.",
+    "topics": [
+      "python",
+      "machine-learning",
+      "deep-learning",
+      "transformers",
+      "mlops"
+    ],
+    "outcomes": [
+      "Prepare data and train baseline models",
+      "Compare models using suitable evaluation",
+      "Ship and monitor model pipelines"
+    ],
+    "priority": 2
+  },
+  {
+    "slug": "cloud",
+    "name": "Cloud Platform Engineering",
+    "subtitle": "Make reliable delivery a skill.",
+    "icon": "cloud",
+    "tone": "blue",
+    "description": "Follow infrastructure from containers to orchestration, cloud, automation, and operating production systems.",
+    "topics": [
+      "docker",
+      "kubernetes",
+      "terraform",
+      "aws",
+      "azure",
+      "gcp",
+      "ci-cd",
+      "helm-gitops",
+      "observability",
+      "devops-cloud-interviews"
+    ],
+    "outcomes": [
+      "Build repeatable cloud infrastructure",
+      "Operate delivery pipelines and platforms",
+      "Reason about reliability and production incidents"
+    ],
+    "priority": 3
+  },
+  {
+    "slug": "full-stack",
+    "name": "Full Stack Engineering",
+    "subtitle": "Connect the application from interface to data.",
+    "icon": "code",
+    "tone": "violet",
+    "description": "Connect typed application code, APIs, persistence, and deployment. Use the Java full-stack guides and Node.js topics to build and explain a working application.",
+    "topics": [
+      "java",
+      "nodejs",
+      "typescript-nestjs",
+      "spring-boot",
+      "databases-sql",
+      "docker",
+      "coding-interviews"
+    ],
+    "outcomes": [
+      "Connect interfaces, APIs, and persistence",
+      "Build and test typed application code",
+      "Deliver a working application"
+    ],
+    "priority": 4
+  },
+  {
+    "slug": "backend",
+    "name": "Backend Engineering",
+    "subtitle": "Build services that hold up.",
+    "icon": "layers",
+    "tone": "teal",
+    "description": "Connect language fundamentals, APIs, data, and distributed systems. Practise explaining your decisions and handling failure.",
+    "topics": [
+      "java",
+      "spring-boot",
+      "databases-sql",
+      "redis",
+      "microservices",
+      "system-design-interviews"
+    ],
+    "outcomes": [
+      "Build and reason about APIs",
+      "Choose data and caching strategies",
+      "Explain system trade-offs"
+    ],
+    "priority": 5
+  },
+  {
+    "slug": "forward-deployed",
+    "name": "Forward Deployed Engineering",
+    "subtitle": "Turn customer problems into deployed solutions.",
+    "icon": "target",
+    "tone": "blue",
+    "description": "Work from discovery and integration to deployment, evaluation, and handoff. Combine software, cloud, and AI foundations with customer-facing engineering.",
+    "topics": [
+      "forward-deployed-engineer",
+      "python",
+      "databases-sql",
+      "llms",
+      "vector-databases",
+      "docker",
+      "observability",
+      "behavioral-interviews"
+    ],
+    "outcomes": [
+      "Define customer workflows and success measures",
+      "Build and evaluate integrated solutions",
+      "Deploy, operate, and hand off customer projects"
+    ],
+    "priority": 6
+  }
+]

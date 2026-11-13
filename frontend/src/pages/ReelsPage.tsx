@@ -1,44 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { api, Category } from "../api";
+import { api, Reel } from "../api";
 import { useAuth } from "../auth";
 import Icon from "../components/Icon";
 import { LoadState } from "../components/LearningUI";
-import { plainText } from "../readingOutline";
 import "../reels.css";
 
-import { mockReels } from "../mockReels";
-
-// Sample reels on `npm run dev` (see frontend/.env.development). Remove once real content is wired up.
-const USE_MOCK_REELS = import.meta.env.VITE_REELS_MOCK === "true";
-
-export interface Reel {
-  key: string;
-  href: string;
-  topicName: string;
-  title: string;
-  step: number;
-  sentences: string[];
-}
-
-const TOPIC_LIMIT = 6;
-const REEL_LIMIT = 12;
-const SENTENCE_LIMIT = 3;
-
-/** Short, readable sentences from a lesson: headings and code blocks are left out. */
-function shortSentences(markdown: string): string[] {
-  const text = plainText(
-    markdown.replace(/```[\s\S]*?```/g, " ").replace(/^#{1,6} .*$/gm, " "),
-  );
-  return text
-    .split(/(?<=[.!?])\s+/)
-    .map((sentence) => sentence.trim())
-    .filter((sentence) => sentence.length >= 24)
-    .slice(0, SENTENCE_LIMIT)
-    .map((sentence) => (sentence.length > 180 ? `${sentence.slice(0, 177)}…` : sentence));
-}
-
-/** Newest first: the catalogue assigns higher ids to content that was added later. */
+/** The backend returns published reels in update order. */
 export default function ReelsPage() {
   const { user } = useAuth();
   const [reels, setReels] = useState<Reel[]>([]);
@@ -52,46 +20,9 @@ export default function ReelsPage() {
     let active = true;
     setLoading(true);
     setError("");
-    if (USE_MOCK_REELS) {
-      setReels(mockReels);
-      setLoading(false);
-      return () => {
-        active = false;
-      };
-    }
-    (async () => {
-      const categories: Category[] = await api.categories();
-      const topics = categories
-        .flatMap((category) => category.topics)
-        .sort((a, b) => b.id - a.id)
-        .slice(0, TOPIC_LIMIT);
-      const details = await Promise.allSettled(topics.map((topic) => api.topic(topic.slug)));
-      const candidates = details
-        .flatMap((result) => (result.status === "fulfilled" ? [result.value] : []))
-        .flatMap((topic) => topic.lessons.map((lesson) => ({ topic, lesson })))
-        .filter(({ lesson }) => user || !lesson.exclusive)
-        .sort((a, b) => b.lesson.id - a.lesson.id)
-        .slice(0, REEL_LIMIT);
-      const lessons = await Promise.allSettled(
-        candidates.map(({ topic, lesson }) => api.lesson(topic.slug, lesson.slug)),
-      );
-      const built: Reel[] = [];
-      lessons.forEach((result, index) => {
-        if (result.status !== "fulfilled") return;
-        const sentences = shortSentences(result.value.contentMd);
-        if (sentences.length === 0) return;
-        const { topic, lesson } = candidates[index];
-        built.push({
-          key: `${topic.slug}/${lesson.slug}`,
-          href: `/topics/${topic.slug}/${lesson.slug}`,
-          topicName: topic.name,
-          title: lesson.title,
-          step: lesson.stepNumber,
-          sentences,
-        });
-      });
-      if (active) setReels(built);
-    })()
+    api.reels().then((items) => {
+      if (active) { setReels(items); setIndex(0); }
+    })
       .catch((cause: unknown) => {
         if (active)
           setError(cause instanceof Error ? cause.message : "Could not load reels");
@@ -180,7 +111,7 @@ function ReelFeed({
       }}
     >
       {reels.map((reel) => (
-        <ReelCard key={reel.key} reel={reel} />
+        <ReelCard key={reel.slug} reel={reel} />
       ))}
     </div>
   );
@@ -192,7 +123,7 @@ function ReelCard({ reel }: { reel: Reel }) {
   return (
     <article
       className="reel"
-      aria-labelledby={`reel-${reel.key.replace(/[^a-z0-9]/gi, "-")}`}
+      aria-labelledby={`reel-${reel.slug.replace(/[^a-z0-9]/gi, "-")}`}
       onTouchStart={(event) => {
         const touch = event.touches[0];
         start.current = { x: touch.clientX, y: touch.clientY };
@@ -205,27 +136,25 @@ function ReelCard({ reel }: { reel: Reel }) {
         const dx = touch.clientX - origin.x;
         const dy = touch.clientY - origin.y;
         // A clear swipe to the right opens the full lesson; vertical moves stay with the feed.
-        if (dx > 80 && Math.abs(dy) < 60) navigate(reel.href);
+        if (dx > 80 && Math.abs(dy) < 60) navigate(`/topics/${reel.courseSlug}/${reel.lessonSlug}`);
       }}
     >
       <div>
         <p className="reel-kicker">
-          {reel.topicName} · Step {reel.step}
+          {reel.courseName} · Step {reel.step}
         </p>
-        <h2 id={`reel-${reel.key.replace(/[^a-z0-9]/gi, "-")}`} className="reel-title mt-3">
-          {reel.title}
+        <h2 id={`reel-${reel.slug.replace(/[^a-z0-9]/gi, "-")}`} className="reel-title mt-3">
+          {reel.heading}
         </h2>
         <ul className="reel-lines mt-6">
-          {reel.sentences.map((sentence) => (
+          {reel.content.split(/\n+/).filter(Boolean).map((sentence) => (
             <li key={sentence}>{sentence}</li>
           ))}
         </ul>
       </div>
       <div className="reel-footer">
-        <span className="reel-source">
-          Source: {reel.topicName} · {reel.title}
-        </span>
-        <Link className="btn" to={reel.href}>
+        <a className="reel-source" href={reel.sourceUrl} target="_blank" rel="noopener noreferrer">Source: {reel.sourceName}</a>
+        <Link className="btn" to={`/topics/${reel.courseSlug}/${reel.lessonSlug}`}>
           Open lesson
         </Link>
       </div>

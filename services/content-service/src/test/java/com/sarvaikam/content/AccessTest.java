@@ -4,6 +4,7 @@ import com.sarvaikam.content.domain.*;
 import com.sarvaikam.content.security.ContentAccess;
 import com.sarvaikam.content.service.AssetService;
 import com.sarvaikam.content.service.ContentService;
+import com.sarvaikam.content.service.BodyStorage;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -43,7 +44,7 @@ class AccessTest {
         var lessons = mock(LessonRepository.class);
         var lesson = new Lesson(); lesson.setExclusive(true); lesson.setContentMd("private lesson body");
         when(lessons.findByTopicSlugAndSlug("topic", "lesson")).thenReturn(Optional.of(lesson));
-        var service = new ContentService(mock(CategoryRepository.class), mock(TopicRepository.class), lessons, mock(AssetService.class));
+        var service = new ContentService(mock(CategoryRepository.class), mock(TopicRepository.class), lessons, mock(AssetService.class), mock(BodyStorage.class));
         assertThrows(ResponseStatusException.class, () -> service.getLesson("topic", "lesson"));
     }
     @Test void exclusiveResourceListChecksLessonAccessBeforeReadingMetadata() {

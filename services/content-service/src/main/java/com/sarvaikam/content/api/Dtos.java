@@ -28,12 +28,12 @@ public final class Dtos {
 
     private static final String SLUG = "^[a-z0-9]+(-[a-z0-9]+)*$";
 
-    public record CategoryRequest(@NotBlank @Pattern(regexp = SLUG) String slug, @NotBlank String name,
-                                  String description, String icon, int sortOrder) {}
+    public record CategoryRequest(@NotBlank @Size(max=100) @Pattern(regexp = SLUG) String slug, @NotBlank @Size(max=200) String name,
+                                  @Size(max=10000) String description, @Size(max=20) String icon, @Min(0) int sortOrder) {}
 
-    public record TopicRequest(@NotBlank String categorySlug, @NotBlank @Pattern(regexp = SLUG) String slug,
-                               @NotBlank String name, String summary,
-                               @Pattern(regexp = "BEGINNER|INTERMEDIATE|ADVANCED") String level, int sortOrder) {}
+    public record TopicRequest(@NotBlank @Size(max=100) String categorySlug, @NotBlank @Size(max=100) @Pattern(regexp = SLUG) String slug,
+                               @NotBlank @Size(max=200) String name, @Size(max=10000) String summary,
+                               @Pattern(regexp = "BEGINNER|INTERMEDIATE|ADVANCED") String level, @Min(0) int sortOrder) {}
 
     public record LessonRequest(@NotBlank @Size(max = 100) @Pattern(regexp = SLUG) String topicSlug,
                                 @NotBlank @Size(max = 150) @Pattern(regexp = SLUG) String slug,

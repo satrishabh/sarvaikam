@@ -19,6 +19,9 @@ spec:
             - { name: DB_URL, valueFrom: { secretKeyRef: { name: sarvaikam-secrets, key: CONTENT_DB_URL } } }
             - { name: DB_USER, valueFrom: { secretKeyRef: { name: sarvaikam-secrets, key: POSTGRES_USER } } }
             - { name: DB_PASSWORD, valueFrom: { secretKeyRef: { name: sarvaikam-secrets, key: POSTGRES_PASSWORD } } }
+            - { name: REELS_DB_URL, valueFrom: { secretKeyRef: { name: sarvaikam-reels, key: REELS_DB_URL, optional: true } } }
+            - { name: REELS_DB_USER, valueFrom: { secretKeyRef: { name: sarvaikam-reels, key: REELS_DB_USER, optional: true } } }
+            - { name: REELS_DB_PASSWORD, valueFrom: { secretKeyRef: { name: sarvaikam-reels, key: REELS_DB_PASSWORD, optional: true } } }
             - { name: JWT_SECRET, valueFrom: { secretKeyRef: { name: sarvaikam-secrets, key: JWT_SECRET } } }
           startupProbe:
             httpGet: { path: /api/content/actuator/health, port: 8081 }

@@ -20,7 +20,7 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const business = params.get("account") === "business";
-  const destination = business ? "/profile/business" : "/";
+  const destination = business ? "/profile/business" : params.get("next") === "/admin" ? "/admin" : "/";
   if (ready && user) return <Navigate to={destination} replace />;
   const changeMode = (next: Mode) => {
     setMode(next);
