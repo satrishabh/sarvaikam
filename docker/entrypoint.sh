@@ -135,10 +135,11 @@ if [ "$EMBEDDED_DB" = "true" ]; then
     PGPASSWORD="$POSTGRES_PASSWORD" createdb -h 127.0.0.1 -U "$POSTGRES_USER" sarvaikam_reels
   fi
   pg_ctl -D "$PGDATA" -m fast -w stop >/dev/null
-  export REELS_DB_URL="${REELS_DB_URL:-jdbc:postgresql://127.0.0.1:$DB_PORT/sarvaikam_reels?sslmode=$DB_SSLMODE}"
-  export REELS_DB_USER="${REELS_DB_USER:-$POSTGRES_USER}"
-  export REELS_DB_PASSWORD="${REELS_DB_PASSWORD:-$POSTGRES_PASSWORD}"
 fi
+# Reels live in their own logical database on the same server unless overridden.
+export REELS_DB_URL="${REELS_DB_URL:-jdbc:postgresql://$DB_HOST:$DB_PORT/${REELS_DB_NAME:-sarvaikam_reels}?sslmode=$DB_SSLMODE}"
+export REELS_DB_USER="${REELS_DB_USER:-$POSTGRES_USER}"
+export REELS_DB_PASSWORD="${REELS_DB_PASSWORD:-$POSTGRES_PASSWORD}"
 
 echo "[$APP_ENV] starting: embedded_db=$EMBEDDED_DB db_host=$DB_HOST sslmode=$DB_SSLMODE port=$PORT"
 # PORT is for nginx only; auth-service and progress-service read PORT for their own listeners.

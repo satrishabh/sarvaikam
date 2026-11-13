@@ -1,0 +1,67 @@
+# Cloud SQL Auth Proxy for the dev environment (Cloud SQL instance aio-002).
+# Runs as the workload-identity bound KSA sarvaikam-content (roles/cloudsql.client).
+# The proxy encrypts traffic to Cloud SQL, so the app connects to it with DB_SSLMODE=disable.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sarvaikam-cloudsql-proxy
+  namespace: dev
+  labels:
+    app.kubernetes.io/name: sarvaikam-cloudsql-proxy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: sarvaikam-cloudsql-proxy
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: sarvaikam-cloudsql-proxy
+    spec:
+      serviceAccountName: sarvaikam-content
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: cloud-sql-proxy
+          image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.26.3
+          args:
+            - --structured-logs
+            - --address=0.0.0.0
+            - --port=5432
+            - project-d28840cd-be2f-4901-85e:asia-south1:aio-002
+          ports:
+            - name: postgres
+              containerPort: 5432
+          readinessProbe:
+            tcpSocket: {port: postgres}
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            tcpSocket: {port: postgres}
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          resources:
+            requests: {cpu: 50m, memory: 64Mi}
+            limits: {cpu: 250m, memory: 256Mi}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sarvaikam-cloudsql-proxy
+  namespace: dev
+spec:
+  selector:
+    app.kubernetes.io/name: sarvaikam-cloudsql-proxy
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: postgres

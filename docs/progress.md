@@ -8,8 +8,8 @@ Last updated: 2026-11-13
   - Done: lesson and practice bodies move to the private `GCP_CONTENT_BUCKET` (metadata stays in PostgreSQL); reels move to a separate `sarvaikam_reels` database; admin editors for courses, lesson steps, learning paths and reels; Flyway V4 to V6. See `docs/backend-content.md` and `docs/admin-content-studio.md`.
   - Done: mock reels removed; reels and practice questions come from the backend.
   - Verified locally on 13 Nov: 23 backend tests, 27 frontend tests and the production build pass. Not deployed.
-  - **Blocker before deploying:** the live `dev` pod runs the embedded database with no persistent volume (`docs/postgres-replication-check.md`). Back up that database and move it to persistent storage or Cloud SQL before this rolls out, or the pod replacement will lose accounts, progress and course metadata.
-  - Open: configure `GCP_CONTENT_BUCKET`, workload identity and `REELS_DB_*` in each environment before rollout.
+- **Dev database moved to Cloud SQL (resolved 2026-11-13):** dev now uses databases `sarvaikam` and `sarvaikam_reels` on Cloud SQL `aio-002` (user `sarvaikam_app`, password in K8s secret `dev/sarvaikam-db`) through `deploy/dev/cloudsql-proxy.yaml`; aio-gitops `85d315c` switched `values-dev.yaml` to `EMBEDDED_DB=false`. The embedded data was restored from a `pg_dump` taken 2026-11-13 21:10 IST (1 user, 202 lessons, Flyway V3); a local copy of that dump is kept outside the repo.
+- Open: configure `GCP_CONTENT_BUCKET` in each environment, and Cloud SQL databases plus `REELS_DB_*` for staging and prod.
   - Open: "recent" reels are ordered by ID because the API has no publish dates. Confirm, or add dates.
   - Open: check the reels feed height and the floating bar on a real phone and a tablet.
 
