@@ -43,8 +43,11 @@ RUN npm run build
 # ---------- runtime ----------
 FROM alpine:3.24
 # Everything runs as uid/gid 10001 so the image works under runAsNonRoot + drop ALL capabilities.
+# Minimum versions are the Trivy-gate fixes; bump them when the scan flags a new fixed release.
+# Changing this line also invalidates Kaniko's cached layer so apk fetches current packages.
 RUN apk upgrade --no-cache \
-    && apk add --no-cache openjdk21-jre-headless nodejs nginx supervisor postgresql17 postgresql17-contrib tzdata \
+    && apk add --no-cache openjdk21-jre-headless "nodejs>=24.22.3-r0" nginx supervisor \
+       "postgresql17>=17.12-r0" postgresql17-contrib "libpq>=18.7-r0" tzdata \
     && addgroup -g 10001 -S app && adduser -u 10001 -G app -S -D -H app \
     && mkdir -p /data /tmp/runtime \
     && chown -R 10001:10001 /data /tmp/runtime \
