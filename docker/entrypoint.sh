@@ -77,6 +77,17 @@ elif [ "$JWT_SECRET" = "$DEMO_JWT_SECRET" ]; then
   warn "using the demo JWT secret (fine for dev only)"
 fi
 
+# File storage: gcs (bucket, default) or drive (owner's Google Drive via OAuth refresh token).
+case "${STORAGE_BACKEND:=gcs}" in
+  gcs) ;;
+  drive)
+    for v in DRIVE_CLIENT_ID DRIVE_CLIENT_SECRET DRIVE_REFRESH_TOKEN; do
+      eval "[ -n \"\${$v:-}\" ]" || fail "$v is required when STORAGE_BACKEND=drive (run deploy/drive/authorize-drive.ps1)"
+    done ;;
+  *) fail "STORAGE_BACKEND must be gcs or drive" ;;
+esac
+export STORAGE_BACKEND
+
 if [ "$ERRORS" -gt 0 ]; then
   echo "[$APP_ENV] refusing to start: $ERRORS configuration error(s). See README 'Environments'." >&2
   exit 1

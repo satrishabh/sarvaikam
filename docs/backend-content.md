@@ -20,6 +20,25 @@ Object names are immutable. A failed database transaction can leave an unreferen
 
 This change prepares the code and deployment configuration. It does not itself deploy the application or upload local editorial drafts, source references, or the large workspace ZIP. Existing published database bodies move when the new service starts with bucket access. Source seed JSON remains a bootstrap/handoff artifact, rather than the runtime content source.
 
+## Google Drive storage (personal account)
+
+`STORAGE_BACKEND` selects where lesson/practice/reel bodies and attachments live: `gcs` (default, the bucket above) or `drive` (the owner's Google Drive). The database layout is identical; only object references point to a different store, so pick the backend before content is migrated and do not switch it on a database that already holds references unless the objects are copied too.
+
+With `drive`, content-service signs in as the Drive owner using an OAuth refresh token limited to the `drive.file` scope: it can only see files it created. Everything goes into one app-created folder (`DRIVE_FOLDER_NAME`, default "Sarvaikam content", or a fixed `DRIVE_FOLDER_ID`); each file carries its storage key in its app properties, so the Drive file names are informational only. Do not move these files out of the folder or edit them in Drive; deleting one breaks the lesson or attachment that references it.
+
+- **Uploads** use a Drive resumable session opened for the admin's browser origin; the browser PUTs the file to it directly, as with signed bucket URLs.
+- **Downloads** cannot use signed URLs (Drive has none). `/assets/{id}/download` still checks permissions, then returns a 5-minute HMAC-signed `/api/content/assets/{id}/file` link that streams the file through content-service (nginx does not buffer it). Large videos therefore use pod bandwidth.
+- **Limits**: files count against the owner's Drive quota, and Drive API per-user rate limits apply (429 responses are reported as "try again shortly").
+
+Setup:
+
+1. In a Google Cloud project, enable the Google Drive API. Configure the OAuth consent screen as External with your Gmail as test user, then **publish it** (In production); in Testing mode refresh tokens expire after 7 days. `drive.file` is non-sensitive, so no verification is needed.
+2. Create an OAuth client ID of type **Desktop app**.
+3. Run `deploy/drive/authorize-drive.ps1 -ClientId <id> -Namespace <env>`. It prompts for the client secret, opens the browser for consent, and writes `DRIVE_CLIENT_ID`, `DRIVE_CLIENT_SECRET` and `DRIVE_REFRESH_TOKEN` to the `sarvaikam-drive` secret without printing them.
+4. In the environment's values set `STORAGE_BACKEND=drive` and add `sarvaikam-drive` to `envFrom`. The entrypoint refuses to start if any of the three variables is missing.
+
+Revoking the app at https://myaccount.google.com/permissions stops all reads and uploads until step 3 is repeated.
+
 ## Reel template
 
 Reel studio in Content studio supports a stable slug, course, existing lesson step, heading, short content (one point per line), source name, HTTPS source URL, and draft/published status. Course name and step number resolve from the current catalogue. Source attribution is an explicit editorial field, displayed last as a link. Reels start empty until authored and published; browser sample data and automatic lesson extraction have been removed.

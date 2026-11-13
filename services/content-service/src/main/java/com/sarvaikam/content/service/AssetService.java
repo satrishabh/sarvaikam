@@ -1,8 +1,5 @@
 package com.sarvaikam.content.service;
 
-import com.google.cloud.storage.*;
-import com.google.auth.oauth2.GoogleCredentials;
-import com.google.auth.oauth2.ImpersonatedCredentials;
 import com.sarvaikam.content.domain.Lesson;
 import com.sarvaikam.content.domain.LessonRepository;
 import com.sarvaikam.content.security.ContentAccess;
@@ -13,8 +10,14 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.time.Instant;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 
 @Service
 public class AssetService {
@@ -24,36 +27,24 @@ public class AssetService {
     public record AssetView(UUID id, String filename, String contentType, long size) {}
     public record UploadView(UUID id, String url, Map<String, String> headers, int expiresInSeconds) {}
     public record DownloadView(String url, int expiresInSeconds) {}
+    public record FileStream(String filename, String contentType, long size, InputStream body) {}
     private record Asset(UUID id, long lessonId, String objectName, String filename, String contentType, long size, Long generation, boolean ready) {}
 
+    static final int DOWNLOAD_SECONDS = 300;
     private final JdbcTemplate db;
     private final LessonRepository lessons;
-    private final String bucket;
+    private final ObjectStore store;
     private final long maxSize;
-    private Storage storage;
-    private final String signingAccount;
+    private final byte[] linkKey;
+    private final String contextPath;
 
-    public AssetService(JdbcTemplate db, LessonRepository lessons,
-                        @Value("${GCP_CONTENT_BUCKET:}") String bucket,
+    public AssetService(JdbcTemplate db, LessonRepository lessons, ObjectStore store,
                         @Value("${GCP_MAX_UPLOAD_BYTES:2147483648}") long maxSize,
-                        @Value("${GCP_SIGNING_SERVICE_ACCOUNT:}") String signingAccount) {
-        this.db = db; this.lessons = lessons; this.bucket = bucket; this.maxSize = maxSize; this.signingAccount = signingAccount;
-    }
-
-    synchronized Storage storage() {
-        if (bucket.isBlank()) throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "File storage is not configured yet");
-        if (storage == null) {
-            try {
-                var options = StorageOptions.newBuilder();
-                if (!signingAccount.isBlank()) options.setCredentials(ImpersonatedCredentials.create(
-                        GoogleCredentials.getApplicationDefault(), signingAccount, null,
-                        List.of("https://www.googleapis.com/auth/devstorage.read_write"), 300));
-                storage = options.build().getService();
-            } catch (java.io.IOException e) {
-                throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "File storage credentials are unavailable");
-            }
-        }
-        return storage;
+                        @Value("${app.jwt-secret}") String linkSecret,
+                        @Value("${server.servlet.context-path:}") String contextPath) {
+        this.db = db; this.lessons = lessons; this.store = store; this.maxSize = maxSize;
+        this.linkKey = ("asset-download:" + linkSecret).getBytes(StandardCharsets.UTF_8);
+        this.contextPath = contextPath;
     }
 
     private Lesson lesson(long id) {
@@ -66,7 +57,9 @@ public class AssetService {
                 (rs, n) -> new AssetView(rs.getObject(1, UUID.class), rs.getString(2), rs.getString(3), rs.getLong(4)), lessonId);
     }
 
-    public UploadView upload(long lessonId, UploadRequest request) {
+    public UploadView upload(long lessonId, UploadRequest request) { return upload(lessonId, request, null); }
+
+    public UploadView upload(long lessonId, UploadRequest request, String origin) {
         ContentAccess.require("content.manage");
         lesson(lessonId);
         if (request.size() > maxSize) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "File exceeds the configured upload limit");
@@ -75,15 +68,10 @@ public class AssetService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Choose a filename without paths or control characters");
         UUID id = UUID.randomUUID();
         String object = "lessons/" + lessonId + "/" + id;
-        BlobInfo info = BlobInfo.newBuilder(bucket, object).setContentType(request.contentType()).build();
-        String url = storage().signUrl(info, 15, TimeUnit.MINUTES,
-                Storage.SignUrlOption.httpMethod(com.google.cloud.storage.HttpMethod.PUT),
-                Storage.SignUrlOption.withV4Signature(), Storage.SignUrlOption.withContentType(),
-                Storage.SignUrlOption.withExtHeaders(Map.of("content-length", Long.toString(request.size()), "content-type", request.contentType())),
-                Storage.SignUrlOption.withQueryParams(Map.of("ifGenerationMatch", "0"))).toString();
+        var ticket = store.uploadTicket(object, request.contentType(), request.size(), origin);
         db.update("INSERT INTO lesson_assets(id, lesson_id, object_name, filename, content_type, expected_size) VALUES (?, ?, ?, ?, ?, ?)",
                 id, lessonId, object, filename, request.contentType(), request.size());
-        return new UploadView(id, url, Map.of("Content-Type", request.contentType()), 900);
+        return new UploadView(id, ticket.url(), ticket.headers(), 900);
     }
 
     private Asset asset(UUID id) {
@@ -96,32 +84,55 @@ public class AssetService {
     public AssetView complete(UUID id) {
         ContentAccess.require("content.manage");
         Asset a = asset(id);
-        Blob blob = storage().get(bucket, a.objectName());
-        if (blob == null) throw new ResponseStatusException(HttpStatus.CONFLICT, "Upload has not completed. Retry the upload.");
-        if (blob.getSize() != a.size() || blob.getSize() > maxSize || !a.contentType().equals(blob.getContentType())) {
-            storage().delete(blob.getBlobId());
+        var stored = store.stat(a.objectName());
+        if (stored == null) throw new ResponseStatusException(HttpStatus.CONFLICT, "Upload has not completed. Retry the upload.");
+        if (stored.size() != a.size() || stored.size() > maxSize || !a.contentType().equals(stored.contentType())) {
+            store.delete(a.objectName());
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "File size or type did not match the upload. Upload it again.");
         }
-        db.update("UPDATE lesson_assets SET ready = true, generation = ? WHERE id = ?", blob.getGeneration(), id);
+        db.update("UPDATE lesson_assets SET ready = true, generation = ? WHERE id = ?", stored.version(), id);
         return new AssetView(id, a.filename(), a.contentType(), a.size());
     }
+
+    private static String safeName(String filename) { return filename.replaceAll("[^a-zA-Z0-9._ -]", "_"); }
 
     public DownloadView download(UUID id) {
         ContentAccess.require("assets.download");
         Asset a = asset(id);
         ContentAccess.lesson(lesson(a.lessonId()).isExclusive());
         if (!a.ready()) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "File is not ready");
-        String safeName = a.filename().replaceAll("[^a-zA-Z0-9._ -]", "_");
-        String url = storage().signUrl(BlobInfo.newBuilder(bucket, a.objectName()).build(), 5, TimeUnit.MINUTES,
-                Storage.SignUrlOption.withV4Signature(), Storage.SignUrlOption.withQueryParams(Map.of(
-                        "generation", Long.toString(a.generation()), "response-content-disposition", "attachment; filename=\"" + safeName + "\""))).toString();
-        return new DownloadView(url, 300);
+        String url = store.directDownloadUrl(a.objectName(), a.generation(), safeName(a.filename()));
+        if (url == null) {
+            long expires = Instant.now().getEpochSecond() + DOWNLOAD_SECONDS;
+            url = contextPath + "/assets/" + id + "/file?expires=" + expires + "&signature=" + sign(id, expires);
+        }
+        return new DownloadView(url, DOWNLOAD_SECONDS);
+    }
+
+    /** Serves a download link issued by {@link #download}; the signature carries the access check made then. */
+    public FileStream stream(UUID id, long expires, String signature) throws IOException {
+        if (expires < Instant.now().getEpochSecond() || expires > Instant.now().getEpochSecond() + DOWNLOAD_SECONDS
+                || signature == null || !MessageDigest.isEqual(sign(id, expires).getBytes(StandardCharsets.US_ASCII), signature.getBytes(StandardCharsets.US_ASCII)))
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "This download link has expired. Start the download again.");
+        Asset a = asset(id);
+        if (!a.ready()) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "File is not ready");
+        return new FileStream(safeName(a.filename()), a.contentType(), a.size(), store.open(a.objectName(), a.generation()));
+    }
+
+    String sign(UUID id, long expires) {
+        try {
+            Mac mac = Mac.getInstance("HmacSHA256");
+            mac.init(new SecretKeySpec(linkKey, "HmacSHA256"));
+            return HexFormat.of().formatHex(mac.doFinal((id + ":" + expires).getBytes(StandardCharsets.UTF_8)));
+        } catch (java.security.GeneralSecurityException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     public void delete(UUID id) {
         ContentAccess.require("content.manage");
         Asset a = asset(id);
-        storage().delete(BlobId.of(bucket, a.objectName()));
+        store.delete(a.objectName());
         db.update("DELETE FROM lesson_assets WHERE id = ?", id);
     }
 
