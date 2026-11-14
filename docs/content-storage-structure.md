@@ -9,8 +9,8 @@ Open [the visual storage map](content-storage-map.html) for a diagram, the prior
 | 1 | Gen AI Engineering | `gen-ai` |
 | 2 | AI / ML Engineering | `ai-ml` |
 | 3 | Cloud Platform Engineering | `cloud` |
-| 4 | Full Stack Engineering | `full-stack` |
-| 5 | Backend Engineering | `backend` |
+| 4 | Backend Engineering | `backend` |
+| 5 | Full-stack Foundations | `full-stack` |
 | 6 | Forward Deployed Engineering | `forward-deployed` |
 
 Forward Deployed Engineering is sixth because it was requested but was not assigned a position in the five-item priority list. All six paths reference existing lesson-bearing topics. This organizes the available material; it does not claim a complete new curriculum for each role.
@@ -169,7 +169,7 @@ Add lessons to the new course using its slug. Paths hide empty courses until the
 UPDATE learning_paths
 SET priority = CASE slug
   WHEN 'gen-ai' THEN 1 WHEN 'ai-ml' THEN 2 WHEN 'cloud' THEN 3
-  WHEN 'full-stack' THEN 4 WHEN 'backend' THEN 5 WHEN 'forward-deployed' THEN 6
+  WHEN 'backend' THEN 4 WHEN 'full-stack' THEN 5 WHEN 'forward-deployed' THEN 6
 END
 WHERE slug IN ('gen-ai', 'ai-ml', 'cloud', 'full-stack', 'backend', 'forward-deployed');
 
