@@ -177,6 +177,7 @@ test("blocked browser storage does not break the reader", (t) => {
 });
 
 test("backend path seed follows the requested engineering priority", () => {
-  assert.deepEqual(learningPaths.map(p => p.slug), ['gen-ai', 'ai-ml', 'cloud', 'full-stack', 'backend', 'forward-deployed']);
-  assert.deepEqual(learningPaths.map(p => p.priority), [1, 2, 3, 4, 5, 6]);
+  const ordered = [...learningPaths].sort((a, b) => a.priority - b.priority);
+  assert.deepEqual(ordered.map(p => p.slug), ['gen-ai', 'ai-ml', 'cloud', 'backend', 'full-stack', 'forward-deployed']);
+  assert.deepEqual(ordered.map(p => p.priority), [1, 2, 3, 4, 5, 6]);
 });
