@@ -110,6 +110,7 @@ public class ContentService {
             if (l.getContentObject() != null) throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Content bucket is not configured");
             l.setContentMd(r.contentMd());
         }
+        l.setSearchText(SearchText.plain(r.contentMd()));
         l.setExclusive(r.exclusive());
         if (r.stage() != null) l.setStage(r.stage());
         return summary(lessons.save(l));

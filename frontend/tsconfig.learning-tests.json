@@ -14,6 +14,7 @@
     "src/practice.ts",
     "src/readerPreferences.ts",
     "src/readingOutline.ts",
-    "src/sessionSync.ts"
+    "src/sessionSync.ts",
+    "src/search.ts"
   ]
 }

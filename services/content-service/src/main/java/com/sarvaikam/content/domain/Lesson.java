@@ -23,6 +23,11 @@ public class Lesson {
     private String contentMd;
 
     private String contentObject;
+
+    /** Plain text of the body for full-text search (V8); search_vector is generated from it by Postgres. */
+    @Column(name = "search_text", columnDefinition = "TEXT")
+    private String searchText;
+    public void setSearchText(String searchText) { this.searchText = searchText; }
     public String getContentObject() { return contentObject; }
     public void setContentObject(String contentObject) { this.contentObject = contentObject; }
 

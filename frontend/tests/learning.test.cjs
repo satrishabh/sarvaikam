@@ -205,3 +205,16 @@ test("practice opens the topic's own exercise when there is one", () => {
   assert.equal(sql.topic, "sql-interviews");
   assert.equal(practiceForTopic("no-such-topic", practiceQuestions), undefined);
 });
+
+const { snippetParts } = require("../../.cache/learning-tests/search.js");
+
+test("search snippets split into plain and matched text without HTML", () => {
+  assert.deepEqual(snippetParts("a \u0002vector\u0003 <b>store</b> \u0002db\u0003"), [
+    { text: "a ", match: false },
+    { text: "vector", match: true },
+    { text: " <b>store</b> ", match: false },
+    { text: "db", match: true },
+  ]);
+  assert.deepEqual(snippetParts("no matches"), [{ text: "no matches", match: false }]);
+  assert.deepEqual(snippetParts("cut \u0002off"), [{ text: "cut ", match: false }, { text: "off", match: true }]);
+});

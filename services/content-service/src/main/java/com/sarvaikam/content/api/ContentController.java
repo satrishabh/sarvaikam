@@ -2,6 +2,7 @@ package com.sarvaikam.content.api;
 
 import com.sarvaikam.content.api.Dtos.*;
 import com.sarvaikam.content.service.ContentService;
+import com.sarvaikam.content.service.LessonSearch;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -11,9 +12,11 @@ import java.util.List;
 @RestController
 public class ContentController {
     private final ContentService service;
+    private final LessonSearch lessonSearch;
 
-    public ContentController(ContentService service) {
+    public ContentController(ContentService service, LessonSearch lessonSearch) {
         this.service = service;
+        this.lessonSearch = lessonSearch;
     }
 
     @GetMapping("/categories")
@@ -29,6 +32,10 @@ public class ContentController {
 
     @GetMapping("/search")
     public List<TopicSummary> search(@RequestParam String q) { return service.search(q.trim()); }
+
+    /** Full-text search over lesson titles and bodies, best match first (at most 20). */
+    @GetMapping("/search/lessons")
+    public List<LessonSearch.Hit> searchLessons(@RequestParam(defaultValue = "") String q) { return lessonSearch.search(q); }
 
     @GetMapping("/lessons/{id}/access")
     public java.util.Map<String, Object> lessonAccess(@PathVariable long id, @RequestParam String topicSlug) {

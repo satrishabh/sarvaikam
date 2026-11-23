@@ -12,6 +12,7 @@ import {
 } from "../components/LearningUI";
 import useLearningPaths from "../useLearningPaths";
 import useCatalogue from "../useCatalogue";
+import LessonResults from "../components/LessonResults";
 
 export default function HomePage() {
   const { paths, error: pathsError, retry: retryPaths } = useLearningPaths();
@@ -395,7 +396,7 @@ export default function HomePage() {
             <input
               type="search"
               className="input pl-11"
-              placeholder="Search a technology or skill…"
+              placeholder="Search topics and lessons…"
               value={query}
               onChange={(e) => {
                 setQuery(e.target.value);
@@ -469,6 +470,7 @@ export default function HomePage() {
                 </button>
               </div>
             )}
+            <LessonResults query={query} />
           </>
         ) : (
           <p className="surface p-6 text-sm text-muted">Topics appear here once the library loads.</p>
