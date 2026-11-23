@@ -94,6 +94,19 @@ class LessonSearchDatabaseTest {
     }
 
     @Test
+    void sitemapListsPublicLessonsOnly() {
+        var urls = new com.sarvaikam.content.api.SitemapController(db, "https://learn.example/").urls();
+        var paths = urls.stream().map(com.sarvaikam.content.api.SitemapController.Url::path).toList();
+        assertThat(paths).contains("/", "/paths", "/topics/gen-ai", "/topics/gen-ai/prompts", "/topics/gen-ai/rag")
+                .doesNotContain("/topics/gen-ai/secret");
+        String xml = com.sarvaikam.content.api.SitemapController.render("https://learn.example", urls);
+        assertThat(xml).startsWith("<?xml").contains("<loc>https://learn.example/topics/gen-ai/rag</loc><lastmod>")
+                .doesNotContain("secret");
+        assertThat(com.sarvaikam.content.api.SitemapController.render("https://x.y",
+                List.of(new com.sarvaikam.content.api.SitemapController.Url("/a&b", null)))).contains("https://x.y/a&amp;b");
+    }
+
+    @Test
     void editedLessonsAreReindexedByTheGeneratedColumn() {
         db.update("UPDATE lessons SET search_text = 'kubernetes operators' WHERE slug = 'prompts'");
         assertThat(new LessonSearch(db).search("kubernetes")).extracting(LessonSearch.Hit::slug).containsExactly("prompts");

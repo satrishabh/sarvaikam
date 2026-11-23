@@ -113,6 +113,7 @@ jobs:
           test "$(code /no-such-page)" = 404
           curl -s http://localhost:8080/no-such-page | grep -q 'id="root"'
           test "$(code /api/content/actuator/health)" = 404
+          curl -fs http://localhost:8080/robots.txt | grep -q '^Sitemap: '
           docker logs smoke 2>&1 | grep -q '"httpRequest"'
       - name: Image logs on failure
         if: failure()

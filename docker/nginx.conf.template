@@ -78,6 +78,7 @@ __ENV_HEADERS__
         location = /api/core/health { proxy_pass http://127.0.0.1:8084; include /etc/sarvaikam/proxy_headers; }
         # Actuator details are internal only.
         location /api/content/actuator/ { return 404; }
+        location = /sitemap.xml { proxy_pass http://127.0.0.1:8081/api/content/sitemap.xml; include /etc/sarvaikam/proxy_headers; }
 
         location = /sw.js { add_header Cache-Control "no-cache"; }
         location = /manifest.webmanifest { types { application/manifest+json webmanifest; } default_type application/manifest+json; add_header Cache-Control "no-cache"; }
