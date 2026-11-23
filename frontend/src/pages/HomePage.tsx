@@ -13,6 +13,7 @@ import {
 import useLearningPaths from "../useLearningPaths";
 import useCatalogue from "../useCatalogue";
 import LessonResults from "../components/LessonResults";
+import Onboarding from "../components/Onboarding";
 
 export default function HomePage() {
   const { paths, error: pathsError, retry: retryPaths } = useLearningPaths();
@@ -59,6 +60,7 @@ export default function HomePage() {
   );
   return (
     <div className="page-stack">
+      <Onboarding paths={paths} categories={categories} />
       <section className="mobile-start lg:hidden">
         <p className="text-sm text-muted">
           {user

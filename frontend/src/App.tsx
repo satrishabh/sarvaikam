@@ -2,6 +2,8 @@
 import { Link, NavLink, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "./auth";
 import { can } from "./api";
+import { goalStore } from "./engagement";
+import { followPath } from "./learning";
 import Icon from "./components/Icon";
 import MobileSheet from "./components/MobileSheet";
 import HomePage from "./pages/HomePage";
@@ -33,6 +35,13 @@ const navigation = [
 ];
 export default function App() {
   const { user, ready, logout, signedOutCount } = useAuth();
+  // The account's onboarding choices follow the learner to every device they sign in on.
+  useEffect(() => {
+    const chosen = user?.learningPreferences;
+    if (!chosen) return;
+    followPath(chosen.path);
+    goalStore.set(chosen.dailyGoal);
+  }, [user?.id, user?.learningPreferences?.path, user?.learningPreferences?.dailyGoal]);
   const [open, setOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();

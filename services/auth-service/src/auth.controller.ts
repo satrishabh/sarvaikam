@@ -2,7 +2,7 @@ import { Body, Controller, Get, Headers, Param, ParseUUIDPipe, Patch, Post, Put,
 import { JwtService } from '@nestjs/jwt';
 import { DataSource } from 'typeorm';
 import { AuthService } from './auth.service';
-import { BusinessApplicationDto, PolicyDto, ReaderPreferencesDto, ReviewDto, UserAccessDto } from './profile.dto';
+import { BusinessApplicationDto, LearningPreferencesDto, PolicyDto, ReaderPreferencesDto, ReviewDto, UserAccessDto } from './profile.dto';
 
 @Controller()
 export class AuthController {
@@ -38,6 +38,11 @@ export class AuthController {
   @Put('me/reader-preferences')
   async readerPreferences(@Headers('authorization') header: string, @Body() dto: ReaderPreferencesDto) {
     return this.auth.updateReaderPreferences(await this.subject(header), dto);
+  }
+
+  @Put('me/learning-preferences')
+  async learningPreferences(@Headers('authorization') header: string, @Body() dto: LearningPreferencesDto) {
+    return this.auth.updateLearningPreferences(await this.subject(header), dto);
   }
 
   @Get('admin/users')

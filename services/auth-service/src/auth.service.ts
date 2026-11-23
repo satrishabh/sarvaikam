@@ -9,7 +9,7 @@ import { EntityManager, Repository } from 'typeorm';
 import { isEmail } from 'class-validator';
 import { AccessAudit, DEFAULT_PERMISSIONS, PERMISSIONS, Permission, RolePolicy } from './access.entity';
 import { BusinessApplicationDto, ReviewDto, UserAccessDto } from './profile.dto';
-import { ReaderPreferences, User } from './user.entity';
+import { LearningPreferences, ReaderPreferences, User } from './user.entity';
 
 export interface PublicUser {
   id: string;
@@ -26,6 +26,15 @@ export interface PublicUser {
   disabled: boolean;
   createdAt: Date;
   readerPreferences: ReaderPreferences | null;
+  learningPreferences: LearningPreferences | null;
+}
+
+const PATH_SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+function storedLearning(value: Partial<LearningPreferences> | null | undefined): LearningPreferences | null {
+  if (!value || typeof value !== 'object') return null;
+  const valid = typeof value.path === 'string' && value.path.length <= 100 && PATH_SLUG.test(value.path)
+    && [1, 3, 5].includes(value.dailyGoal as number);
+  return valid ? { path: value.path!, dailyGoal: value.dailyGoal! } : null;
 }
 
 // Stored JSON is only trusted when every setting is a known value; anything else reads as "not set".
@@ -153,13 +162,22 @@ export class AuthService {
     return { id: u.id, email: u.email, name: u.name, role: u.role, permissions,
       businessStatus: u.businessStatus, organization: u.organization, businessWebsite: u.businessWebsite,
       businessReason: u.businessReason, reviewNote: u.reviewNote, reviewedAt: u.reviewedAt,
-      disabled: u.disabled, createdAt: u.createdAt, readerPreferences: storedPreferences(u.readerPreferences) };
+      disabled: u.disabled, createdAt: u.createdAt, readerPreferences: storedPreferences(u.readerPreferences),
+      learningPreferences: storedLearning(u.learningPreferences) };
   }
 
   async updateReaderPreferences(id: string, prefs: ReaderPreferences): Promise<PublicUser> {
     const user = await this.users.findOneBy({ id });
     if (!user || user.disabled) throw new UnauthorizedException('This account is unavailable');
     user.readerPreferences = { size: prefs.size, font: prefs.font, theme: prefs.theme, spacing: prefs.spacing };
+    await this.users.save(user);
+    return this.toPublic(user);
+  }
+
+  async updateLearningPreferences(id: string, prefs: LearningPreferences): Promise<PublicUser> {
+    const user = await this.users.findOneBy({ id });
+    if (!user || user.disabled) throw new UnauthorizedException('This account is unavailable');
+    user.learningPreferences = { path: prefs.path, dailyGoal: prefs.dailyGoal };
     await this.users.save(user);
     return this.toPublic(user);
   }

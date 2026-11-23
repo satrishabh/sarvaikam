@@ -227,3 +227,14 @@ test("quick check scores right answers and treats skipped questions as wrong", (
   assert.equal(quickCheckScore(questions, [1, 1, undefined]), 1);
   assert.equal(quickCheckScore(questions, []), 0);
 });
+
+const { needsOnboarding } = require("../../.cache/learning-tests/learning.js");
+
+test("onboarding shows once per account until a path is chosen or it is skipped on this device", () => {
+  const fresh = { id: "u1", learningPreferences: null };
+  assert.equal(needsOnboarding(null, ""), false, "signed out");
+  assert.equal(needsOnboarding(fresh, ""), true);
+  assert.equal(needsOnboarding(fresh, "u1"), false, "skipped here");
+  assert.equal(needsOnboarding(fresh, "someone-else"), true, "another account skipped");
+  assert.equal(needsOnboarding({ id: "u1", learningPreferences: { path: "gen-ai", dailyGoal: 3 } }, ""), false);
+});

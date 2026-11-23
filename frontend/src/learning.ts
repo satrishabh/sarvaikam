@@ -89,3 +89,27 @@ export function nextInPath(
   }
   return null;
 }
+
+const ONBOARDING_SKIPPED_KEY = "sarvaikam.onboardingSkipped";
+/** The account that chose "Skip for now" on this device ("" when none). */
+export function readOnboardingSkipped(): string {
+  try {
+    return typeof localStorage === "undefined" ? "" : (localStorage.getItem(ONBOARDING_SKIPPED_KEY) ?? "");
+  } catch {
+    return "";
+  }
+}
+export function skipOnboarding(userId: string): void {
+  try {
+    if (typeof localStorage !== "undefined") localStorage.setItem(ONBOARDING_SKIPPED_KEY, userId);
+  } catch {
+    /* the card simply shows again next visit */
+  }
+}
+/** First-run onboarding shows for a signed-in account that has not chosen a path and goal, unless skipped here. */
+export function needsOnboarding(
+  user: { id: string; learningPreferences?: unknown } | null,
+  skippedFor: string,
+): boolean {
+  return !!user && !user.learningPreferences && skippedFor !== user.id;
+}

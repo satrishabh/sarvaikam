@@ -68,6 +68,8 @@ export interface User {
   disabled: boolean;
   createdAt: string;
   readerPreferences: ReaderPreferences | null;
+  /** Path and daily goal chosen during onboarding; null until chosen. */
+  learningPreferences: { path: string; dailyGoal: 1 | 3 | 5 } | null;
 }
 export type Role = 'ADMIN' | 'BUSINESS' | 'USER';
 export type Permission = 'content.exclusive' | 'content.manage' | 'assets.download' | 'candidates.view';
@@ -208,6 +210,8 @@ export const api = {
     request<void>(`/api/progress/lessons/${lessonId}/complete`, { method: 'DELETE' }),
   updateReaderPreferences: (prefs: ReaderPreferences) =>
     request<User>('/api/auth/me/reader-preferences', { method: 'PUT', body: JSON.stringify(prefs) }),
+  updateLearningPreferences: (prefs: { path: string; dailyGoal: 1 | 3 | 5 }) =>
+    request<User>('/api/auth/me/learning-preferences', { method: 'PUT', body: JSON.stringify(prefs) }),
   bookmarks: () => request<BookmarkItem[]>('/api/progress/me/bookmarks'),
   bookmark: (lessonId: number, topicSlug: string) =>
     request<void>(`/api/progress/lessons/${lessonId}/bookmark`, {
