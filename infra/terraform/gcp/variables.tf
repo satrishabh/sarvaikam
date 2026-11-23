@@ -58,3 +58,21 @@ variable "db_maintenance_hour" {
   description = "Maintenance hour in UTC (21 = 02:30 IST Monday)"
   default     = 21
 }
+
+variable "public_host" {
+  type        = string
+  description = "Public hostname the uptime check probes (https://<host>/ready)"
+  default     = "learn.sarvaikam.com"
+}
+
+variable "alert_email" {
+  type        = string
+  description = "Where alerts are emailed; empty creates the alerts without a notification channel"
+  default     = ""
+}
+
+variable "alert_5xx_per_5min" {
+  type        = number
+  description = "Alert when more than this many 5xx responses are logged in 5 minutes"
+  default     = 10
+}

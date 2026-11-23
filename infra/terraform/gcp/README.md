@@ -36,3 +36,18 @@ regional (HA) database and deletion protection.
   `gcloud sql backups restore <backup-id> --restore-instance=<target-instance>`.
 
 Practise one restore before launch and write down how long it took.
+
+## Monitoring
+
+`monitoring.tf` creates an uptime check on `https://<public_host>/ready` and alerts for:
+
+| Alert | Fires when |
+|---|---|
+| Site down | `/ready` fails from more than one checker region for 2 minutes |
+| Pods restarting | a pod restarts more than twice in 10 minutes |
+| Service crashed inside the pod | supervisord logs an unexpected exit of content, auth, Core or progress |
+| 5xx responses | more than `alert_5xx_per_5min` (default 10) 5xx responses in 5 minutes |
+| Cloud SQL CPU / disk | above 80% CPU or 85% disk for 10 minutes |
+
+Pass `-var alert_email=you@example.com` to get emails; without it the alerts exist but notify no one.
+The 5xx and crash alerts read logs, so they need `LOG_FORMAT=json` (the default outside `APP_ENV=dev`).

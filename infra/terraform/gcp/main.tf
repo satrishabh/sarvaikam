@@ -17,7 +17,7 @@ provider "google" {
 
 locals {
   prefix = "${var.name}-${var.env}"
-  apis   = ["container.googleapis.com", "sqladmin.googleapis.com", "artifactregistry.googleapis.com", "servicenetworking.googleapis.com", "storage.googleapis.com", "iamcredentials.googleapis.com", "secretmanager.googleapis.com"]
+  apis   = ["container.googleapis.com", "sqladmin.googleapis.com", "artifactregistry.googleapis.com", "servicenetworking.googleapis.com", "storage.googleapis.com", "iamcredentials.googleapis.com", "secretmanager.googleapis.com", "monitoring.googleapis.com", "logging.googleapis.com"]
 }
 
 resource "google_project_service" "apis" {
