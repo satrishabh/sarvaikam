@@ -51,3 +51,10 @@ Practise one restore before launch and write down how long it took.
 
 Pass `-var alert_email=you@example.com` to get emails; without it the alerts exist but notify no one.
 The 5xx and crash alerts read logs, so they need `LOG_FORMAT=json` (the default outside `APP_ENV=dev`).
+
+### Errors
+
+Server errors go to **Cloud Error Reporting** without an extra service: with `LOG_FORMAT=json`, every service
+logs exceptions as `severity: ERROR` with a `stack_trace` field (Spring Boot, Nest, and Go panics), which Error
+Reporting groups and counts. Turn on its email notifications in the console (Error Reporting > Configure
+notifications) to hear about new error types. Browser-side errors are not captured yet.

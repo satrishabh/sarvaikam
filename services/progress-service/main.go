@@ -99,10 +99,11 @@ func main() {
 
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID, middleware.RealIP)
-	if env("LOG_FORMAT", "text") != "json" {
-		r.Use(middleware.Logger) // in JSON mode nginx's access log already records every request
+	if env("LOG_FORMAT", "text") == "json" {
+		r.Use(recoverJSON) // nginx's access log already records every request
+	} else {
+		r.Use(middleware.Logger, middleware.Recoverer)
 	}
-	r.Use(middleware.Recoverer)
 	r.Route("/api/progress", func(r chi.Router) {
 		r.Get("/health", func(w http.ResponseWriter, _ *http.Request) { writeJSON(w, 200, map[string]string{"status": "UP"}) })
 		r.Get("/ready", s.ready)
