@@ -1,11 +1,12 @@
-import { Body, Controller, Get, Headers, Param, ParseUUIDPipe, Patch, Post, Put, Query, UnauthorizedException } from '@nestjs/common';
+import { Body, Controller, Get, Headers, Param, ParseUUIDPipe, Patch, Post, Put, Query, ServiceUnavailableException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { DataSource } from 'typeorm';
 import { AuthService } from './auth.service';
 import { BusinessApplicationDto, PolicyDto, ReaderPreferencesDto, ReviewDto, UserAccessDto } from './profile.dto';
 
 @Controller()
 export class AuthController {
-  constructor(private readonly auth: AuthService, private readonly jwt: JwtService) {}
+  constructor(private readonly auth: AuthService, private readonly jwt: JwtService, private readonly db: DataSource) {}
 
   @Post('oidc/exchange')
   exchange(@Headers('authorization') header?: string) {
@@ -69,8 +70,26 @@ export class AuthController {
     return this.auth.auditLog(await this.subject(header));
   }
 
+  /** Liveness: the process is serving. Deliberately ignores the database so a DB blip doesn't restart the pod. */
   @Get('health')
   health() {
     return { status: 'UP' };
+  }
+
+  /** Readiness: only take traffic when the database answers, so sign-ins fail over instead of erroring. */
+  @Get('ready')
+  async ready() {
+    let timer: NodeJS.Timeout | undefined;
+    try {
+      await Promise.race([
+        this.db.query('SELECT 1'),
+        new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('timeout')), 2000); }),
+      ]);
+      return { status: 'UP' };
+    } catch {
+      throw new ServiceUnavailableException({ status: 'DOWN' });
+    } finally {
+      clearTimeout(timer);
+    }
   }
 }

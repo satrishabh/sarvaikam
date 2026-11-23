@@ -4,7 +4,10 @@ terraform {
     google = { source = "hashicorp/google", version = "~> 6.6" }
     random = { source = "hashicorp/random", version = "~> 3.6" }
   }
-  # backend "gcs" { bucket = "my-tf-state" prefix = "sarvaikam" }
+  # Remote state, so the team and CI share one state with locking. Partial config: pass the bucket at init:
+  #   terraform init -backend-config="bucket=<state-bucket>" -backend-config="prefix=sarvaikam/<env>"
+  # One-time bucket setup: see infra/terraform/gcp/README.md.
+  backend "gcs" {}
 }
 
 provider "google" {
@@ -14,7 +17,7 @@ provider "google" {
 
 locals {
   prefix = "${var.name}-${var.env}"
-  apis   = ["container.googleapis.com", "sqladmin.googleapis.com", "artifactregistry.googleapis.com", "servicenetworking.googleapis.com", "storage.googleapis.com", "iamcredentials.googleapis.com"]
+  apis   = ["container.googleapis.com", "sqladmin.googleapis.com", "artifactregistry.googleapis.com", "servicenetworking.googleapis.com", "storage.googleapis.com", "iamcredentials.googleapis.com", "secretmanager.googleapis.com"]
 }
 
 resource "google_project_service" "apis" {
@@ -99,13 +102,37 @@ resource "google_sql_database_instance" "postgres" {
     ip_configuration {
       ipv4_enabled    = false
       private_network = google_compute_network.vpc.id
+      # Direct connections must use TLS. The Cloud SQL Auth Proxy already encrypts, so it is unaffected.
+      ssl_mode = "ENCRYPTED_ONLY"
     }
-    backup_configuration { enabled = true }
+    # Nightly backups kept 14 days, plus point-in-time recovery to any second in the last 7 days.
+    backup_configuration {
+      enabled                        = true
+      start_time                     = var.db_backup_start_time
+      point_in_time_recovery_enabled = true
+      transaction_log_retention_days = 7
+      backup_retention_settings {
+        retained_backups = 14
+      }
+    }
+    maintenance_window {
+      day  = var.db_maintenance_day
+      hour = var.db_maintenance_hour
+    }
+    insights_config {
+      query_insights_enabled = true
+    }
   }
 }
 
 resource "google_sql_database" "app" {
   name     = "sarvaikam"
+  instance = google_sql_database_instance.postgres.name
+}
+
+# Reels live in their own logical database (REELS_DB_NAME, see docker/entrypoint.sh).
+resource "google_sql_database" "reels" {
+  name     = "sarvaikam_reels"
   instance = google_sql_database_instance.postgres.name
 }
 

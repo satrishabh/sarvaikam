@@ -54,6 +54,10 @@ management:
       probes:
         enabled: true
       show-details: never
+      group:
+        # Readiness also checks the database; liveness stays process-only (see deploy/k8s/content-service.yaml).
+        readiness:
+          include: readinessState,db
 
 ---
 spring:

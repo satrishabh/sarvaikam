@@ -1,76 +1,212 @@
 {
   "Sarvaikam": {
+    "$description": "Single source of design tokens. Run `npm run tokens` to regenerate src/styles/tokens.css, tokens.preset.js and website/tokens.css. Values here are the light theme; the Sarvaikam-dark and Sarvaikam-contrast sets override colours only.",
     "color": {
-      "canvas": {
-        "$type": "color",
-        "$value": "#FCFCFD"
+      "canvas": { "$type": "color", "$value": "#FCFCFD", "$description": "Page background behind surfaces." },
+      "surface": { "$type": "color", "$value": "#FFFFFF", "$description": "Cards, fields and panels." },
+      "surface-raised": { "$type": "color", "$value": "#FFFFFF", "$description": "Sheets, menus and popovers above surfaces." },
+      "ink": { "$type": "color", "$value": "#252932", "$description": "Primary text." },
+      "ink-muted": { "$type": "color", "$value": "#59616D", "$description": "Secondary text." },
+      "line": { "$type": "color", "$value": "#E6E7EB", "$description": "Hairline borders and dividers." },
+      "track": { "$type": "color", "$value": "#F2F3F5", "$description": "Quiet fills: progress tracks, hover, skeletons." },
+      "accent": { "$type": "color", "$value": "#A74412", "$description": "Sarvaikam orange: the primary action and progress only." },
+      "accent-strong": { "$type": "color", "$value": "#87380F", "$description": "Accent hover and pressed." },
+      "accent-soft": { "$type": "color", "$value": "#FFF3EA", "$description": "Accent wash behind accent text." },
+      "on-accent": { "$type": "color", "$value": "#FFFFFF", "$description": "Text and icons on an accent fill." },
+      "gold": { "$type": "color", "$value": "#E0A945", "$description": "Reserved for completed lessons." },
+      "gold-soft": { "$type": "color", "$value": "#FBF2DF" },
+      "success": { "$type": "color", "$value": "#1F7A4A" },
+      "warning": { "$type": "color", "$value": "#9A5B00" },
+      "danger": { "$type": "color", "$value": "#B4232F" },
+      "focus": { "$type": "color", "$value": "{color.accent}", "$description": "Focus rings." },
+      "shadow": { "$type": "color", "$value": "#12325A", "$description": "Shadow tint; always used with an alpha." },
+      "muted": { "$type": "color", "$value": "{color.ink-muted}", "$description": "Alias kept for existing screens; prefer ink-muted." },
+      "accentStrong": { "$type": "color", "$value": "{color.accent-strong}", "$description": "Alias kept for the old token name." },
+      "accentSoft": { "$type": "color", "$value": "{color.accent-soft}", "$description": "Alias kept for the old token name." },
+      "goldSoft": { "$type": "color", "$value": "{color.gold-soft}", "$description": "Alias kept for the old token name." },
+      "brand": { "$type": "color", "$value": "#10231E", "$description": "Logo colour; also the active mobile tab pill." },
+      "on-brand": { "$type": "color", "$value": "#FFFFFF", "$description": "Text on a brand fill." },
+      "chrome-ink": { "$type": "color", "$value": "#12325A", "$description": "Legacy cool navy used by mobile chrome (sheet, reader options). Fold into ink in the visual pass." },
+      "chrome-muted": { "$type": "color", "$value": "#4A5A70", "$description": "Legacy: mobile search and sheet secondary text." },
+      "chrome-subtle": { "$type": "color", "$value": "#526579", "$description": "Legacy: mobile tab labels and reel captions." },
+      "chrome-line": { "$type": "color", "$value": "#E3E7ED", "$description": "Legacy: mobile chrome borders." },
+      "chrome-line-strong": { "$type": "color", "$value": "#D4DCE5", "$description": "Legacy: mobile control borders." },
+      "chrome-fill": { "$type": "color", "$value": "#EDF0F4", "$description": "Legacy: mobile segmented controls and close buttons." },
+      "reel-ink": { "$type": "color", "$value": "#1F2D3D", "$description": "Reel body text." },
+      "reel-wash": { "$type": "color", "$value": "#FFF6EF", "$description": "End of the reel card gradient." },
+      "tone-violet": { "$type": "color", "$value": "#6251B8", "$description": "Path icon tone." },
+      "tone-violet-soft": { "$type": "color", "$value": "#EFEDFC" },
+      "tone-blue": { "$type": "color", "$value": "#3563B1", "$description": "Path icon tone." },
+      "tone-blue-soft": { "$type": "color", "$value": "#EAF0FC" },
+      "code-surface": { "$type": "color", "$value": "#102C43", "$description": "Runnable code panel; dark in every theme." },
+      "code-muted": { "$type": "color", "$value": "#C2CFDB" },
+      "code-accent": { "$type": "color", "$value": "#A4DED2" }
+    },
+    "reader": {
+      "$description": "Lesson reader page themes, chosen in Reader settings (data-reader-theme). Independent of the app theme.",
+      "day": {
+        "page": { "$type": "color", "$value": "#FFFFFF" },
+        "text": { "$type": "color", "$value": "#20384E" },
+        "muted": { "$type": "color", "$value": "#526579" },
+        "line": { "$type": "color", "$value": "#DDE4E9" },
+        "fill": { "$type": "color", "$value": "#F1F5F6" },
+        "accent": { "$type": "color", "$value": "#A74412" }
       },
-      "surface": {
-        "$type": "color",
-        "$value": "#FFFFFF"
+      "night": {
+        "$extensions": { "com.sarvaikam": { "colorScheme": "dark" } },
+        "page": { "$type": "color", "$value": "#14212C" },
+        "text": { "$type": "color", "$value": "#E2EAF0" },
+        "muted": { "$type": "color", "$value": "#B2C2CE" },
+        "line": { "$type": "color", "$value": "#3B4C59" },
+        "fill": { "$type": "color", "$value": "#203442" },
+        "accent": { "$type": "color", "$value": "#FFD1AA" }
       },
-      "ink": {
-        "$type": "color",
-        "$value": "#252932"
+      "paper": {
+        "$extensions": { "com.sarvaikam": { "colorScheme": "light" } },
+        "page": { "$type": "color", "$value": "#F6F0E4" },
+        "text": { "$type": "color", "$value": "#3B2F24" },
+        "muted": { "$type": "color", "$value": "#6B5A48" },
+        "line": { "$type": "color", "$value": "#E0D4BF" },
+        "fill": { "$type": "color", "$value": "#EFE6D4" },
+        "accent": { "$type": "color", "$value": "#9A4A1F" }
       },
-      "muted": {
-        "$type": "color",
-        "$value": "#59616D"
+      "slate": {
+        "$extensions": { "com.sarvaikam": { "colorScheme": "light" } },
+        "page": { "$type": "color", "$value": "#FFFFFF" },
+        "text": { "$type": "color", "$value": "#0F172A" },
+        "muted": { "$type": "color", "$value": "#64748B" },
+        "line": { "$type": "color", "$value": "#E2E8F0" },
+        "fill": { "$type": "color", "$value": "#F8FAFC" },
+        "accent": { "$type": "color", "$value": "#2563EB" }
+      }
+    },
+    "font": {
+      "family": {
+        "sans": { "$type": "fontFamily", "$value": ["Archivo", "-apple-system", "BlinkMacSystemFont", "\"Segoe UI\"", "Roboto", "sans-serif"] },
+        "serif": { "$type": "fontFamily", "$value": ["Playfair Display", "Georgia", "\"Times New Roman\"", "serif"] },
+        "display": { "$type": "fontFamily", "$value": ["-apple-system", "BlinkMacSystemFont", "\"SF Pro Display\"", "\"Segoe UI\"", "Inter", "sans-serif"] },
+        "mono": { "$type": "fontFamily", "$value": ["\"IBM Plex Mono\"", "ui-monospace", "\"SF Mono\"", "\"Cascadia Code\"", "Menlo", "monospace"] }
       },
-      "line": {
-        "$type": "color",
-        "$value": "#E6E7EB"
+      "size": {
+        "caption": { "$type": "dimension", "$value": "13px" },
+        "callout": { "$type": "dimension", "$value": "15px" },
+        "body": { "$type": "dimension", "$value": "17px" },
+        "title": { "$type": "dimension", "$value": "22px" },
+        "headline": { "$type": "dimension", "$value": "28px" },
+        "display": { "$type": "dimension", "$value": "40px" }
       },
-      "track": {
-        "$type": "color",
-        "$value": "#F2F3F5"
+      "lineHeight": {
+        "body": { "$type": "number", "$value": 1.5 },
+        "heading": { "$type": "number", "$value": 1.2 }
+      }
+    },
+    "space": {
+      "$description": "4/8 px grid. Tailwind's default spacing scale is already this grid, so the preset does not override it.",
+      "0": { "$type": "dimension", "$value": "0px" },
+      "1": { "$type": "dimension", "$value": "4px" },
+      "2": { "$type": "dimension", "$value": "8px" },
+      "3": { "$type": "dimension", "$value": "12px" },
+      "4": { "$type": "dimension", "$value": "16px" },
+      "5": { "$type": "dimension", "$value": "20px" },
+      "6": { "$type": "dimension", "$value": "24px" },
+      "8": { "$type": "dimension", "$value": "32px" },
+      "10": { "$type": "dimension", "$value": "40px" },
+      "12": { "$type": "dimension", "$value": "48px" },
+      "16": { "$type": "dimension", "$value": "64px" }
+    },
+    "radius": {
+      "control": { "$type": "dimension", "$value": "8px", "$description": "Buttons, fields, chips." },
+      "card": { "$type": "dimension", "$value": "14px", "$description": "Cards and panels." },
+      "sheet": { "$type": "dimension", "$value": "20px", "$description": "Sheets and dialogs." }
+    },
+    "motion": {
+      "duration": {
+        "fast": { "$type": "duration", "$value": "180ms" },
+        "base": { "$type": "duration", "$value": "220ms" },
+        "slow": { "$type": "duration", "$value": "260ms" }
       },
-      "accent": {
-        "$type": "color",
-        "$value": "#A74412"
-      },
-      "accentStrong": {
-        "$type": "color",
-        "$value": "#87380F"
-      },
-      "accentSoft": {
-        "$type": "color",
-        "$value": "#FFF3EA"
-      },
-      "gold": {
-        "$type": "color",
-        "$value": "#E0A945"
-      },
-      "goldSoft": {
-        "$type": "color",
-        "$value": "#FBF2DF"
-      },
-      "danger": {
-        "$type": "color",
-        "$value": "#B4232F"
+      "easing": {
+        "standard": { "$type": "cubicBezier", "$value": [0.2, 0.8, 0.2, 1] },
+        "spring": { "$type": "cubicBezier", "$value": [0.2, 0.9, 0.3, 1.4] },
+        "exit": { "$type": "cubicBezier", "$value": [0.4, 0, 1, 1] }
       }
     },
     "dimension": {
-      "control": {
-        "$type": "dimension",
-        "$value": "44px"
-      },
-      "spaceUnit": {
-        "$type": "dimension",
-        "$value": "4px"
-      },
-      "fieldRadius": {
-        "$type": "dimension",
-        "$value": "12px"
-      },
-      "surfaceRadius": {
-        "$type": "dimension",
-        "$value": "16px"
-      },
-      "contentWidth": {
-        "$type": "dimension",
-        "$value": "1080px"
-      }
+      "control": { "$type": "dimension", "$value": "44px" },
+      "spaceUnit": { "$type": "dimension", "$value": "4px" },
+      "fieldRadius": { "$type": "dimension", "$value": "12px" },
+      "surfaceRadius": { "$type": "dimension", "$value": "16px" },
+      "contentWidth": { "$type": "dimension", "$value": "1080px" }
     }
-  }
+  },
+  "Sarvaikam-dark": {
+    "color": {
+      "canvas": { "$type": "color", "$value": "#0F1318" },
+      "surface": { "$type": "color", "$value": "#161B22" },
+      "surface-raised": { "$type": "color", "$value": "#1E242C" },
+      "ink": { "$type": "color", "$value": "#E8EAEE" },
+      "ink-muted": { "$type": "color", "$value": "#A9B0BB" },
+      "line": { "$type": "color", "$value": "#2C333D" },
+      "track": { "$type": "color", "$value": "#222830" },
+      "accent": { "$type": "color", "$value": "#FF9A62" },
+      "accent-strong": { "$type": "color", "$value": "#FFB48A" },
+      "accent-soft": { "$type": "color", "$value": "#3A2216" },
+      "on-accent": { "$type": "color", "$value": "#1A0E06" },
+      "gold": { "$type": "color", "$value": "#E8B85C" },
+      "gold-soft": { "$type": "color", "$value": "#3A2E14" },
+      "success": { "$type": "color", "$value": "#5CCB8F" },
+      "warning": { "$type": "color", "$value": "#F2B544" },
+      "danger": { "$type": "color", "$value": "#FF7A84" },
+      "shadow": { "$type": "color", "$value": "#000000" },
+      "brand": { "$type": "color", "$value": "#E8EAEE" },
+      "on-brand": { "$type": "color", "$value": "#0F1318" },
+      "chrome-ink": { "$type": "color", "$value": "#E2EAF0" },
+      "chrome-muted": { "$type": "color", "$value": "#B2C2CE" },
+      "chrome-subtle": { "$type": "color", "$value": "#A9B6C3" },
+      "chrome-line": { "$type": "color", "$value": "#2C333D" },
+      "chrome-line-strong": { "$type": "color", "$value": "#3B4C59" },
+      "chrome-fill": { "$type": "color", "$value": "#222830" },
+      "reel-ink": { "$type": "color", "$value": "#DDE3EA" },
+      "reel-wash": { "$type": "color", "$value": "#241A14" },
+      "tone-violet": { "$type": "color", "$value": "#B4A9F5" },
+      "tone-violet-soft": { "$type": "color", "$value": "#27223F" },
+      "tone-blue": { "$type": "color", "$value": "#8EB1F0" },
+      "tone-blue-soft": { "$type": "color", "$value": "#1C2740" }
+    }
+  },
+  "Sarvaikam-contrast": {
+    "color": {
+      "canvas": { "$type": "color", "$value": "#FFFFFF" },
+      "ink": { "$type": "color", "$value": "#000000" },
+      "ink-muted": { "$type": "color", "$value": "#262626" },
+      "line": { "$type": "color", "$value": "#000000" },
+      "track": { "$type": "color", "$value": "#E6E6E6" },
+      "accent": { "$type": "color", "$value": "#7A2E08" },
+      "accent-strong": { "$type": "color", "$value": "#5C2205" },
+      "accent-soft": { "$type": "color", "$value": "#FFE6D4" },
+      "gold": { "$type": "color", "$value": "#8A5A00" },
+      "gold-soft": { "$type": "color", "$value": "#FFF0C9" },
+      "success": { "$type": "color", "$value": "#0B5A30" },
+      "warning": { "$type": "color", "$value": "#6B3F00" },
+      "danger": { "$type": "color", "$value": "#8A0F1A" },
+      "shadow": { "$type": "color", "$value": "#000000" },
+      "brand": { "$type": "color", "$value": "#000000" },
+      "chrome-ink": { "$type": "color", "$value": "#000000" },
+      "chrome-muted": { "$type": "color", "$value": "#262626" },
+      "chrome-subtle": { "$type": "color", "$value": "#262626" },
+      "chrome-line": { "$type": "color", "$value": "#000000" },
+      "chrome-line-strong": { "$type": "color", "$value": "#000000" },
+      "chrome-fill": { "$type": "color", "$value": "#E6E6E6" },
+      "reel-ink": { "$type": "color", "$value": "#000000" },
+      "reel-wash": { "$type": "color", "$value": "#FFFFFF" },
+      "tone-violet": { "$type": "color", "$value": "#3D2C94" },
+      "tone-blue": { "$type": "color", "$value": "#1A438A" }
+    }
+  },
+  "$themes": [
+    { "name": "Light", "group": "Mode", "selectedTokenSets": { "Sarvaikam": "enabled" } },
+    { "name": "Dark", "group": "Mode", "selectedTokenSets": { "Sarvaikam": "enabled", "Sarvaikam-dark": "enabled" } },
+    { "name": "High contrast", "group": "Mode", "selectedTokenSets": { "Sarvaikam": "enabled", "Sarvaikam-contrast": "enabled" } }
+  ],
+  "$metadata": { "tokenSetOrder": ["Sarvaikam", "Sarvaikam-dark", "Sarvaikam-contrast"] }
 }

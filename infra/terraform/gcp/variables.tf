@@ -28,3 +28,33 @@ variable "content_origins" {
   description = "Exact browser origins allowed to upload learning resources"
   default     = ["https://learn.sarvaikam.com"]
 }
+
+variable "k8s_namespace" {
+  type        = string
+  description = "Namespace of the app's Kubernetes service account (Workload Identity)"
+  default     = "sarvaikam"
+}
+
+variable "k8s_service_account" {
+  type        = string
+  description = "Kubernetes service account the app pods run as (Workload Identity)"
+  default     = "content-service"
+}
+
+variable "db_backup_start_time" {
+  type        = string
+  description = "Daily backup start, HH:MM in UTC (20:30 UTC = 02:00 IST)"
+  default     = "20:30"
+}
+
+variable "db_maintenance_day" {
+  type        = number
+  description = "Maintenance day, 1 = Monday ... 7 = Sunday (UTC)"
+  default     = 7
+}
+
+variable "db_maintenance_hour" {
+  type        = number
+  description = "Maintenance hour in UTC (21 = 02:30 IST Monday)"
+  default     = 21
+}

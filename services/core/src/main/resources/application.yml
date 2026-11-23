@@ -1,0 +1,102 @@
+server:
+  port: ${CORE_PORT:8084}
+  # Trust X-Forwarded-* from nginx / the ingress (TLS is terminated there in staging/prod).
+  forward-headers-strategy: framework
+  shutdown: graceful
+  servlet:
+    session:
+      # A signed-in browser stays signed in while it is used at least once a week (Keycloak's own session
+      # limits still apply, because the Core refreshes Keycloak tokens server-side).
+      timeout: ${SESSION_IDLE_TIMEOUT:7d}
+      cookie:
+        # __Host- forces Secure, Path=/ and no Domain: the cookie cannot be set or read by a sibling subdomain.
+        name: ${SESSION_COOKIE_NAME:__Host-sid}
+        secure: ${SESSION_COOKIE_SECURE:true}
+        http-only: true
+        # Lax, not Strict: the browser must send it on the top-level redirect back from Keycloak.
+        same-site: lax
+        path: /
+  error:
+    include-stacktrace: never
+    include-message: never
+
+spring:
+  application:
+    name: sarvaikam-core
+  profiles:
+    active: ${APP_ENV:dev}
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/sarvaikam}
+    username: ${DB_USER:sarvaikam}
+    password: ${DB_PASSWORD:sarvaikam}
+    hikari:
+      maximum-pool-size: ${CORE_DB_POOL_SIZE:5}
+  flyway:
+    locations: classpath:db/core
+    # The database is shared with the services the Core replaces, so it keeps its own history table and
+    # baselines below V1 so its own migrations still run on a non-empty schema.
+    table: core_flyway_history
+    baseline-on-migrate: true
+    baseline-version: 0
+  session:
+    jdbc:
+      table-name: core_session
+      # Created by Flyway (db/core/V2), so the schema has one owner.
+      initialize-schema: never
+  modulith:
+    events:
+      jdbc:
+        # The outbox table for domain events (event_publication), created if missing.
+        schema-initialization:
+          enabled: true
+      # Delete publications once every listener has handled them.
+      completion-mode: delete
+      republish-outstanding-events-on-restart: true
+  lifecycle:
+    timeout-per-shutdown-phase: 20s
+
+app:
+  # No default: the Core must not start with a known secret. Set JWT_SECRET (32+ characters).
+  jwt-secret: ${JWT_SECRET:}
+
+logging:
+  pattern:
+    correlation: "[%X{requestId:-}] "
+  level:
+    root: info
+    com.sarvaikam: ${LOG_LEVEL:info}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never
+
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+server:
+  # Plain http://localhost in dev: a Secure or __Host- cookie would not be stored over http by every browser.
+  servlet:
+    session:
+      cookie:
+        name: ${SESSION_COOKIE_NAME:sarvaikam-sid}
+        secure: ${SESSION_COOKIE_SECURE:false}
+  error:
+    include-message: always
+
+---
+spring:
+  config:
+    activate:
+      on-profile: staging,prod
+  datasource:
+    hikari:
+      maximum-pool-size: ${CORE_DB_POOL_SIZE:10}

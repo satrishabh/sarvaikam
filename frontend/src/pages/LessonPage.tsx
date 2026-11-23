@@ -42,11 +42,11 @@ function CodeBlock({ children }: { children?: ReactNode }) {
     }
   };
   return (
-    <div className="not-prose my-6 overflow-hidden rounded-xl border border-line bg-[#102c43]">
-      <div className="flex min-h-11 items-center justify-between gap-3 border-b border-white/10 px-4 text-[11px] text-[#c2cfdb]">
+    <div className="not-prose my-6 overflow-hidden rounded-xl border border-line bg-code-surface">
+      <div className="flex min-h-11 items-center justify-between gap-3 border-b border-white/10 px-4 text-[11px] text-code-muted">
         <span>Code example</span>
         <button
-          className="min-h-11 px-2 font-medium text-[#a4ded2]"
+          className="min-h-11 px-2 font-medium text-code-accent"
           onClick={() => void copy()}
         >
           Copy code
@@ -63,10 +63,10 @@ function CodeBlock({ children }: { children?: ReactNode }) {
       >
         {children}
       </pre>
-      <p className="px-5 pb-3 text-xs !text-[#c2cfdb] lg:hidden">
+      <p className="px-5 pb-3 text-xs !text-code-muted lg:hidden">
         Swipe sideways to read long lines of code.
       </p>
-      {status && <p className="px-5 pb-3 text-xs text-[#a4ded2]">{status}</p>}
+      {status && <p className="px-5 pb-3 text-xs text-code-accent">{status}</p>}
     </div>
   );
 }
@@ -162,7 +162,7 @@ export default function LessonPage() {
       .catch(() => {
         if (active)
           setSaveError(
-            "Your saved progress could not be loaded. Retry before changing this lessonâ€™s completion.",
+            "Your saved progress could not be loaded. Retry before changing this lesson’s completion.",
           );
       })
       .finally(() => {
@@ -226,7 +226,7 @@ export default function LessonPage() {
       <div className="surface mx-auto max-w-2xl p-9">
         <p className="eyebrow">LESSON UNAVAILABLE</p>
         <h1 className="mt-3 text-3xl font-semibold">
-          Letâ€™s find your next step.
+          Let’s find your next step.
         </h1>
         <p className="mt-4 text-muted">{error}</p>
         <div className="mt-7 flex flex-wrap gap-3">
@@ -376,7 +376,7 @@ export default function LessonPage() {
             <Icon name="clock" className="h-3.5 w-3.5" />
             About {readingMinutes(lesson.contentMd)} min reading
           </span>
-          <span className="badge">{stageName(lesson.stage)}{lesson.stage === "DEEP_DIVE" ? " Â· Optional" : ""}</span>
+          <span className="badge">{stageName(lesson.stage)}{lesson.stage === "DEEP_DIVE" ? " · Optional" : ""}</span>
           {lesson.exclusive && <span className="badge">Exclusive</span>}
         </div>
         <h1 className="mt-5 text-[clamp(2rem,4vw,3rem)] font-semibold leading-[1.15] tracking-tightest">
@@ -430,7 +430,7 @@ export default function LessonPage() {
             className="mt-5 flex min-h-11 items-center gap-2 rounded-xl bg-accent-soft p-4 text-sm font-medium text-accent-strong"
           >
             <Icon name="chevron" className="h-4 w-4 shrink-0" />
-            <span>Continue from â€œ{resumeItem.text}â€</span>
+            <span>Continue from “{resumeItem.text}”</span>
           </a>
         )}
         {saveError && (
@@ -535,9 +535,9 @@ export default function LessonPage() {
               >
                 {completed && <Icon name="check" className="h-4 w-4" />}
                 {saving
-                  ? "Savingâ€¦"
+                  ? "Saving…"
                   : checking
-                    ? "Loading progressâ€¦"
+                    ? "Loading progress…"
                     : completed
                       ? "Lesson complete"
                       : "Mark complete"}

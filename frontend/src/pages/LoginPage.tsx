@@ -1,11 +1,11 @@
 import { FormEvent, useState } from "react";
 import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
-import { api } from "../api";
+import { api, keycloakUrl } from "../api";
 import { useAuth } from "../auth";
 
 type Mode = "login" | "register" | "recover" | "verify-email";
 export default function LoginPage() {
-  const { user, login, ready, error: authError } = useAuth();
+  const { user, login, ready, error: authError, signInMode } = useAuth();
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const [mode, setMode] = useState<Mode>(
@@ -116,6 +116,16 @@ export default function LoginPage() {
           Explore the learning library
         </Link>
       </section>
+      {signInMode === null ? (
+        <section className="surface order-1 min-h-[22rem] p-6 sm:p-8 lg:order-2" aria-busy="true" />
+      ) : signInMode === "keycloak" ? (
+        <KeycloakSignIn
+          destination={destination}
+          business={business}
+          failed={params.get("signin") === "failed"}
+          message={authError}
+        />
+      ) : (
       <section
         className="surface order-1 p-6 sm:p-8 lg:order-2"
         aria-labelledby="login-title"
@@ -301,6 +311,50 @@ export default function LoginPage() {
           Your email must be verified before you can sign in.
         </p>
       </section>
+      )}
     </div>
+  );
+}
+
+/**
+ * Sign-in on the Keycloak account page. Passwords, sign-up, email verification and password reset all happen
+ * there; the browser comes back to `destination` signed in.
+ */
+function KeycloakSignIn({ destination, business, failed, message }: {
+  destination: string;
+  business: boolean;
+  failed: boolean;
+  message: string;
+}) {
+  return (
+    <section className="surface order-1 p-6 sm:p-8 lg:order-2" aria-labelledby="login-title">
+      <h2 id="login-title" className="text-2xl font-semibold leading-tight">
+        Welcome back.
+      </h2>
+      <p className="mt-2 text-base text-muted">
+        You sign in on the secure Sarvaikam account page, then come straight back here.
+      </p>
+      {business && (
+        <p className="mt-4 rounded-xl bg-accent-soft p-3 text-sm">
+          Create or sign in to your account, then continue to your business application.
+        </p>
+      )}
+      {(failed || message) && (
+        <p role="alert" className="mt-4 rounded-xl bg-danger/5 p-3 text-base text-danger">
+          {failed
+            ? "Sign-in did not finish. Try again. If it keeps failing, check that your email address is verified."
+            : message}
+        </p>
+      )}
+      <a className="btn mt-6 w-full" href={keycloakUrl("login", destination)}>
+        Continue to sign in
+      </a>
+      <a className="btn-quiet mt-3 w-full" href={keycloakUrl("register", destination)}>
+        Create an account
+      </a>
+      <p className="mt-5 border-t border-line pt-5 text-sm text-muted">
+        Forgot your password or need a new verification email? You can do both on the sign-in page.
+      </p>
+    </section>
   );
 }

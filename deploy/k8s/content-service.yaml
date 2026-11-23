@@ -13,6 +13,8 @@ spec:
           image: sarvaikam/content-service
           ports: [{ containerPort: 8081 }]
           env:
+            # Without this the service falls back to the "dev" Spring profile (error messages and health details exposed).
+            - { name: APP_ENV, value: prod }
             - { name: AUTH_SERVICE_URL, value: "http://auth-service:8082" }
             - { name: GCP_CONTENT_BUCKET, valueFrom: { configMapKeyRef: { name: content-storage, key: bucket, optional: true } } }
             - { name: GCP_SIGNING_SERVICE_ACCOUNT, valueFrom: { configMapKeyRef: { name: content-storage, key: signing-account, optional: true } } }
@@ -23,14 +25,15 @@ spec:
             - { name: REELS_DB_USER, valueFrom: { secretKeyRef: { name: sarvaikam-reels, key: REELS_DB_USER, optional: true } } }
             - { name: REELS_DB_PASSWORD, valueFrom: { secretKeyRef: { name: sarvaikam-reels, key: REELS_DB_PASSWORD, optional: true } } }
             - { name: JWT_SECRET, valueFrom: { secretKeyRef: { name: sarvaikam-secrets, key: JWT_SECRET } } }
+          # Liveness never depends on the database, so a DB outage takes pods out of rotation instead of restarting them.
           startupProbe:
-            httpGet: { path: /api/content/actuator/health, port: 8081 }
+            httpGet: { path: /api/content/actuator/health/liveness, port: 8081 }
             failureThreshold: 30
             periodSeconds: 5
           readinessProbe:
-            httpGet: { path: /api/content/actuator/health, port: 8081 }
+            httpGet: { path: /api/content/actuator/health/readiness, port: 8081 }
           livenessProbe:
-            httpGet: { path: /api/content/actuator/health, port: 8081 }
+            httpGet: { path: /api/content/actuator/health/liveness, port: 8081 }
           resources:
             requests: { cpu: 200m, memory: 384Mi }
             limits: { memory: 768Mi }

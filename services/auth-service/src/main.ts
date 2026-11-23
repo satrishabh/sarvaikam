@@ -3,6 +3,7 @@ import { LogLevel, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module';
+import { runMigrations } from './migrate';
 
 const LEVELS: Record<string, LogLevel[]> = {
   debug: ['error', 'warn', 'log', 'debug'],
@@ -12,6 +13,8 @@ const LEVELS: Record<string, LogLevel[]> = {
 };
 
 async function bootstrap() {
+  // Schema changes come from the versioned SQL files, never from TypeORM synchronize (see app.module.ts).
+  if (process.env.DB_MIGRATE !== 'false') await runMigrations();
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     logger: LEVELS[process.env.LOG_LEVEL ?? 'info'] ?? LEVELS.info,
   });

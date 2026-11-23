@@ -183,6 +183,7 @@ One-time setup:
    ```
 
    The container refuses to start if any `DRIVE_*` credential is missing.
+   With `APP_ENV=prod` it also refuses `drive` unless `ALLOW_DRIVE_STORAGE=true`: production should use `gcs`.
 
 Keep in mind:
 
@@ -211,18 +212,20 @@ Service per app with probes and resource limits, and an Ingress. Set real image 
 |---|---|
 | `infra/terraform/aws` | VPC (3 AZs), EKS with managed node group, ECR repos, RDS PostgreSQL 16 |
 | `infra/terraform/azure` | Resource group, VNet, AKS (autoscaling), ACR with AcrPull, PostgreSQL Flexible Server (private) |
-| `infra/terraform/gcp` | VPC, GKE Autopilot, Artifact Registry, Cloud SQL PostgreSQL 16 (private IP) |
+| `infra/terraform/gcp` | VPC, GKE Autopilot, Artifact Registry, Cloud SQL PostgreSQL 16 (private IP, TLS-only, PITR), Secret Manager |
 
 ```bash
 cd infra/terraform/aws        # or azure (-var subscription_id=...) / gcp (-var project_id=...)
-terraform init
+terraform init                # gcp: terraform init -backend-config="bucket=<state-bucket>"
 terraform plan
 terraform apply
 terraform output kubeconfig_command
 ```
 
 Then build and push images to the registry output, update `deploy/k8s/kustomization.yaml`, and
-`kubectl apply -k deploy/k8s`. Uncomment the remote backend block in each `main.tf` for team use.
+`kubectl apply -k deploy/k8s`. The GCP stack uses remote state in a GCS bucket and Secret Manager; see
+[infra/terraform/gcp/README.md](infra/terraform/gcp/README.md) (state bucket setup, database restore). For AWS/Azure,
+uncomment the remote backend block in `main.tf` for team use.
 These stacks create billable resources - run `terraform destroy` when done.
 
 ## Building
@@ -230,18 +233,23 @@ These stacks create billable resources - run `terraform destroy` when done.
 ### Single image (CI/CD, Kaniko)
 
 The root `Dockerfile` builds everything into **one image**: the React frontend, Spring Boot, NestJS and Go
-services, run by supervisord behind nginx on port **8080**, plus an embedded PostgreSQL.
+services, run by supervisord behind nginx on port **8080**. The default image has **no database server**;
+point it at an external PostgreSQL. A `demo` target adds an embedded PostgreSQL for one-container local runs.
 
 ```bash
+# Deployable image (what Kaniko/CI build): external PostgreSQL
 docker build -t sarvaikam .
-docker run -p 8080:8080 -v sarvaikam-data:/var/lib/postgresql/data sarvaikam
-# Kaniko: default --context (repo root) and --dockerfile=Dockerfile work as-is
+docker run -p 8080:8080 -e EMBEDDED_DB=false -e DB_HOST=db.example.internal -e POSTGRES_PASSWORD=... sarvaikam
+# Local demo with an embedded PostgreSQL (data in the volume)
+docker build --target demo -t sarvaikam-demo .
+docker run -p 8080:8080 -v sarvaikam-data:/data sarvaikam-demo
+# Kaniko: default --context (repo root) and --dockerfile=Dockerfile build the default image as-is
 ```
 
 | Env var | Default | Notes |
 |---|---|---|
 | `PORT` | `8080` | Port nginx listens on |
-| `EMBEDDED_DB` | `true` | `false` to use an external PostgreSQL |
+| `EMBEDDED_DB` | `true` in dev on the `demo` image, otherwise `false` | `true` needs the `demo` image; never in prod |
 | `DB_HOST` / `DB_PORT` / `DB_SSLMODE` | `127.0.0.1` / `5432` / `disable` | Set for an external DB (e.g. RDS, `DB_SSLMODE=require`) |
 | `POSTGRES_DB` / `POSTGRES_USER` / `POSTGRES_PASSWORD` | `sarvaikam` | DB credentials |
 | `JWT_SECRET` | demo value | **Override in every real environment** (>= 32 chars) |

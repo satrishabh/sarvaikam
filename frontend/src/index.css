@@ -1,4 +1,6 @@
-﻿@tailwind base;
+﻿@import "./styles/tokens.css";
+
+@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
@@ -95,12 +97,12 @@
     @apply inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent;
   }
   .tone-violet .icon-tile {
-    background: #efedfc;
-    color: #6251b8;
+    background: var(--color-tone-violet-soft);
+    color: var(--color-tone-violet);
   }
   .tone-blue .icon-tile {
-    background: #eaf0fc;
-    color: #3563b1;
+    background: var(--color-tone-blue-soft);
+    color: var(--color-tone-blue);
   }
   .progress-track {
     @apply h-1.5 overflow-hidden rounded-full bg-track;
@@ -109,11 +111,11 @@
     @apply h-full rounded-full transition-[width] duration-300;
   }
   .soft-panel {
-    border: 1px solid #e6e7eb;
-    background: #ffffff;
+    border: 1px solid var(--color-line);
+    background: var(--color-surface);
   }
   .mobile-start {
-    background: #ffffff;
+    background: var(--color-surface);
   }
   .workspace-nav {
     @apply inline-flex min-h-11 items-center gap-2 rounded-lg px-3 text-sm font-medium text-muted transition-colors hover:bg-track hover:text-ink;
@@ -136,7 +138,7 @@
   header,
   .reading-controls {
     backdrop-filter: none !important;
-    background: #fff !important;
+    background: var(--color-surface) !important;
   }
 }
 
@@ -166,9 +168,9 @@
   max-height: 100dvh;
   padding: 0;
   border: 0;
-  border-right: 1px solid #e3e7ed;
-  color: #12325a;
-  background: #fff;
+  border-right: 1px solid var(--color-chrome-line);
+  color: var(--color-chrome-ink);
+  background: var(--color-surface-raised);
   overscroll-behavior: contain;
 }
 .mobile-sheet[open] {
@@ -188,7 +190,7 @@
   justify-content: space-between;
   gap: 12px;
   padding: max(16px, env(safe-area-inset-top)) 16px 12px 22px;
-  border-bottom: 1px solid #e3e7ed;
+  border-bottom: 1px solid var(--color-chrome-line);
 }
 .sheet-heading h2 {
   font-size: 18px;
@@ -201,7 +203,7 @@
   height: 44px;
   flex-shrink: 0;
   border-radius: 10px;
-  background: #edf0f4;
+  background: var(--color-chrome-fill);
 }
 .sheet-content {
   min-height: 0;
@@ -211,16 +213,16 @@
 .reader-option {
   min-height: 48px;
   padding: 8px;
-  border: 1px solid #d4dce5;
+  border: 1px solid var(--color-chrome-line-strong);
   border-radius: 10px;
   font-size: 15px;
   background: white;
-  color: #12325a;
+  color: var(--color-chrome-ink);
 }
 .reader-option[aria-pressed="true"] {
-  background: #12325a;
+  background: var(--color-chrome-ink);
   color: white;
-  border-color: #12325a;
+  border-color: var(--color-chrome-ink);
 }
 .reader-settings legend {
   font-size: 15px;
@@ -242,7 +244,7 @@
   display: grid;
   height: 44px;
   place-items: center;
-  border: 1px solid rgb(18 50 90 / 0.12);
+  border: 1px solid rgb(var(--color-chrome-ink-rgb) / 0.12);
   border-radius: 8px;
   background: var(--swatch-page);
   color: var(--swatch-ink);
@@ -262,7 +264,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  border-bottom: 1px solid var(--reader-line, #e3e7ed);
+  border-bottom: 1px solid var(--reader-line, var(--color-chrome-line));
   margin-bottom: 20px;
 }
 .reader-mobile-tools button {
@@ -279,21 +281,21 @@
   inset-inline: 0;
   z-index: 35;
   height: 2px;
-  background: var(--reader-line, #e3e7ed);
+  background: var(--reader-line, var(--color-chrome-line));
 }
 .reader-position span {
   display: block;
   height: 100%;
-  background: var(--reader-accent, #a74412);
+  background: var(--reader-accent, var(--color-accent));
 }
 .practice-switch {
   display: grid;
   grid-template-columns: 1fr 1fr;
   padding: 4px;
   gap: 4px;
-  border: 1px solid #e3e7ed;
+  border: 1px solid var(--color-chrome-line);
   border-radius: 12px;
-  background: #edf0f4;
+  background: var(--color-chrome-fill);
 }
 .practice-switch button {
   min-height: 46px;
@@ -302,60 +304,24 @@
   font-weight: 600;
 }
 .practice-switch button[aria-pressed="true"] {
-  background: #fff;
-  color: #a74412;
-  box-shadow: 0 1px 3px #12325a15;
+  background: var(--color-surface);
+  color: var(--color-accent);
+  box-shadow: 0 1px 3px rgb(var(--color-shadow-rgb) / 0.082);
 }
 .mobile-search {
   display: flex;
   min-height: 52px;
   align-items: center;
   gap: 12px;
-  border: 1px solid #d4dce5;
+  border: 1px solid var(--color-chrome-line-strong);
   border-radius: 12px;
   background: white;
   padding: 12px 14px;
-  color: #4a5a70;
+  color: var(--color-chrome-muted);
   font-size: 14px;
 }
 
-html[data-reader-theme] {
-  --reader-page: #fff;
-  --reader-text: #20384e;
-  --reader-muted: #526579;
-  --reader-line: #dde4e9;
-  --reader-fill: #f1f5f6;
-  --reader-accent: #a74412;
-}
-html[data-reader-theme="night"] {
-  color-scheme: dark;
-  --reader-page: #14212c;
-  --reader-text: #e2eaf0;
-  --reader-muted: #b2c2ce;
-  --reader-line: #3b4c59;
-  --reader-fill: #203442;
-  --reader-accent: #ffd1aa;
-}
-/* Warm: cream paper with brown ink, for long reads. Signed-in readers only. */
-html[data-reader-theme="paper"] {
-  color-scheme: light;
-  --reader-page: #f6f0e4;
-  --reader-text: #3b2f24;
-  --reader-muted: #6b5a48;
-  --reader-line: #e0d4bf;
-  --reader-fill: #efe6d4;
-  --reader-accent: #9a4a1f;
-}
-/* Slate: white page with cool grey surfaces (Tailwind Slate, MIT) and a blue accent. Signed-in readers only. */
-html[data-reader-theme="slate"] {
-  color-scheme: light;
-  --reader-page: #ffffff;
-  --reader-text: #0f172a;
-  --reader-muted: #64748b;
-  --reader-line: #e2e8f0;
-  --reader-fill: #f8fafc;
-  --reader-accent: #2563eb;
-}
+/* Reader page themes (data-reader-theme) are generated into styles/tokens.css from design-tokens.json. */
 html[data-reader-theme] body,
 html[data-reader-theme] .app-header,
 html[data-reader-theme] .reading-controls {
@@ -515,7 +481,7 @@ html[data-reader-theme] .reading-controls .outline-btn {
     border-radius: 999px;
     font-size: 11px;
     font-weight: 500;
-    color: #526579;
+    color: var(--color-chrome-subtle);
     transition:
       background-color 180ms ease,
       color 180ms ease,
@@ -527,13 +493,13 @@ html[data-reader-theme] .reading-controls .outline-btn {
   }
   .mobile-tabs a:focus-visible,
   .mobile-tabs button:focus-visible {
-    outline: 2px solid #a74412;
+    outline: 2px solid var(--color-focus);
     outline-offset: 2px;
   }
   /* The active tab is a dark pill, matching the logo colour. */
   .mobile-tabs [aria-current="page"] {
-    color: #ffffff;
-    background: #10231e;
+    color: var(--color-on-brand);
+    background: var(--color-brand);
     font-weight: 600;
   }
   .mobile-tabs.keyboard-open {
@@ -702,11 +668,11 @@ html[data-reader-theme] .reading-controls .outline-btn {
 
 .mobile-sheet {
   color-scheme: light;
-  --reader-text: #12325a;
-  --reader-muted: #4a5a70;
-  --reader-line: #e3e7ed;
-  --reader-fill: #edf0f4;
-  --reader-accent: #a74412;
+  --reader-text: var(--color-chrome-ink);
+  --reader-muted: var(--color-chrome-muted);
+  --reader-line: var(--color-chrome-line);
+  --reader-fill: var(--color-chrome-fill);
+  --reader-accent: var(--color-accent);
 }
 .is-reader .app-footer {
   display: none;
@@ -722,9 +688,9 @@ html[data-reader-theme] .app-header .btn-quiet {
   gap: 12px;
   padding: 14px 16px;
   text-align: left;
-  border: 1px solid #d4dce5;
+  border: 1px solid var(--color-chrome-line-strong);
   border-radius: 12px;
-  background: #fff;
+  background: var(--color-surface);
 }
 @media (min-width: 1024px) {
   .practice-picker-toggle {
@@ -832,7 +798,7 @@ html[data-reader-theme] :focus-visible {
 
 /* Editorial reading pass: section breaks, a lead paragraph, calmer quotes, and softer surfaces. */
 .surface {
-  box-shadow: 0 1px 2px rgb(18 50 90 / 0.04), 0 14px 30px -20px rgb(18 50 90 / 0.14);
+  box-shadow: 0 1px 2px rgb(var(--color-shadow-rgb) / 0.04), 0 14px 30px -20px rgb(var(--color-shadow-rgb) / 0.14);
 }
 .reader-copy > p:first-child {
   font-size: 1.1em;
@@ -873,8 +839,8 @@ html[data-reader-theme] :focus-visible {
   z-index: 60;
   display: flex;
   flex-direction: column;
-  background: var(--reader-page, #f7f8fa);
-  color: var(--reader-text, #12325a);
+  background: var(--reader-page, var(--color-canvas));
+  color: var(--reader-text, var(--color-chrome-ink));
   padding: max(12px, env(safe-area-inset-top)) 0 max(12px, env(safe-area-inset-bottom));
   /* Stops a sideways swipe from triggering the browser's back navigation and closing the deck. */
   overscroll-behavior: none;
@@ -899,9 +865,9 @@ html[data-reader-theme] :focus-visible {
   flex-direction: column;
   overflow: hidden;
   border-radius: 24px;
-  border: 1px solid var(--reader-line, #e3e7ed);
-  background: var(--reader-fill, #fff);
-  box-shadow: 0 1px 2px rgb(18 50 90 / 0.05), 0 24px 48px -28px rgb(18 50 90 / 0.25);
+  border: 1px solid var(--reader-line, var(--color-chrome-line));
+  background: var(--reader-fill, var(--color-surface));
+  box-shadow: 0 1px 2px rgb(var(--color-shadow-rgb) / 0.05), 0 24px 48px -28px rgb(var(--color-shadow-rgb) / 0.25);
   touch-action: none;
   cursor: grab;
   user-select: none;
@@ -935,12 +901,12 @@ html[data-reader-theme] :focus-visible {
   width: 6px;
   height: 6px;
   border-radius: 999px;
-  background: var(--reader-line, #d6dce5);
+  background: var(--reader-line, var(--color-chrome-line-strong));
   transition: width 240ms ease, background-color 240ms ease;
 }
 .lesson-deck-dots span.is-active {
   width: 20px;
-  background: var(--reader-accent, #b84a14);
+  background: var(--reader-accent, var(--color-accent));
 }
 
 /* Learn motion: a gentle entrance and a looping swipe preview. */
@@ -990,7 +956,7 @@ html[data-reader-theme] :focus-visible {
   inset: 0;
   border-radius: 14px;
   padding: 16px;
-  background: #fff;
+  background: var(--color-surface);
   border: 1px solid rgba(31, 41, 51, 0.1);
   box-shadow: 0 6px 18px rgba(31, 41, 51, 0.08);
 }

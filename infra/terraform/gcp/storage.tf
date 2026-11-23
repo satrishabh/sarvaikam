@@ -40,7 +40,7 @@ resource "google_service_account_iam_member" "signing" {
 resource "google_service_account_iam_member" "workload" {
   service_account_id = google_service_account.content.name
   role               = "roles/iam.workloadIdentityUser"
-  member             = "serviceAccount:${var.project_id}.svc.id.goog[sarvaikam/content-service]"
+  member             = "serviceAccount:${var.project_id}.svc.id.goog[${var.k8s_namespace}/${var.k8s_service_account}]"
 }
 
 output "content_bucket" { value = google_storage_bucket.content.name }

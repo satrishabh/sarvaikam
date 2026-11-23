@@ -55,6 +55,11 @@ public class ReelService implements ApplicationRunner {
             db.update("UPDATE reels SET content_object = ?, content = NULL WHERE slug = ? AND content_object IS NULL AND content = ?", object, row.get("slug"), content);
         }
     }
+    /** Object keys of every stored reel body, for storage copies; null when no reels database is configured. */
+    public java.util.List<String> contentObjects() {
+        if (db == null) return null;
+        return db.queryForList("SELECT content_object FROM reels WHERE content_object IS NOT NULL", String.class);
+    }
     private JdbcTemplate db() {
         if (db == null) throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Reels database is not configured");
         return db;

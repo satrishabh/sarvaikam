@@ -1,5 +1,5 @@
 # Full nginx config for the all-in-one image. Rendered to /tmp/runtime/nginx.conf by /entrypoint.sh
-# (placeholders: __PORT__, __ENV_HEADERS__). Runs as a non-root user: every writable path is under /tmp.
+# (placeholders: __PORT__, __ENV_HEADERS__, __PROGRESS_PORT__). Runs as a non-root user: every writable path is under /tmp.
 worker_processes auto;
 pid /tmp/runtime/nginx.pid;
 error_log /dev/stderr warn;
@@ -21,6 +21,12 @@ http {
     uwsgi_temp_path       /tmp/runtime/uwsgi;
     scgi_temp_path        /tmp/runtime/scgi;
 
+    # The scheme the browser used: the ingress's X-Forwarded-Proto when there is one, else this connection's.
+    map $http_x_forwarded_proto $forwarded_proto {
+        default $http_x_forwarded_proto;
+        ""      $scheme;
+    }
+
     server {
         listen __PORT__;
         server_name _;
@@ -39,8 +45,8 @@ __ENV_HEADERS__
 
         # Liveness: the gateway process is up (supervisord restarts any crashed backend).
         location = /health { access_log off; default_type text/plain; return 200 "ok\n"; }
-        # Readiness: database + all three backends reachable (aggregated by progress-service).
-        location = /ready  { access_log off; proxy_pass http://127.0.0.1:8083/api/progress/ready; }
+        # Readiness: database + the other backends reachable, aggregated by whichever process serves /api/progress.
+        location = /ready  { access_log off; proxy_pass http://127.0.0.1:__PROGRESS_PORT__/api/progress/ready; }
         # Runtime config for the SPA (environment name), generated at container start.
         location = /config.json { alias /tmp/runtime/config.json; add_header Cache-Control no-store; }
 
@@ -48,7 +54,21 @@ __ENV_HEADERS__
         # Attachment downloads stream from Google Drive through content-service; pass bytes through without disk buffering.
         location ~ ^/api/content/assets/[0-9a-f-]+/file$ { proxy_pass http://127.0.0.1:8081; include /etc/sarvaikam/proxy_headers; proxy_buffering off; proxy_read_timeout 300s; }
         location /api/auth/     { proxy_pass http://127.0.0.1:8082; include /etc/sarvaikam/proxy_headers; }
-        location /api/progress/ { proxy_pass http://127.0.0.1:8083; include /etc/sarvaikam/proxy_headers; }
+        # Strangler routing: PROGRESS_BACKEND picks the Core (8084) or the Go progress-service (8083).
+        location /api/progress/ { proxy_pass http://127.0.0.1:__PROGRESS_PORT__; include /etc/sarvaikam/proxy_headers; }
+        # Browser sessions: sign-in on the Keycloak login page, run by the Core. When the Core is not running this
+        # answers 502 and the web app falls back to the in-app sign-in form.
+        # Keeps the ingress's X-Forwarded-Proto (https) so the Core builds an https callback URL for Keycloak.
+        location /api/session/ {
+            proxy_pass http://127.0.0.1:8084;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $forwarded_proto;
+            proxy_read_timeout 60s;
+        }
+        # The Core's own routes. Only answered when the Core is running.
+        location = /api/core/health { proxy_pass http://127.0.0.1:8084; include /etc/sarvaikam/proxy_headers; }
         # Actuator details are internal only.
         location /api/content/actuator/ { return 404; }
 

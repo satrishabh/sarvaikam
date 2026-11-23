@@ -1,5 +1,5 @@
 ﻿import { lazy, Suspense, useEffect, useState } from "react";
-import { Link, NavLink, Route, Routes, useLocation } from "react-router-dom";
+import { Link, NavLink, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "./auth";
 import { can } from "./api";
 import Icon from "./components/Icon";
@@ -32,10 +32,21 @@ const navigation = [
   { to: "/skills", name: "My skills", icon: "chart" },
 ];
 export default function App() {
-  const { user, logout } = useAuth();
+  const { user, ready, logout, signedOutCount } = useAuth();
   const [open, setOpen] = useState(false);
-  const [logoutError, setLogoutError] = useState("");
   const location = useLocation();
+  const navigate = useNavigate();
+  // Sign-out always completes locally; the person who chose it goes home.
+  const signOut = () => {
+    setOpen(false);
+    navigate("/", { replace: true });
+    void logout();
+  };
+  // A sign-out in another tab only moves this tab off pages that need an account.
+  useEffect(() => {
+    if (signedOutCount > 0 && /^\/(profile|admin)(\/|$)/.test(location.pathname)) navigate("/", { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [signedOutCount]);
   const isReader = /^\/topics\/[^/]+\/[^/]+\/?$/.test(location.pathname);
   const isReels = location.pathname === "/reels";
   const [keyboardOpen, setKeyboardOpen] = useState(false);
@@ -156,7 +167,7 @@ export default function App() {
             aria-label="Sarvaikam home"
             className="mr-auto flex shrink-0 items-center gap-2.5 lg:mr-3"
           >
-            <svg viewBox="0 0 40 40" fill="none" aria-hidden="true" className="h-8 w-8 text-[#10231e]">
+            <svg viewBox="0 0 40 40" fill="none" aria-hidden="true" className="h-8 w-8 text-brand">
               <path d="M7 25 17 7l5 9-7 12H7Zm13 6 9-15 5 9-4 6H20Z" fill="currentColor" />
               <circle cx="30" cy="8" r="3" fill="currentColor" />
             </svg>
@@ -176,7 +187,10 @@ export default function App() {
             <NavLink to="/settings" className="workspace-nav hidden lg:inline-flex">
               Settings
             </NavLink>
-            {user ? (
+            {!ready ? (
+              // Holds the account slot's size while the session check runs, so "Sign in" never flashes.
+              <span className="block h-10 w-10 sm:w-36" aria-hidden="true" />
+            ) : user ? (
               <NavLink
                 to="/profile"
                 className="workspace-nav"
@@ -240,21 +254,13 @@ export default function App() {
           {user && (
             <button
               className="outline-btn mt-5"
-              onClick={() => {
-                setOpen(false);
-                void logout().catch((cause) => setLogoutError(cause.message));
-              }}
+              onClick={signOut}
             >
               Sign out
             </button>
           )}
         </div>
       </MobileSheet>
-      {logoutError && (
-        <p role="alert" className="mx-auto px-5 pt-4 text-danger">
-          {logoutError}
-        </p>
-      )}
       <main
         id="main-content"
         className="app-main mx-auto w-full max-w-[1240px] flex-1 px-5 py-9 sm:px-8 sm:py-12"
@@ -262,7 +268,7 @@ export default function App() {
         <Suspense
           fallback={
             <div role="status" className="space-y-5 py-8">
-              <p className="text-sm text-muted">Loading your workspaceâ€¦</p>
+              <p className="text-sm text-muted">Loading your workspace…</p>
               <div className="skeleton h-12 w-2/3" />
               <div className="skeleton h-48" />
             </div>
@@ -295,7 +301,7 @@ export default function App() {
                 <div className="py-24 text-center">
                   <p className="eyebrow">404 / A SMALL DETOUR</p>
                   <h1 className="mt-3 text-4xl font-semibold">
-                    This page doesnâ€™t exist.
+                    This page doesn’t exist.
                   </h1>
                   <Link className="btn mt-7" to="/">
                     Back to learning
@@ -350,7 +356,7 @@ export default function App() {
         <div className="mx-auto flex max-w-[1240px] flex-wrap items-center justify-between gap-7 px-5 py-9 sm:px-8">
           <div>
             <Link to="/" className="flex items-center gap-2 font-semibold">
-              <svg viewBox="0 0 40 40" fill="none" aria-hidden="true" className="h-6 w-6 text-[#10231e]">
+              <svg viewBox="0 0 40 40" fill="none" aria-hidden="true" className="h-6 w-6 text-brand">
                 <path d="M7 25 17 7l5 9-7 12H7Zm13 6 9-15 5 9-4 6H20Z" fill="currentColor" />
                 <circle cx="30" cy="8" r="3" fill="currentColor" />
               </svg>
@@ -384,9 +390,7 @@ export default function App() {
             </Link>
             {user ? (
               <button
-                onClick={() =>
-                  void logout().catch((cause) => setLogoutError(cause.message))
-                }
+                onClick={signOut}
                 className="hover:text-accent"
               >
                 Sign out

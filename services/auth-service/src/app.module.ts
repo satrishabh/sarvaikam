@@ -22,9 +22,9 @@ import { SessionController } from './session.controller';
         ? { rejectUnauthorized: process.env.DB_SSL_REJECT_UNAUTHORIZED === 'true' }
         : false,
       entities: [User, RolePolicy, AccessAudit],
-      // Only this service owns the users table. Sync creates it on first start; set DB_SYNCHRONIZE=false
-      // once the schema exists if you want schema changes to be applied manually.
-      synchronize: process.env.DB_SYNCHRONIZE !== 'false',
+      // Only this service owns the users table. main.ts applies migrations/*.sql at startup; synchronize would
+      // let TypeORM alter the shared production schema on its own, so it is opt-in for throwaway local databases.
+      synchronize: process.env.DB_SYNCHRONIZE === 'true',
       extra: { max: Number(process.env.DB_POOL_SIZE ?? 5) },
     }),
     TypeOrmModule.forFeature([User, RolePolicy, AccessAudit]),
@@ -34,6 +34,10 @@ import { SessionController } from './session.controller';
       useFactory: () => {
         const secret = process.env.JWT_SECRET;
         if (!secret || secret.length < 32) throw new Error('JWT_SECRET must be set to at least 32 characters');
+        // Published placeholder values (e.g. "change-me-…") are public knowledge: anyone could mint an admin token.
+        if ((process.env.APP_ENV ?? 'dev') !== 'dev' && /change-?me|example|placeholder/i.test(secret)) {
+          throw new Error('JWT_SECRET is a published placeholder value; generate one with: openssl rand -base64 48');
+        }
         // Shorter sessions outside dev.
         return { secret, signOptions: { expiresIn: '5m', algorithm: 'HS256' } };
       },

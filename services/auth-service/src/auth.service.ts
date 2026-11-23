@@ -91,7 +91,9 @@ export class AuthService {
     }
 
     if (
-      ![this.profileClientId, process.env.PROFILE_API_CLIENT_ID ?? 'sarvaikam-learn-api'].includes(claims.azp ?? '') ||
+      // sarvaikam-learn-web is the client the Core signs learners in with on the Keycloak login page.
+      ![this.profileClientId, process.env.PROFILE_API_CLIENT_ID ?? 'sarvaikam-learn-api',
+        process.env.PROFILE_WEB_CLIENT_ID ?? 'sarvaikam-learn-web'].includes(claims.azp ?? '') ||
       typeof claims.sub !== 'string' ||
       !claims.sub ||
       typeof claims.email !== 'string' ||

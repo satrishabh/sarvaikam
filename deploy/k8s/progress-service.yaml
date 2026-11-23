@@ -17,8 +17,9 @@ spec:
             - { name: CONTENT_SERVICE_URL, value: "http://content-service:8081" }
             - { name: DATABASE_URL, valueFrom: { secretKeyRef: { name: sarvaikam-secrets, key: PROGRESS_DATABASE_URL } } }
             - { name: JWT_SECRET, valueFrom: { secretKeyRef: { name: sarvaikam-secrets, key: JWT_SECRET } } }
+          # /ready checks the database; /health (liveness) is process-only so a DB outage doesn't restart pods.
           readinessProbe:
-            httpGet: { path: /api/progress/health, port: 8083 }
+            httpGet: { path: /api/progress/ready, port: 8083 }
           livenessProbe:
             httpGet: { path: /api/progress/health, port: 8083 }
           resources:

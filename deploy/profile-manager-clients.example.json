@@ -16,6 +16,25 @@
       "redirectUris": []
     },
     {
+      "clientId": "sarvaikam-learn-web",
+      "name": "Sarvaikam Learn",
+      "description": "Sign-in on the Keycloak login page for the Learn web app. The Core keeps the tokens server-side.",
+      "protocol": "openid-connect",
+      "enabled": true,
+      "publicClient": false,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "frontchannelLogout": false,
+      "fullScopeAllowed": true,
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      },
+      "webOrigins": [],
+      "redirectUris": []
+    },
+    {
       "clientId": "sarvaikam-learn-registration",
       "name": "Learn server-side registration and verification",
       "protocol": "openid-connect",

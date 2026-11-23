@@ -28,7 +28,7 @@ spec:
             - { name: PROFILE_API_CLIENT_SECRET, valueFrom: { secretKeyRef: { name: sarvaikam-secrets, key: PROFILE_API_CLIENT_SECRET } } }
             - { name: PROFILE_REGISTRATION_CLIENT_SECRET, valueFrom: { secretKeyRef: { name: sarvaikam-secrets, key: PROFILE_REGISTRATION_CLIENT_SECRET } } }
           readinessProbe:
-            httpGet: { path: /api/auth/health, port: 8082 }
+            httpGet: { path: /api/auth/ready, port: 8082 }
           livenessProbe:
             httpGet: { path: /api/auth/health, port: 8082 }
             initialDelaySeconds: 15

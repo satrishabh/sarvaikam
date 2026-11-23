@@ -5,7 +5,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-sarvaikam}
       POSTGRES_USER: ${POSTGRES_USER:-sarvaikam}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sarvaikam}
-    ports: ["5432:5432"]
+    ports: ["127.0.0.1:5432:5432"]
     volumes: [pgdata:/var/lib/postgresql/data]
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-sarvaikam}"]
@@ -18,7 +18,7 @@ services:
       POSTGRES_DB: sarvaikam_reels
       POSTGRES_USER: ${REELS_DB_USER:-sarvaikam}
       POSTGRES_PASSWORD: ${REELS_DB_PASSWORD:-sarvaikam}
-    ports: ["5433:5432"]
+    ports: ["127.0.0.1:5433:5432"]
     volumes: [reelsdata:/var/lib/postgresql/data]
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${REELS_DB_USER:-sarvaikam} -d sarvaikam_reels"]
@@ -33,6 +33,7 @@ services:
       DB_PASSWORD: ${POSTGRES_PASSWORD:-sarvaikam}
       JWT_SECRET: ${JWT_SECRET:-change-me-to-a-long-random-secret-of-32-bytes-min}
       AUTH_SERVICE_URL: http://auth-service:8082
+      APP_ENV: ${APP_ENV:-dev}
       GCP_CONTENT_BUCKET: ${GCP_CONTENT_BUCKET:-}
       GCP_SIGNING_SERVICE_ACCOUNT: ${GCP_SIGNING_SERVICE_ACCOUNT:-}
       REELS_DB_URL: jdbc:postgresql://reels-postgres:5432/sarvaikam_reels
@@ -63,13 +64,36 @@ services:
       DATABASE_URL: postgres://${POSTGRES_USER:-sarvaikam}:${POSTGRES_PASSWORD:-sarvaikam}@postgres:5432/${POSTGRES_DB:-sarvaikam}?sslmode=disable
       JWT_SECRET: ${JWT_SECRET:-change-me-to-a-long-random-secret-of-32-bytes-min}
       AUTH_SERVICE_URL: http://auth-service:8082
+      APP_ENV: ${APP_ENV:-dev}
       CONTENT_SERVICE_URL: http://content-service:8081
+    depends_on: { postgres: { condition: service_healthy } }
+
+  # Sarvaikam Core (the modular monolith). Serves /api/progress; progress-service stays up for rollback:
+  # PROGRESS_UPSTREAM=http://progress-service:8083 docker compose up -d frontend
+  core:
+    build: ./services/core
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-sarvaikam}
+      DB_USER: ${POSTGRES_USER:-sarvaikam}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-sarvaikam}
+      JWT_SECRET: ${JWT_SECRET:-change-me-to-a-long-random-secret-of-32-bytes-min}
+      AUTH_SERVICE_URL: http://auth-service:8082
+      CONTENT_SERVICE_URL: http://content-service:8081
+      APP_ENV: ${APP_ENV:-dev}
+      # Sign-in on the Keycloak login page. Without a secret the web app keeps the in-app form.
+      PROFILE_ISSUER: ${PROFILE_ISSUER:-https://profile.sarvaikam.com/realms/sarvaikam}
+      PROFILE_WEB_CLIENT_ID: ${PROFILE_WEB_CLIENT_ID:-sarvaikam-learn-web}
+      PROFILE_WEB_CLIENT_SECRET: ${PROFILE_WEB_CLIENT_SECRET:-}
+      PROFILE_REGISTRATION_CLIENT_ID: ${PROFILE_REGISTRATION_CLIENT_ID:-sarvaikam-learn-registration}
+      PROFILE_REGISTRATION_CLIENT_SECRET: ${PROFILE_REGISTRATION_CLIENT_SECRET:-}
     depends_on: { postgres: { condition: service_healthy } }
 
   frontend:
     build: ./frontend
     ports: ["80:80"]
-    depends_on: [content-service, auth-service, progress-service]
+    environment:
+      PROGRESS_UPSTREAM: ${PROGRESS_UPSTREAM:-http://core:8084}
+    depends_on: [content-service, auth-service, progress-service, core]
 
 volumes:
   pgdata:

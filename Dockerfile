@@ -1,4 +1,6 @@
-# Single all-in-one image: React frontend + Spring Boot + NestJS + Go behind nginx, optional embedded PostgreSQL.
+# Single all-in-one image: React frontend + Spring Boot (content, Core) + NestJS + Go behind nginx.
+# The default (last) stage has no database and expects an external PostgreSQL (EMBEDDED_DB=false + DB_HOST).
+# For a self-contained local demo with an embedded PostgreSQL: docker build --target demo -t sarvaikam-demo .
 # Build from the repo root:  docker build -t sarvaikam .   (Kaniko: default --dockerfile=Dockerfile, --context=repo root)
 
 # ---------- content-service (Java / Spring Boot) ----------
@@ -7,6 +9,14 @@ WORKDIR /src
 COPY services/content-service/pom.xml .
 RUN mvn -q -B dependency:go-offline
 COPY services/content-service/src ./src
+RUN mvn -q -B -DskipTests package
+
+# ---------- Sarvaikam Core (Java / Spring Modulith) ----------
+FROM maven:3.9-eclipse-temurin-21 AS core
+WORKDIR /src
+COPY services/core/pom.xml .
+RUN mvn -q -B dependency:go-offline
+COPY services/core/src ./src
 RUN mvn -q -B -DskipTests package
 
 # ---------- auth-service (NestJS / TypeScript) ----------
@@ -40,8 +50,8 @@ RUN npm ci --no-audit --no-fund
 COPY frontend/ ./
 RUN npm run build
 
-# ---------- runtime ----------
-FROM alpine:3.24
+# ---------- runtime (shared by demo and the default image) ----------
+FROM alpine:3.24 AS runtime
 # Everything runs as uid/gid 10001 so the image works under runAsNonRoot + drop ALL capabilities.
 # Minimum versions are the Trivy-gate fixes; bump them when the scan flags a new fixed release.
 # Changing this line also invalidates Kaniko's cached layer so apk fetches current packages.
@@ -54,9 +64,12 @@ RUN apk upgrade --no-cache \
     && chmod 0775 /data
 
 COPY --from=content  /src/target/content-service-1.0.0.jar /app/content/app.jar
+COPY --from=core     /src/target/core-1.0.0.jar /app/core/app.jar
 COPY --from=auth-deps /src/node_modules /app/auth/node_modules
 COPY --from=auth     /src/dist /app/auth/dist
 COPY --from=auth     /src/package.json /app/auth/package.json
+# Applied by auth-service at startup (dist/migrate.js).
+COPY services/auth-service/migrations /app/auth/migrations
 COPY --from=progress /out/progress-service /app/progress/progress-service
 COPY --from=web      /src/dist /usr/share/nginx/html
 
@@ -77,3 +90,12 @@ EXPOSE 8080
 VOLUME /data
 HEALTHCHECK --interval=30s --timeout=5s --start-period=120s CMD wget -qO- http://127.0.0.1:${PORT}/ready || exit 1
 ENTRYPOINT ["/entrypoint.sh"]
+
+# ---------- demo: adds an embedded PostgreSQL for one-container local runs ----------
+FROM runtime AS demo
+USER root
+RUN apk add --no-cache "postgresql17>=17.12-r0" postgresql17-contrib "libpq>=18.7-r0"
+USER 10001:10001
+
+# ---------- default image (Kaniko/CI build this): no database server inside ----------
+FROM runtime AS app
