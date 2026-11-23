@@ -114,6 +114,15 @@ esac
 if [ -n "${PROFILE_WEB_CLIENT_SECRET:-}" ]; then CORE_ENABLED=true; fi
 export CORE_ENABLED LEGACY_PROGRESS_ENABLED
 
+# Logs: JSON (one object per line, Cloud Logging field names) outside dev, readable text in dev.
+: "${LOG_FORMAT:=$([ "$APP_ENV" = "dev" ] && echo text || echo json)}"
+case "$LOG_FORMAT" in
+  json) export LOGGING_STRUCTURED_FORMAT_CONSOLE=logstash; ACCESS_LOG_FORMAT=json ;;  # Spring Boot services
+  text) ACCESS_LOG_FORMAT=combined ;;
+  *) fail "LOG_FORMAT must be json or text" ;;
+esac
+export LOG_FORMAT
+
 if [ "$ERRORS" -gt 0 ]; then
   echo "[$APP_ENV] refusing to start: $ERRORS configuration error(s). See README 'Environments'." >&2
   exit 1
@@ -151,7 +160,7 @@ else
   # TLS is terminated at the ingress in staging/prod.
   ENV_HEADERS='        add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;'
 fi
-sed -e "s/__PORT__/$PORT/" -e "s/__PROGRESS_PORT__/$PROGRESS_PORT/g" /etc/sarvaikam/nginx.conf.template \
+sed -e "s/__PORT__/$PORT/" -e "s/__PROGRESS_PORT__/$PROGRESS_PORT/g" -e "s/__ACCESS_LOG_FORMAT__/$ACCESS_LOG_FORMAT/" /etc/sarvaikam/nginx.conf.template \
   | awk -v h="$ENV_HEADERS" '{ if ($0 == "__ENV_HEADERS__") print h; else print }' > "$RUNTIME/nginx.conf"
 printf '{"env":"%s"}\n' "$APP_ENV" > "$RUNTIME/config.json"
 

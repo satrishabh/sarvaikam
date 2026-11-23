@@ -5,7 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"log"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"os"
@@ -66,23 +66,24 @@ type bookmarkItem struct {
 var placeholderSecret = regexp.MustCompile(`(?i)change-?me|example|placeholder`)
 
 func main() {
+	setupLogging(env("LOG_FORMAT", "text"), os.Stdout)
 	ctx := context.Background()
 	db, err := connect(ctx, env("DATABASE_URL", "postgres://sarvaikam:sarvaikam@localhost:5432/sarvaikam?sslmode=disable"))
 	if err != nil {
-		log.Fatalf("db: %v", err)
+		fatal("db: %v", err)
 	}
 	defer db.Close()
 	if _, err := db.Exec(ctx, schema); err != nil {
-		log.Fatalf("migrate: %v", err)
+		fatal("migrate: %v", err)
 	}
 
 	jwtSecret := env("JWT_SECRET", "")
 	if len(jwtSecret) < 32 {
-		log.Fatal("JWT_SECRET must be set to at least 32 characters")
+		fatal("JWT_SECRET must be set to at least 32 characters")
 	}
 	// Published placeholder values are public knowledge; outside dev they would let anyone mint tokens.
 	if env("APP_ENV", "prod") != "dev" && placeholderSecret.MatchString(jwtSecret) {
-		log.Fatal("JWT_SECRET is a published placeholder value; generate one with: openssl rand -base64 48")
+		fatal("JWT_SECRET is a published placeholder value; generate one with: openssl rand -base64 48")
 	}
 
 	s := &server{
@@ -97,7 +98,11 @@ func main() {
 	}
 
 	r := chi.NewRouter()
-	r.Use(middleware.RequestID, middleware.RealIP, middleware.Logger, middleware.Recoverer)
+	r.Use(middleware.RequestID, middleware.RealIP)
+	if env("LOG_FORMAT", "text") != "json" {
+		r.Use(middleware.Logger) // in JSON mode nginx's access log already records every request
+	}
+	r.Use(middleware.Recoverer)
 	r.Route("/api/progress", func(r chi.Router) {
 		r.Get("/health", func(w http.ResponseWriter, _ *http.Request) { writeJSON(w, 200, map[string]string{"status": "UP"}) })
 		r.Get("/ready", s.ready)
@@ -115,12 +120,12 @@ func main() {
 	})
 
 	addr := ":" + env("PORT", "8083")
-	log.Printf("progress-service listening on %s", addr)
+	slog.Info("progress-service listening", "addr", addr)
 	srv := &http.Server{Addr: addr, Handler: r, ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout: 15 * time.Second, WriteTimeout: 30 * time.Second, IdleTimeout: 60 * time.Second}
 	go func() {
 		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			log.Fatal(err)
+			fatal("listen: %v", err)
 		}
 	}()
 
@@ -128,11 +133,11 @@ func main() {
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, syscall.SIGTERM, os.Interrupt)
 	<-stop
-	log.Print("progress-service shutting down")
+	slog.Info("progress-service shutting down")
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 	if err := srv.Shutdown(shutdownCtx); err != nil {
-		log.Printf("shutdown: %v", err)
+		slog.Warn("shutdown", "error", err)
 	}
 	db.Close()
 }

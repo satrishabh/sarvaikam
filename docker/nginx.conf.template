@@ -1,5 +1,5 @@
 # Full nginx config for the all-in-one image. Rendered to /tmp/runtime/nginx.conf by /entrypoint.sh
-# (placeholders: __PORT__, __ENV_HEADERS__, __PROGRESS_PORT__). Runs as a non-root user: every writable path is under /tmp.
+# (placeholders: __PORT__, __ENV_HEADERS__, __PROGRESS_PORT__, __ACCESS_LOG_FORMAT__). Runs as a non-root user: every writable path is under /tmp.
 worker_processes auto;
 pid /tmp/runtime/nginx.pid;
 error_log /dev/stderr warn;
@@ -9,7 +9,14 @@ events { worker_connections 1024; }
 http {
     include       /etc/nginx/mime.types;
     default_type  application/octet-stream;
-    access_log    /dev/stdout;
+    # LOG_FORMAT=json: Cloud Logging's httpRequest shape, with 5xx as ERROR so alerts can count them.
+    map $status $log_severity { ~^5 ERROR; ~^4 WARNING; default INFO; }
+    log_format json escape=json '{"severity":"$log_severity","message":"$request_method $uri $status",'
+        '"httpRequest":{"requestMethod":"$request_method","requestUrl":"$request_uri","status":$status,'
+        '"responseSize":"$body_bytes_sent","userAgent":"$http_user_agent","remoteIp":"$remote_addr",'
+        '"referer":"$http_referer","latency":"${request_time}s","protocol":"$server_protocol"},'
+        '"requestId":"$request_id"}';
+    access_log    /dev/stdout __ACCESS_LOG_FORMAT__;
     sendfile      on;
     server_tokens off;
     gzip          on;

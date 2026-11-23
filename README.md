@@ -253,6 +253,8 @@ docker run -p 8080:8080 -v sarvaikam-data:/data sarvaikam-demo
 | `DB_HOST` / `DB_PORT` / `DB_SSLMODE` | `127.0.0.1` / `5432` / `disable` | Set for an external DB (e.g. RDS, `DB_SSLMODE=require`) |
 | `POSTGRES_DB` / `POSTGRES_USER` / `POSTGRES_PASSWORD` | `sarvaikam` | DB credentials |
 | `JWT_SECRET` | demo value | **Override in every real environment** (>= 32 chars) |
+| `LOG_FORMAT` | `text` in dev, otherwise `json` | `json`: one object per line with Cloud Logging fields (`severity`, `message`, nginx `httpRequest`) |
+| `LOG_LEVEL` | `debug` in dev, otherwise `info` | App log level |
 | `PROFILE_API_CLIENT_SECRET` / `PROFILE_REGISTRATION_CLIENT_SECRET` | Required at runtime | Server-only Profile Manager clients; see integration guide |
 
 Health check: `GET /api/content/actuator/health`.

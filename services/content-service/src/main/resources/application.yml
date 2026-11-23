@@ -40,6 +40,12 @@ app:
   seed-pattern: ${SEED_PATTERN:classpath*:seed/*.json}
 
 logging:
+  # JSON logs are switched on by LOGGING_STRUCTURED_FORMAT_CONSOLE=logstash (set by docker/entrypoint.sh when
+  # LOG_FORMAT=json). Cloud Logging reads the level from a field named "severity".
+  structured:
+    json:
+      rename:
+        level: severity
   level:
     root: info
     com.sarvaikam: ${LOG_LEVEL:info}

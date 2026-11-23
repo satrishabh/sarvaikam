@@ -3,6 +3,7 @@ import { LogLevel, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module';
+import { JsonLogger } from './json-logger';
 import { runMigrations } from './migrate';
 
 const LEVELS: Record<string, LogLevel[]> = {
@@ -13,11 +14,12 @@ const LEVELS: Record<string, LogLevel[]> = {
 };
 
 async function bootstrap() {
+  const levels = LEVELS[process.env.LOG_LEVEL ?? 'info'] ?? LEVELS.info;
+  // LOG_FORMAT=json: one JSON object per line for Cloud Logging; otherwise Nest's readable console format.
+  const json = process.env.LOG_FORMAT === 'json' ? new JsonLogger(levels) : undefined;
   // Schema changes come from the versioned SQL files, never from TypeORM synchronize (see app.module.ts).
-  if (process.env.DB_MIGRATE !== 'false') await runMigrations();
-  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
-    logger: LEVELS[process.env.LOG_LEVEL ?? 'info'] ?? LEVELS.info,
-  });
+  if (process.env.DB_MIGRATE !== 'false') await runMigrations(undefined, json ? message => json.log(message, 'Migrations') : undefined);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, { logger: json ?? levels });
   // Behind nginx + the ingress: use X-Forwarded-For for the client IP.
   app.set('trust proxy', 'loopback, uniquelocal');
   app.setGlobalPrefix('api/auth');
