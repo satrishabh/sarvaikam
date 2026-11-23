@@ -1,0 +1,25 @@
+# Production values for apps/sarvaikam/values-prod.yaml in aio-gitops. Copy, fill the <...> fields, commit
+# there. Only non-secret settings live here; secrets come from Secret Manager (external-secrets.example.yaml).
+# The keys below are the ones the dev values already use (serviceAccountName, env, envFrom). If the chart also
+# takes replicaCount / image.tag / resources, pin image.tag to the git SHA CI built, never "latest".
+serviceAccountName: sarvaikam-content          # bound to the prod Google service account (Workload Identity)
+env:
+  - {name: APP_ENV, value: prod}               # strict validation; refuses demo secrets and embedded DB
+  - {name: EMBEDDED_DB, value: "false"}
+  - {name: DB_HOST, value: sarvaikam-cloudsql-proxy}   # cloudsql-proxy.example.yaml
+  - {name: DB_PORT, value: "5432"}
+  - {name: DB_SSLMODE, value: disable}         # the proxy encrypts to Cloud SQL
+  - {name: POSTGRES_DB, value: sarvaikam}
+  - {name: POSTGRES_USER, value: sarvaikam}
+  - {name: STORAGE_BACKEND, value: gcs}
+  - {name: GCP_CONTENT_BUCKET, value: <terraform output content_bucket>}
+  - {name: GCP_SIGNING_SERVICE_ACCOUNT, value: <terraform output content_service_account>}
+  - {name: PROGRESS_BACKEND, value: legacy}    # switch to core after it has run cleanly in dev
+  - {name: LOG_FORMAT, value: json}
+  - {name: LOG_LEVEL, value: info}
+  - {name: PROFILE_ISSUER, value: https://profile.sarvaikam.com/realms/sarvaikam}
+  - {name: PROFILE_CLIENT_ID, value: sarvaikam-learn}
+  - {name: PROFILE_API_CLIENT_ID, value: sarvaikam-learn-api}
+  - {name: PROFILE_REGISTRATION_CLIENT_ID, value: sarvaikam-learn-registration}
+envFrom:
+  - secretRef: {name: sarvaikam-runtime}       # POSTGRES_PASSWORD, JWT_SECRET, PROFILE_*_SECRET
