@@ -2,6 +2,7 @@ import type { ReaderPreferences } from './readerPreferences';
 import type { PracticeQuestion } from './practice';
 import type { LearningPath } from './learning';
 import type { LessonHit } from './search';
+import type { QuickCheckQuestion } from './quickCheck';
 
 export interface Reel {
   slug: string; courseSlug: string; courseName: string; lessonSlug: string;
@@ -157,6 +158,7 @@ export const api = {
     request<Lesson>(`/api/content/topics/${enc(topic)}/lessons/${enc(lesson)}`),
   search: (q: string) => request<TopicSummary[]>(`/api/content/search?q=${enc(q)}`),
   searchLessons: (q: string) => request<LessonHit[]>(`/api/content/search/lessons?q=${enc(q)}`),
+  quickCheck: (topic: string, lesson: string) => request<QuickCheckQuestion[]>(`/api/content/topics/${enc(topic)}/lessons/${enc(lesson)}/quick-check`),
 
   exchangeProfileToken: async (accessToken: string) => {
     const res = await fetch('/api/auth/oidc/exchange', {

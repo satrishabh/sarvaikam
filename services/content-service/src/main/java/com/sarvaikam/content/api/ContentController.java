@@ -3,6 +3,7 @@ package com.sarvaikam.content.api;
 import com.sarvaikam.content.api.Dtos.*;
 import com.sarvaikam.content.service.ContentService;
 import com.sarvaikam.content.service.LessonSearch;
+import com.sarvaikam.content.service.QuickChecks;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -13,10 +14,12 @@ import java.util.List;
 public class ContentController {
     private final ContentService service;
     private final LessonSearch lessonSearch;
+    private final QuickChecks quickChecks;
 
-    public ContentController(ContentService service, LessonSearch lessonSearch) {
+    public ContentController(ContentService service, LessonSearch lessonSearch, QuickChecks quickChecks) {
         this.service = service;
         this.lessonSearch = lessonSearch;
+        this.quickChecks = quickChecks;
     }
 
     @GetMapping("/categories")
@@ -28,6 +31,12 @@ public class ContentController {
     @GetMapping("/topics/{topicSlug}/lessons/{lessonSlug}")
     public LessonView lesson(@PathVariable String topicSlug, @PathVariable String lessonSlug) {
         return service.getLesson(topicSlug, lessonSlug);
+    }
+
+    /** The lesson's quick check (empty when it has none), with the same access rules as the lesson. */
+    @GetMapping("/topics/{topicSlug}/lessons/{lessonSlug}/quick-check")
+    public List<QuickChecks.Question> quickCheck(@PathVariable String topicSlug, @PathVariable String lessonSlug) {
+        return quickChecks.forLesson(topicSlug, lessonSlug);
     }
 
     @GetMapping("/search")

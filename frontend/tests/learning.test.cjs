@@ -218,3 +218,12 @@ test("search snippets split into plain and matched text without HTML", () => {
   assert.deepEqual(snippetParts("no matches"), [{ text: "no matches", match: false }]);
   assert.deepEqual(snippetParts("cut \u0002off"), [{ text: "cut ", match: false }, { text: "off", match: true }]);
 });
+
+const { quickCheckScore } = require("../../.cache/learning-tests/quickCheck.js");
+
+test("quick check scores right answers and treats skipped questions as wrong", () => {
+  const questions = [{ answer: 1 }, { answer: 0 }, { answer: 2 }];
+  assert.equal(quickCheckScore(questions, [1, 0, 2]), 3);
+  assert.equal(quickCheckScore(questions, [1, 1, undefined]), 1);
+  assert.equal(quickCheckScore(questions, []), 0);
+});

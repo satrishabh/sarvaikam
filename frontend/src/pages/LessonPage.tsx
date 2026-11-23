@@ -17,6 +17,7 @@ import yaml from "highlight.js/lib/languages/yaml";
 import { api, Category, Lesson, Topic } from "../api";
 import { useAuth } from "../auth";
 import LessonAssets from "../components/LessonAssets";
+import QuickCheck from "../components/QuickCheck";
 import Icon from "../components/Icon";
 import { LearningPath, nextInPath, readFollowedPath, stageName } from "../learning";
 import { PracticeQuestion, practiceForTopic } from "../practice";
@@ -534,6 +535,7 @@ export default function LessonPage() {
             {lesson.contentMd}
           </ReactMarkdown>
         </div>
+        <QuickCheck topicSlug={topicSlug} lessonSlug={lesson.slug} />
         <section className="reader-reflection mt-10 rounded-2xl border border-accent/15 bg-accent-soft p-6">
           <p className="text-sm font-medium">Before you move on</p>
           <h2 className="mt-3 text-xl font-semibold">
