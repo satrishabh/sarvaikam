@@ -99,6 +99,24 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: docker build -t sarvaikam:ci .
+      # Boots the image (no database needed for these checks): the entrypoint validates the nginx config, known
+      # app routes return 200, unknown paths a real 404 with the app shell, and access logs are Cloud Logging JSON.
+      - name: Smoke-test the image
+        run: |
+          docker run -d --name smoke -p 8080:8080 -e APP_ENV=staging -e EMBEDDED_DB=false -e DB_HOST=db.invalid \
+            -e POSTGRES_PASSWORD=ci-only-not-a-secret -e JWT_SECRET="$(openssl rand -hex 32)" -e LOG_FORMAT=json sarvaikam:ci
+          for i in $(seq 1 30); do curl -fs -o /dev/null http://localhost:8080/health && break; sleep 2; done
+          code() { curl -s -o /dev/null -w '%{http_code}' "http://localhost:8080$1"; }
+          test "$(code /)" = 200
+          test "$(code /paths)" = 200
+          test "$(code /topics/python/basics)" = 200
+          test "$(code /no-such-page)" = 404
+          curl -s http://localhost:8080/no-such-page | grep -q 'id="root"'
+          test "$(code /api/content/actuator/health)" = 404
+          docker logs smoke 2>&1 | grep -q '"httpRequest"'
+      - name: Image logs on failure
+        if: failure()
+        run: docker logs smoke 2>&1 | tail -100 || true
       # Fails on fixable CRITICAL vulnerabilities; HIGH ones are listed but don't block (tighten once clean).
       # Pin this image by digest once the first run is green.
       - name: Scan image

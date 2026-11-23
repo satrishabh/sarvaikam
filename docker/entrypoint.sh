@@ -162,6 +162,8 @@ else
 fi
 sed -e "s/__PORT__/$PORT/" -e "s/__PROGRESS_PORT__/$PROGRESS_PORT/g" -e "s/__ACCESS_LOG_FORMAT__/$ACCESS_LOG_FORMAT/" /etc/sarvaikam/nginx.conf.template \
   | awk -v h="$ENV_HEADERS" '{ if ($0 == "__ENV_HEADERS__") print h; else print }' > "$RUNTIME/nginx.conf"
+# Fail fast with nginx's own message instead of supervisord restarting a broken nginx forever.
+nginx -t -q -e stderr -c "$RUNTIME/nginx.conf" || { echo "[$APP_ENV] refusing to start: the rendered nginx config is invalid" >&2; exit 1; }
 printf '{"env":"%s"}\n' "$APP_ENV" > "$RUNTIME/config.json"
 
 # ---------------------------------------------------------------- embedded database

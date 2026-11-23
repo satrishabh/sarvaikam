@@ -106,6 +106,9 @@ export default function App() {
         } as Record<string, string>
       )[location.pathname] ?? "Learn";
     document.title = `${title} | Sarvaikam`;
+    // One canonical URL per page (no query or hash), so shared and tracked links don't split search ranking.
+    const canonical = document.querySelector<HTMLLinkElement>('link[rel="canonical"]');
+    if (canonical) canonical.href = new URL(location.pathname, window.location.origin).href;
     if (location.hash) {
       let target = location.hash.slice(1);
       try {
@@ -348,20 +351,7 @@ export default function App() {
             <Route path="/privacy" element={<LegalPage kind="privacy" />} />
             <Route path="/terms" element={<LegalPage kind="terms" />} />
             <Route path="/contact" element={<LegalPage kind="contact" />} />
-            <Route
-              path="*"
-              element={
-                <div className="py-24 text-center">
-                  <p className="eyebrow">404 / A SMALL DETOUR</p>
-                  <h1 className="mt-3 text-4xl font-semibold">
-                    This page doesn’t exist.
-                  </h1>
-                  <Link className="btn mt-7" to="/">
-                    Back to learning
-                  </Link>
-                </div>
-              }
-            />
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
       </main>
@@ -463,3 +453,22 @@ export default function App() {
   );
 }
 
+/** Unknown routes. nginx already answers them with HTTP 404; this keeps them out of search indexes too. */
+function NotFound() {
+  useEffect(() => {
+    const robots = document.createElement("meta");
+    robots.name = "robots";
+    robots.content = "noindex";
+    document.head.appendChild(robots);
+    return () => robots.remove();
+  }, []);
+  return (
+    <div className="py-24 text-center">
+      <p className="eyebrow">404 / A SMALL DETOUR</p>
+      <h1 className="mt-3 text-4xl font-semibold">This page doesn’t exist.</h1>
+      <Link className="btn mt-7" to="/">
+        Back to learning
+      </Link>
+    </div>
+  );
+}
