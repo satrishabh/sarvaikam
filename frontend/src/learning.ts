@@ -52,3 +52,40 @@ export function groupedLessons(lessons: LessonSummary[]) {
   const ordered = orderedLessons(lessons);
   return learningStages.map(stage => ({ ...stage, lessons: ordered.filter(lesson => lessonStage(lesson) === stage.key) }));
 }
+
+const FOLLOWED_PATH_KEY = "sarvaikam.followedPath";
+/** The path the learner chose to follow on this device ("" when none). */
+export function readFollowedPath(): string {
+  try {
+    return typeof localStorage === "undefined" ? "" : (localStorage.getItem(FOLLOWED_PATH_KEY) ?? "");
+  } catch {
+    return "";
+  }
+}
+export function followPath(slug: string): void {
+  try {
+    if (typeof localStorage !== "undefined") localStorage.setItem(FOLLOWED_PATH_KEY, slug);
+  } catch {
+    /* private mode: following just isn't remembered */
+  }
+}
+/**
+ * The topic after `current` in a learning path: the followed path first, then paths by priority.
+ * Only paths that contain `current` and still have a published topic after it count.
+ */
+export function nextInPath(
+  current: string,
+  paths: LearningPath[],
+  categories: Category[],
+  followed = "",
+): { path: LearningPath; topic: TopicSummary } | null {
+  const ordered = [...paths].sort(
+    (a, b) => Number(b.slug === followed) - Number(a.slug === followed) || a.priority - b.priority,
+  );
+  for (const path of ordered) {
+    const topics = pathTopics(path, categories);
+    const at = topics.findIndex((t) => t.slug === current);
+    if (at >= 0 && at + 1 < topics.length) return { path, topic: topics[at + 1] };
+  }
+  return null;
+}

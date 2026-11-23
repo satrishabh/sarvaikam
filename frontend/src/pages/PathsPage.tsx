@@ -7,7 +7,7 @@ import {
   SectionHeading,
 } from "../components/LearningUI";
 import { useSkills } from "../components/SkillMap";
-import { pathTopics, topicState } from "../learning";
+import { followPath, pathTopics, readFollowedPath, topicState } from "../learning";
 import useLearningPaths from "../useLearningPaths";
 import useCatalogue from "../useCatalogue";
 
@@ -17,7 +17,12 @@ export default function PathsPage() {
   const { skills, signedIn, progressError, progressLoading } = useSkills(
     categories ?? [],
   );
-  const [focus, setFocus] = useState("");
+  // The followed path is remembered on this device; lessons use it to choose the next topic.
+  const [focus, setFocus] = useState(readFollowedPath);
+  const follow = (slug: string) => {
+    followPath(slug);
+    setFocus(slug);
+  };
   const doneByTopic = new Map(
     skills.flatMap((c) => c.topics).map((t) => [t.slug, t.done]),
   );
@@ -118,7 +123,7 @@ export default function PathsPage() {
                     </div>
                   )}
                   {next && (
-                    <Link className="btn mt-6" to={`/topics/${next.slug}`}>
+                    <Link className="btn mt-6" to={`/topics/${next.slug}`} onClick={() => follow(path.slug)}>
                       {done ? "Continue this path" : "Start this path"}
                       <Icon name="arrow" className="h-4 w-4" />
                     </Link>
@@ -131,12 +136,12 @@ export default function PathsPage() {
                   )}
                   <button
                     className="link mt-4 block min-h-11 text-sm"
-                    onClick={() => setFocus(path.slug)}
+                    onClick={() => follow(path.slug)}
                     aria-pressed={focus === path.slug}
                   >
                     {focus === path.slug
-                      ? "Selected for this visit"
-                      : "Highlight this path"}
+                      ? "You’re following this path"
+                      : "Follow this path"}
                   </button>
                 </div>
                 <div className="p-7 sm:p-9">

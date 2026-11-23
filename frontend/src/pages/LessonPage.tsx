@@ -8,11 +8,12 @@
 import ReactMarkdown from "react-markdown";
 import { Link, useParams } from "react-router-dom";
 import remarkGfm from "remark-gfm";
-import { api, Lesson, Topic } from "../api";
+import { api, Category, Lesson, Topic } from "../api";
 import { useAuth } from "../auth";
 import LessonAssets from "../components/LessonAssets";
 import Icon from "../components/Icon";
-import { stageName } from "../learning";
+import { LearningPath, nextInPath, readFollowedPath, stageName } from "../learning";
+import { PracticeQuestion, practiceForTopic } from "../practice";
 import { readingMinutes } from "../engagement";
 import MobileSheet from "../components/MobileSheet";
 import LessonOutline from "../components/LessonOutline";
@@ -70,6 +71,20 @@ function CodeBlock({ children }: { children?: ReactNode }) {
     </div>
   );
 }
+// Paths, catalogue and practice change rarely: load them once per visit for "what's next" links.
+let journeyData: Promise<[LearningPath[], Category[], PracticeQuestion[]]> | null = null;
+function loadJourneyData() {
+  journeyData ??= Promise.all([api.paths(), api.categories(), api.practiceQuestions()]).catch((cause) => {
+    journeyData = null;
+    throw cause;
+  });
+  return journeyData;
+}
+interface Journey {
+  next: ReturnType<typeof nextInPath>;
+  practice?: PracticeQuestion;
+}
+
 export default function LessonPage() {
   const { topicSlug = "", lessonSlug = "" } = useParams();
   const { user, ready } = useAuth();
@@ -95,6 +110,23 @@ export default function LessonPage() {
   const [bookmarked, setBookmarked] = useState(false);
   const [bookmarkError, setBookmarkError] = useState("");
   const [cardsOpen, setCardsOpen] = useState(false);
+  const [journey, setJourney] = useState<Journey | null>(null);
+  useEffect(() => {
+    let active = true;
+    setJourney(null);
+    loadJourneyData()
+      .then(([paths, categories, questions]) => {
+        if (active)
+          setJourney({
+            next: nextInPath(topicSlug, paths, categories, readFollowedPath()),
+            practice: practiceForTopic(topicSlug, questions),
+          });
+      })
+      .catch(() => {}); // the plain topic and practice-room links still work
+    return () => {
+      active = false;
+    };
+  }, [topicSlug]);
   useEffect(() => {
     setResumeId(lesson ? (readResumePoint(lesson.id)?.id ?? "") : "");
   }, [lesson?.id]);
@@ -263,6 +295,10 @@ export default function LessonPage() {
   const headingId = (node?: { position?: { start: { line: number } } }) =>
     node?.position ? headingIds.get(node.position.start.line) : undefined;
   const resumeItem = outline.find((item) => item.id === resumeId);
+  const practiceLink = journey?.practice
+    ? `/practice?question=${encodeURIComponent(journey.practice.id)}`
+    : "/practice";
+  const nextTopic = journey?.next ?? null;
   const sequence = (
     <nav aria-label="Topic lessons" className="mt-4 space-y-1">
       {topic?.lessons.map((item, i) => (
@@ -347,10 +383,10 @@ export default function LessonPage() {
         <LessonOutline items={outline} />
         <Link
           className="mt-7 flex items-center gap-2 rounded-xl border border-line bg-surface p-4 text-xs font-medium text-accent"
-          to="/practice"
+          to={practiceLink}
         >
-          <Icon name="target" className="h-4 w-4" />
-          Put it into practice
+          <Icon name="target" className="h-4 w-4 shrink-0" />
+          {journey?.practice ? `Practise: ${journey.practice.title}` : "Put it into practice"}
         </Link>
       </aside>
       <article className="reader-article min-w-0 max-w-[68ch]">
@@ -496,6 +532,36 @@ export default function LessonPage() {
           </p>
         </section>
         <LessonAssets key={lesson.id} lessonId={lesson.id} />
+        {!lesson.next && (
+          <section aria-labelledby="whats-next" className="mt-10 rounded-2xl border border-line bg-surface p-6">
+            <p className="text-sm font-medium text-muted">
+              Last lesson in {lesson.topicName}
+            </p>
+            <h2 id="whats-next" className="mt-2 text-xl font-semibold">
+              What’s next
+            </h2>
+            <div className="mt-5 flex flex-wrap gap-3">
+              {nextTopic ? (
+                <Link className="btn" to={`/topics/${nextTopic.topic.slug}`}>
+                  Next in {nextTopic.path.name}: {nextTopic.topic.name}
+                  <Icon name="arrow" className="h-4 w-4" />
+                </Link>
+              ) : (
+                <Link className="btn" to="/paths">
+                  Choose your next path
+                  <Icon name="arrow" className="h-4 w-4" />
+                </Link>
+              )}
+              <Link className="outline-btn" to={practiceLink}>
+                <Icon name="target" className="h-4 w-4" />
+                {journey?.practice ? `Practise: ${journey.practice.title}` : "Practice room"}
+              </Link>
+              <Link className="btn-quiet" to={`/topics/${topicSlug}`}>
+                Topic overview
+              </Link>
+            </div>
+          </section>
+        )}
       </article>
       <div className="reading-controls fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface/95 backdrop-blur-xl">
         <div className="mx-auto flex max-w-[1240px] flex-wrap items-center justify-between gap-2 px-5 py-3 sm:px-8">
@@ -553,6 +619,15 @@ export default function LessonPage() {
                 to={`/topics/${topicSlug}/${lesson.next.slug}`}
               >
                 <span>Next</span>
+                <Icon name="chevron" className="h-4 w-4" />
+              </Link>
+            ) : nextTopic ? (
+              <Link
+                className="btn-quiet px-3 text-xs"
+                to={`/topics/${nextTopic.topic.slug}`}
+                aria-label={`Finish topic and go to ${nextTopic.topic.name}`}
+              >
+                Next topic
                 <Icon name="chevron" className="h-4 w-4" />
               </Link>
             ) : (

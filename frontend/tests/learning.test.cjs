@@ -181,3 +181,27 @@ test("backend path seed follows the requested engineering priority", () => {
   assert.deepEqual(ordered.map(p => p.slug), ['gen-ai', 'ai-ml', 'cloud', 'backend', 'full-stack', 'forward-deployed']);
   assert.deepEqual(ordered.map(p => p.priority), [1, 2, 3, 4, 5, 6]);
 });
+
+const { nextInPath } = require("../../.cache/learning-tests/learning.js");
+const { practiceForTopic } = require("../../.cache/learning-tests/practice.js");
+
+test("finishing a topic leads to the next published topic, preferring the followed path", () => {
+  const paths = [
+    { slug: "backend", priority: 4, topics: ["java", "spring-boot", "databases-sql"] },
+    { slug: "full-stack", priority: 5, topics: ["java", "react"] },
+  ];
+  const categories = [{ topics: [
+    { slug: "java", lessonCount: 3 }, { slug: "spring-boot", lessonCount: 0 },
+    { slug: "databases-sql", lessonCount: 2 }, { slug: "react", lessonCount: 4 },
+  ] }];
+  assert.equal(nextInPath("java", paths, categories).topic.slug, "databases-sql", "skips empty topics, highest priority first");
+  assert.equal(nextInPath("java", paths, categories, "full-stack").topic.slug, "react", "the followed path wins");
+  assert.equal(nextInPath("databases-sql", paths, categories), null, "last topic of every path");
+  assert.equal(nextInPath("unknown", paths, categories), null);
+});
+
+test("practice opens the topic's own exercise when there is one", () => {
+  const sql = practiceForTopic("sql-interviews", practiceQuestions);
+  assert.equal(sql.topic, "sql-interviews");
+  assert.equal(practiceForTopic("no-such-topic", practiceQuestions), undefined);
+});

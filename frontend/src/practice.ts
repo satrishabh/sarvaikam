@@ -11,3 +11,8 @@
   criteria: string[];
   outline: string[];
 }
+
+/** The first practice exercise for a topic, if one is published. */
+export function practiceForTopic(topicSlug: string, questions: PracticeQuestion[]): PracticeQuestion | undefined {
+  return questions.find((q) => q.topic === topicSlug);
+}
