@@ -1,13 +1,19 @@
-﻿import {
-  Children,
-  isValidElement,
-  ReactNode,
-  useEffect,
-  useState,
-} from "react";
+﻿import { ReactNode, useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { Link, useParams } from "react-router-dom";
+import rehypeHighlight, { type Options as HighlightOptions } from "rehype-highlight";
 import remarkGfm from "remark-gfm";
+import bash from "highlight.js/lib/languages/bash";
+import dockerfile from "highlight.js/lib/languages/dockerfile";
+import go from "highlight.js/lib/languages/go";
+import java from "highlight.js/lib/languages/java";
+import javascript from "highlight.js/lib/languages/javascript";
+import json from "highlight.js/lib/languages/json";
+import python from "highlight.js/lib/languages/python";
+import sql from "highlight.js/lib/languages/sql";
+import typescript from "highlight.js/lib/languages/typescript";
+import xml from "highlight.js/lib/languages/xml";
+import yaml from "highlight.js/lib/languages/yaml";
 import { api, Category, Lesson, Topic } from "../api";
 import { useAuth } from "../auth";
 import LessonAssets from "../components/LessonAssets";
@@ -28,13 +34,19 @@ import {
   readResumePoint,
 } from "../readingOutline";
 
+// Only the languages lessons use, so the lesson chunk stays small. Fences without a language stay plain.
+const highlightOptions: HighlightOptions = {
+  languages: { bash, dockerfile, go, java, javascript, json, python, sql, typescript, xml, yaml },
+  aliases: { bash: ["sh", "shell", "zsh"], javascript: ["js"], typescript: ["ts"], xml: ["html"], yaml: ["yml"] },
+  plainText: ["text", "txt", "hcl", "promql"],
+};
+
 function CodeBlock({ children }: { children?: ReactNode }) {
   const [status, setStatus] = useState("");
+  const pre = useRef<HTMLPreElement>(null);
   const copy = async () => {
-    const child = Children.toArray(children).find(isValidElement);
-    const text = child
-      ? String((child.props as { children?: ReactNode }).children ?? "")
-      : "";
+    // Read the rendered text: highlighted code is a tree of spans, not one string.
+    const text = pre.current?.textContent ?? "";
     try {
       await navigator.clipboard.writeText(text.replace(/\n$/, ""));
       setStatus("Copied");
@@ -57,6 +69,7 @@ function CodeBlock({ children }: { children?: ReactNode }) {
         </span>
       </div>
       <pre
+        ref={pre}
         tabIndex={0}
         role="region"
         aria-label="Scrollable code example"
@@ -497,6 +510,7 @@ export default function LessonPage() {
         >
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}
+            rehypePlugins={[[rehypeHighlight, highlightOptions]]}
             components={{
               h2: ({ node, children }) => (
                 <h2 id={headingId(node)}>{children}</h2>

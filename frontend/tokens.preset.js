@@ -40,7 +40,12 @@ export default {
         "tone-blue-soft": "rgb(var(--color-tone-blue-soft-rgb) / <alpha-value>)",
         "code-surface": "rgb(var(--color-code-surface-rgb) / <alpha-value>)",
         "code-muted": "rgb(var(--color-code-muted-rgb) / <alpha-value>)",
-        "code-accent": "rgb(var(--color-code-accent-rgb) / <alpha-value>)"
+        "code-accent": "rgb(var(--color-code-accent-rgb) / <alpha-value>)",
+        "code-keyword": "rgb(var(--color-code-keyword-rgb) / <alpha-value>)",
+        "code-string": "rgb(var(--color-code-string-rgb) / <alpha-value>)",
+        "code-number": "rgb(var(--color-code-number-rgb) / <alpha-value>)",
+        "code-function": "rgb(var(--color-code-function-rgb) / <alpha-value>)",
+        "code-comment": "rgb(var(--color-code-comment-rgb) / <alpha-value>)"
       },
       "fontFamily": {
         "sans": [

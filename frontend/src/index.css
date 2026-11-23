@@ -976,3 +976,11 @@ html[data-reader-theme] :focus-visible {
     animation: none;
   }
 }
+
+/* Syntax highlighting (rehype-highlight / highlight.js classes) on the dark code panel. Colours are tokens. */
+.hljs-keyword, .hljs-selector-tag, .hljs-literal, .hljs-meta .hljs-keyword, .hljs-doctag { color: var(--color-code-keyword); }
+.hljs-string, .hljs-regexp, .hljs-addition, .hljs-template-tag, .hljs-template-variable { color: var(--color-code-string); }
+.hljs-number, .hljs-symbol, .hljs-bullet, .hljs-variable.constant_ { color: var(--color-code-number); }
+.hljs-title, .hljs-title.function_, .hljs-section, .hljs-name, .hljs-selector-id, .hljs-selector-class { color: var(--color-code-function); }
+.hljs-type, .hljs-built_in, .hljs-attr, .hljs-attribute, .hljs-params .hljs-type, .hljs-meta { color: var(--color-code-accent); }
+.hljs-comment, .hljs-quote, .hljs-deletion { color: var(--color-code-comment); font-style: italic; }

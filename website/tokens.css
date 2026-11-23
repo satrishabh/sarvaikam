@@ -75,6 +75,16 @@
   --color-code-muted-rgb: 194 207 219;
   --color-code-accent: #a4ded2;
   --color-code-accent-rgb: 164 222 210;
+  --color-code-keyword: #f5a9c9;
+  --color-code-keyword-rgb: 245 169 201;
+  --color-code-string: #c9e59b;
+  --color-code-string-rgb: 201 229 155;
+  --color-code-number: #f6c177;
+  --color-code-number-rgb: 246 193 119;
+  --color-code-function: #9cc9ff;
+  --color-code-function-rgb: 156 201 255;
+  --color-code-comment: #93a8ba;
+  --color-code-comment-rgb: 147 168 186;
   --font-sans: Archivo, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-serif: Playfair Display, Georgia, "Times New Roman", serif;
   --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Inter, sans-serif;

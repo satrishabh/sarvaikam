@@ -1,4 +1,4 @@
-﻿import { lazy, Suspense, useEffect, useState } from "react";
+﻿import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { Link, NavLink, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "./auth";
 import { can } from "./api";
@@ -125,6 +125,45 @@ export default function App() {
     }
     window.scrollTo(0, 0);
   }, [location.pathname, location.hash]);
+  // After client-side navigation, move focus to the page and announce its heading, as a full page load would.
+  // Routes without a fixed title (lessons, topics) take their tab title from that heading.
+  const mainRef = useRef<HTMLElement>(null);
+  const firstRoute = useRef(true);
+  const [announcement, setAnnouncement] = useState("");
+  useEffect(() => {
+    if (firstRoute.current) {
+      firstRoute.current = false;
+      return;
+    }
+    const main = mainRef.current;
+    if (!main) return;
+    if (!location.hash) main.focus({ preventScroll: true });
+    let done = false;
+    const announce = () => {
+      const heading = main.querySelector("h1")?.textContent?.trim();
+      if (!heading) return false;
+      done = true;
+      setAnnouncement(heading);
+      if (document.title === "Learn | Sarvaikam") document.title = `${heading} | Sarvaikam`;
+      return true;
+    };
+    const observer = new MutationObserver(() => {
+      if (announce()) observer.disconnect();
+    });
+    // Wait a tick so a reused page (lesson to lesson) has cleared its previous heading.
+    const start = window.setTimeout(() => {
+      if (!announce()) observer.observe(main, { childList: true, subtree: true, characterData: true });
+    }, 0);
+    const giveUp = window.setTimeout(() => {
+      observer.disconnect();
+      if (!done) setAnnouncement(document.title.replace(/ \| Sarvaikam$/, ""));
+    }, 5000);
+    return () => {
+      observer.disconnect();
+      window.clearTimeout(start);
+      window.clearTimeout(giveUp);
+    };
+  }, [location.pathname]);
   const links = (
     <>
       {navigation.map((item) => (
@@ -261,9 +300,14 @@ export default function App() {
           )}
         </div>
       </MobileSheet>
+      <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+        {announcement}
+      </p>
       <main
         id="main-content"
-        className="app-main mx-auto w-full max-w-[1240px] flex-1 px-5 py-9 sm:px-8 sm:py-12"
+        ref={mainRef}
+        tabIndex={-1}
+        className="app-main outline-none mx-auto w-full max-w-[1240px] flex-1 px-5 py-9 sm:px-8 sm:py-12"
       >
         <Suspense
           fallback={

@@ -40,7 +40,12 @@
       "tone-blue-soft": { "$type": "color", "$value": "#EAF0FC" },
       "code-surface": { "$type": "color", "$value": "#102C43", "$description": "Runnable code panel; dark in every theme." },
       "code-muted": { "$type": "color", "$value": "#C2CFDB" },
-      "code-accent": { "$type": "color", "$value": "#A4DED2" }
+      "code-accent": { "$type": "color", "$value": "#A4DED2" },
+      "code-keyword": { "$type": "color", "$value": "#F5A9C9", "$description": "Syntax highlighting on code-surface; every code-* colour keeps >= 4.5:1 contrast on it." },
+      "code-string": { "$type": "color", "$value": "#C9E59B" },
+      "code-number": { "$type": "color", "$value": "#F6C177" },
+      "code-function": { "$type": "color", "$value": "#9CC9FF" },
+      "code-comment": { "$type": "color", "$value": "#93A8BA" }
     },
     "reader": {
       "$description": "Lesson reader page themes, chosen in Reader settings (data-reader-theme). Independent of the app theme.",
