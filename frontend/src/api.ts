@@ -7,8 +7,10 @@ import type { QuickCheckQuestion } from './quickCheck';
 export interface Reel {
   slug: string; courseSlug: string; courseName: string; lessonSlug: string;
   step: number; heading: string; content: string; sourceName: string; sourceUrl: string; published: boolean;
+  /** The lesson the reel summarises, for saving it; null for reels created before this field existed. */
+  lessonId?: number | null;
 }
-export type ReelInput = Omit<Reel, 'courseName' | 'step'>;
+export type ReelInput = Omit<Reel, 'courseName' | 'step' | 'lessonId'>;
 export interface TopicSummary {
   id: number;
   slug: string;
@@ -150,7 +152,7 @@ export const api = {
     request<TopicSummary>('/api/content/admin/topics', { method: 'PUT', body: JSON.stringify(course) }),
   paths: () => request<LearningPath[]>('/api/content/paths'),
   practiceQuestions: () => request<PracticeQuestion[]>('/api/content/practice'),
-  reels: () => request<Reel[]>('/api/content/reels'),
+  reels: () => request<Reel[]>('/api/content/reels?limit=100'),
   adminReels: () => request<Reel[]>('/api/content/admin/reels'),
   saveReel: (reel: ReelInput) => request<void>('/api/content/admin/reels', { method: 'PUT', body: JSON.stringify(reel) }),
   deleteReel: (slug: string) => request<void>(`/api/content/admin/reels/${enc(slug)}`, { method: 'DELETE' }),
