@@ -87,10 +87,12 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      # Scans the full git history for committed credentials. Pin this image by digest once the first run is green.
+      # Scans the full git history for committed credentials. --verbose lists each finding (file, line, commit, rule,
+      # fingerprint) with the value redacted; add a known placeholder's fingerprint to .gitleaksignore.
+      # Pin this image by digest once the first run is green.
       - run: >
           docker run --rm -v "$PWD:/repo" ghcr.io/gitleaks/gitleaks:v8.18.4
-          detect --source /repo --redact --no-banner --exit-code 1
+          detect --source /repo --redact --verbose --no-banner --exit-code 1
 
   image:
     # Builds the all-in-one image exactly as Kaniko does, so a broken Dockerfile fails here instead of at deploy.
