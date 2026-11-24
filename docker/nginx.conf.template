@@ -40,6 +40,8 @@ http {
         root /usr/share/nginx/html;
         index index.html;
         client_max_body_size 5m;
+        # Default for every proxied route; one that streams large files raises it in its own location.
+        proxy_read_timeout 60s;
 
         add_header X-Content-Type-Options nosniff always;
         add_header X-Frame-Options DENY always;
