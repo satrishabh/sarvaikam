@@ -16,6 +16,7 @@
     "src/readingOutline.ts",
     "src/sessionSync.ts",
     "src/search.ts",
-    "src/quickCheck.ts"
+    "src/quickCheck.ts",
+    "src/seo.ts"
   ]
 }

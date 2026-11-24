@@ -11,7 +11,7 @@
     "prebuild": "npm run tokens && npm run lint:colors",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "test:learning": "tsc -p tsconfig.learning-tests.json && node --test tests/learning.test.cjs tests/reading.test.cjs tests/authoring.test.cjs tests/session.test.cjs"
+    "test:learning": "tsc -p tsconfig.learning-tests.json && node --test tests/learning.test.cjs tests/reading.test.cjs tests/authoring.test.cjs tests/session.test.cjs tests/seo.test.cjs"
   },
   "dependencies": {
     "@fontsource/archivo": "5.3.0",

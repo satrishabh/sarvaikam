@@ -4,6 +4,7 @@ import { useAuth } from "./auth";
 import { can } from "./api";
 import { goalStore } from "./engagement";
 import { followPath } from "./learning";
+import { applyPageMeta, defaultDescription } from "./seo";
 import Icon from "./components/Icon";
 import MobileSheet from "./components/MobileSheet";
 import HomePage from "./pages/HomePage";
@@ -25,6 +26,9 @@ const UsersPage = lazy(() => import("./pages/UsersPage"));
 const PathsPage = lazy(() => import("./pages/PathsPage"));
 const PracticePage = lazy(() => import("./pages/PracticePage"));
 const ReelsPage = lazy(() => import("./pages/ReelsPage"));
+
+// Captured before any page replaces it with its own description.
+const SITE_DESCRIPTION = defaultDescription();
 
 const navigation = [
   { to: "/", name: "Overview", icon: "book" },
@@ -84,8 +88,8 @@ export default function App() {
       window.removeEventListener("resize", resize);
     };
   }, []);
+  // Title, canonical URL and share metadata follow the path only: jumping to a #section keeps a lesson's own.
   useEffect(() => {
-    setOpen(false);
     const title =
       (
         {
@@ -108,7 +112,13 @@ export default function App() {
     document.title = `${title} | Sarvaikam`;
     // One canonical URL per page (no query or hash), so shared and tracked links don't split search ranking.
     const canonical = document.querySelector<HTMLLinkElement>('link[rel="canonical"]');
-    if (canonical) canonical.href = new URL(location.pathname, window.location.origin).href;
+    const url = new URL(location.pathname, window.location.origin).href;
+    if (canonical) canonical.href = url;
+    // Site defaults; a page with its own content (a lesson) replaces them once it has loaded.
+    applyPageMeta({ title: document.title, description: SITE_DESCRIPTION, url, structuredData: null });
+  }, [location.pathname]);
+  useEffect(() => {
+    setOpen(false);
     if (location.hash) {
       let target = location.hash.slice(1);
       try {

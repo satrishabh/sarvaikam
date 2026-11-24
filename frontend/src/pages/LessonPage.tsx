@@ -22,6 +22,7 @@ import Icon from "../components/Icon";
 import { LearningPath, nextInPath, readFollowedPath, stageName } from "../learning";
 import { PracticeQuestion, practiceForTopic } from "../practice";
 import { readingMinutes } from "../engagement";
+import { applyPageMeta, defaultDescription, describeMarkdown, lessonStructuredData } from "../seo";
 import MobileSheet from "../components/MobileSheet";
 import LessonOutline from "../components/LessonOutline";
 import LessonSearch from "../components/LessonSearch";
@@ -187,6 +188,34 @@ export default function LessonPage() {
       active = false;
     };
   }, [topicSlug]);
+  // Search and share metadata for this lesson. Exclusive lessons describe only their topic, so none of their
+  // text reaches the page head.
+  useEffect(() => {
+    if (!lesson) return;
+    const origin = window.location.origin;
+    const url = `${origin}/topics/${lesson.topicSlug}/${lesson.slug}`;
+    const title = `${lesson.title} · ${lesson.topicName} | Sarvaikam`;
+    document.title = title;
+    const summary = topic?.slug === lesson.topicSlug ? topic.summary : "";
+    const description = (!lesson.exclusive && describeMarkdown(lesson.contentMd)) || summary || defaultDescription();
+    applyPageMeta({
+      title,
+      description,
+      url,
+      structuredData: lesson.exclusive
+        ? null
+        : lessonStructuredData(
+            {
+              ...lesson,
+              topicSummary: summary,
+              level: topic?.slug === lesson.topicSlug ? topic.level : undefined,
+              minutes: readingMinutes(lesson.contentMd),
+            },
+            origin,
+            description,
+          ),
+    });
+  }, [lesson, topic]);
   useEffect(() => {
     let active = true;
     setCompleted(false);
