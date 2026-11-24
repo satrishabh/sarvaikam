@@ -33,6 +33,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     private final SecretKey key;
     private final RestClient sessions;
     private final SessionCache cache;
+    private final Breaker breaker;
 
     public record SessionUser(String id, String role, List<String> permissions) {}
 
@@ -77,12 +78,49 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         void forget(String sub) { entries.remove(sub); }
     }
 
+    /**
+     * Stops calling auth-service while it is down, so cache misses fail in microseconds instead of each waiting out
+     * the connect and read timeouts. Opens after {@code threshold} failures in a row; after {@code cooldown} one
+     * trial call is let through (half-open), and its result closes or re-opens the breaker. Starting a trial pushes
+     * the next one a cooldown away, so a trial that never reports back cannot leave the breaker stuck.
+     */
+    static final class Breaker {
+        private final int threshold;
+        private final long cooldownMillis;
+        private int failures;
+        private long openUntilMillis;
+        java.util.function.LongSupplier clock = System::currentTimeMillis;
+
+        Breaker(int threshold, Duration cooldown) {
+            this.threshold = Math.max(1, threshold);
+            this.cooldownMillis = cooldown.toMillis();
+        }
+
+        /** True when a call may go to auth-service now. */
+        synchronized boolean allow() {
+            if (failures < threshold) return true;
+            long now = clock.getAsLong();
+            if (now < openUntilMillis) return false;
+            openUntilMillis = now + cooldownMillis;
+            return true;
+        }
+
+        synchronized void succeeded() { failures = 0; }
+
+        synchronized void failed() {
+            if (++failures >= threshold) openUntilMillis = clock.getAsLong() + cooldownMillis;
+        }
+
+        synchronized boolean open() { return failures >= threshold; }
+    }
+
     public JwtAuthFilter(@Value("${app.jwt-secret}") String secret,
                          @Value("${AUTH_SERVICE_URL:http://localhost:8082}") String authUrl,
                          @Value("${APP_ENV:prod}") String appEnv,
                          @Value("${SESSION_CACHE_TTL_SECONDS:30}") long cacheTtlSeconds,
                          @Value("${SESSION_CACHE_STALE_SECONDS:300}") long cacheStaleSeconds) {
         this.cache = new SessionCache(Duration.ofSeconds(cacheTtlSeconds), Duration.ofSeconds(cacheStaleSeconds), 10_000);
+        this.breaker = new Breaker(5, Duration.ofSeconds(10));
         // Published placeholder values are public knowledge; outside dev they would let anyone mint tokens.
         if (!"dev".equals(appEnv) && PLACEHOLDER.matcher(secret).find())
             throw new IllegalStateException("JWT_SECRET is a published placeholder value; generate one with: openssl rand -base64 48");
@@ -108,14 +146,21 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 if (user == null) {
                     SessionUser fetched = null;
                     boolean unavailable = false;
-                    try {
-                        fetched = sessions.get().uri("/api/auth/me").header("Authorization", header)
-                                .retrieve().body(SessionUser.class);
-                    } catch (HttpClientErrorException rejected) {
-                        cache.forget(sub);
-                        throw new IllegalArgumentException("Session rejected", rejected);
-                    } catch (RestClientException down) { // network errors and 5xx
+                    if (!breaker.allow()) {
                         unavailable = true;
+                    } else {
+                        try {
+                            fetched = sessions.get().uri("/api/auth/me").header("Authorization", header)
+                                    .retrieve().body(SessionUser.class);
+                            breaker.succeeded();
+                        } catch (HttpClientErrorException rejected) {
+                            breaker.succeeded(); // auth-service answered; the session is what failed
+                            cache.forget(sub);
+                            throw new IllegalArgumentException("Session rejected", rejected);
+                        } catch (RestClientException down) { // network errors and 5xx
+                            breaker.failed();
+                            unavailable = true;
+                        }
                     }
                     if (unavailable) {
                         // Not re-stored: the stale answer must age out even if the outage continues.
