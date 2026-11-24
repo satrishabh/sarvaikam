@@ -123,14 +123,14 @@ test('DTO validation rejects malformed email, weak password, and invalid website
   assert.ok((await validate(plainToInstance(BusinessApplicationDto, { organization: 'A', website: 'javascript:alert(1)', reason: 'short' }))).length >= 3);
   assert.ok((await validate(plainToInstance(PolicyDto, { permissions: ['admin.superuser'] }))).length);
 });
-test('session actions reject form CSRF and rate-limit per account, not per shared IP', () => {
+test('session actions reject form CSRF and rate-limit per account, not per shared IP', async () => {
   const c = new SessionController({}, {});
-  assert.throws(() => c.check({ get: () => undefined }, []));
+  await assert.rejects(c.check({ get: () => undefined }, []), { status: 403 });
   const as = email => ({ get: () => 'web', ip: '10.0.0.1', body: { email } });
-  for (let i = 0; i < 10; i++) c.check(as('a@example.com'), c.accountRules(as('a@example.com'), 'login', 10, 300));
-  assert.throws(() => c.check(as('a@example.com'), c.accountRules(as('a@example.com'), 'login', 10, 300)), /Too many/);
+  for (let i = 0; i < 10; i++) await c.check(as('a@example.com'), c.accountRules(as('a@example.com'), 'login', 10, 300));
+  await assert.rejects(c.check(as('a@example.com'), c.accountRules(as('a@example.com'), 'login', 10, 300)), /Too many/);
   // Another learner behind the same NAT address can still sign in.
-  assert.doesNotThrow(() => c.check(as('b@example.com'), c.accountRules(as('b@example.com'), 'login', 10, 300)));
+  await c.check(as('b@example.com'), c.accountRules(as('b@example.com'), 'login', 10, 300));
 });
 
 const { ServiceUnavailableException } = require('@nestjs/common');

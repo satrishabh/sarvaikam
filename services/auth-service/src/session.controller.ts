@@ -1,48 +1,33 @@
-import { Body, Controller, ForbiddenException, HttpException, Logger, Post, Req, Res, ServiceUnavailableException, UnauthorizedException } from '@nestjs/common';
+import { Body, Controller, ForbiddenException, HttpException, Logger, Optional, Post, Req, Res, ServiceUnavailableException, UnauthorizedException } from '@nestjs/common';
 import { createHash } from 'node:crypto';
 import { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 import { ProfileClient } from './profile-client.service';
 import { EmailDto, SignInDto, SignUpDto } from './profile.dto';
+import { RateLimiter, Rule } from './rate-limiter';
 
 const COOKIE = 'sarvaikam.profile-session';
 const NOTICE = { message: 'If this email can receive account messages, check your inbox and spam folder for the next step.' };
-const WINDOW_MS = 15 * 60_000;
-const MAX_KEYS = 20_000;
-
-/** A limit bucket: [key, max attempts per window]. */
-type Rule = [string, number];
-
 const digest = (value: string) => createHash('sha256').update(value).digest('base64url').slice(0, 22);
 const emailOf = (body: unknown) => String((body as { email?: unknown } | undefined)?.email ?? '').trim().toLowerCase();
 
 @Controller('session')
 export class SessionController {
   private readonly log = new Logger(SessionController.name);
-  private readonly attempts = new Map<string, { count: number; until: number }>();
-  constructor(private readonly profile: ProfileClient, private readonly auth: AuthService) {}
+  constructor(
+    private readonly profile: ProfileClient,
+    private readonly auth: AuthService,
+    @Optional() private readonly limiter: RateLimiter = new RateLimiter(),
+  ) {}
 
   /**
-   * CSRF guard plus bounded per-instance abuse limits. Buckets are keyed by account or session, with only a
-   * generous per-IP ceiling, so many learners behind one campus/office NAT are not locked out together.
-   * Keep Keycloak brute-force protection and an ingress limiter enabled as the shared layer.
+   * CSRF guard plus abuse limits shared by every replica (RateLimiter). Buckets are keyed by account or session,
+   * with only a generous per-IP ceiling, so many learners behind one campus/office NAT are not locked out together.
+   * Keep Keycloak brute-force protection enabled as the layer behind this one.
    */
-  check(req: Request, rules: Rule[]) {
+  async check(req: Request, rules: Rule[]) {
     if (req.get('X-Sarvaikam-Client') !== 'web') throw new ForbiddenException('Use the Sarvaikam sign-in form');
-    const now = Date.now();
-    for (const [key, item] of this.attempts) if (item.until < now) this.attempts.delete(key);
-    const items = rules.map(([key, limit]) => {
-      const item = this.attempts.get(key) ?? { count: 0, until: now + WINDOW_MS };
-      if (item.count >= limit) throw new HttpException('Too many attempts. Try again in 15 minutes.', 429);
-      return [key, item] as const;
-    });
-    for (const [key, item] of items) {
-      item.count++;
-      this.attempts.delete(key);
-      this.attempts.set(key, item);
-      // Evict the oldest bucket instead of rejecting everyone when the table is full.
-      if (this.attempts.size > MAX_KEYS) this.attempts.delete(this.attempts.keys().next().value!);
-    }
+    if (!(await this.limiter.hit(rules))) throw new HttpException('Too many attempts. Try again in 15 minutes.', 429);
   }
 
   private cookieOptions() {
@@ -62,7 +47,7 @@ export class SessionController {
 
   @Post('login')
   async login(@Req() req: Request, @Res({ passthrough: true }) res: Response, @Body() dto: SignInDto) {
-    this.check(req, this.accountRules(req, 'login', 10, 300));
+    await this.check(req, this.accountRules(req, 'login', 10, 300));
     res.setHeader('Cache-Control', 'no-store');
     const tokens = await this.profile.login(dto.email, dto.password);
     try {
@@ -77,7 +62,7 @@ export class SessionController {
 
   @Post('register')
   async register(@Req() req: Request, @Body() dto: SignUpDto) {
-    this.check(req, this.accountRules(req, 'register', 5, 100));
+    await this.check(req, this.accountRules(req, 'register', 5, 100));
     await this.profile.register(dto);
     return NOTICE;
   }
@@ -89,7 +74,7 @@ export class SessionController {
     if (req.get('X-Sarvaikam-Client') !== 'web') throw new ForbiddenException('Use the Sarvaikam sign-in form');
     // Anonymous visitors have nothing to refresh: answer without spending a rate-limit slot or a Keycloak call.
     if (!cookie) throw new UnauthorizedException();
-    this.check(req, [[`refresh:sid:${digest(cookie)}`, 60], [`refresh:ip:${req.ip}`, 3000]]);
+    await this.check(req, [[`refresh:sid:${digest(cookie)}`, 60], [`refresh:ip:${req.ip}`, 3000]]);
     try {
       const tokens = await this.profile.refresh(cookie);
       const session = await this.auth.exchangeProfileToken(tokens.access_token);
@@ -110,7 +95,7 @@ export class SessionController {
     const cookie = this.refreshCookie(req);
     res.clearCookie(COOKIE, this.cookieOptions());
     if (!cookie) return { message: 'Signed out', revoked: true };
-    this.check(req, [[`logout:sid:${digest(cookie)}`, 30]]);
+    await this.check(req, [[`logout:sid:${digest(cookie)}`, 30]]);
     try {
       await this.profile.logout(cookie);
       return { message: 'Signed out', revoked: true };
@@ -128,7 +113,7 @@ export class SessionController {
     res.setHeader('Cache-Control', 'no-store');
     const cookie = this.refreshCookie(req);
     if (!cookie) throw new UnauthorizedException();
-    this.check(req, [[`logout-all:sid:${digest(cookie)}`, 5]]);
+    await this.check(req, [[`logout-all:sid:${digest(cookie)}`, 5]]);
     // Prove possession of a live session, and learn the identity, straight from the Profile Manager.
     const tokens = await this.profile.refresh(cookie);
     const subject = this.subjectOf(tokens.access_token);
@@ -147,14 +132,14 @@ export class SessionController {
 
   @Post('verify-email')
   async verifyEmail(@Req() req: Request, @Body() dto: EmailDto) {
-    this.check(req, this.accountRules(req, 'email', 5, 100));
+    await this.check(req, this.accountRules(req, 'email', 5, 100));
     await this.profile.emailAction(dto.email, 'VERIFY_EMAIL');
     return NOTICE;
   }
 
   @Post('recover')
   async recover(@Req() req: Request, @Body() dto: EmailDto) {
-    this.check(req, this.accountRules(req, 'email', 5, 100));
+    await this.check(req, this.accountRules(req, 'email', 5, 100));
     await this.profile.emailAction(dto.email, 'UPDATE_PASSWORD');
     return NOTICE;
   }

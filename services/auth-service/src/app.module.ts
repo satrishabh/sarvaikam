@@ -7,6 +7,7 @@ import { User } from './user.entity';
 import { AccessAudit, RolePolicy } from './access.entity';
 import { ProfileClient } from './profile-client.service';
 import { SessionController } from './session.controller';
+import { RateLimiter } from './rate-limiter';
 
 @Module({
   imports: [
@@ -44,6 +45,6 @@ import { SessionController } from './session.controller';
     }),
   ],
   controllers: [AuthController, SessionController],
-  providers: [AuthService, ProfileClient],
+  providers: [AuthService, ProfileClient, RateLimiter],
 })
 export class AppModule {}
