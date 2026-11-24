@@ -1,0 +1,11 @@
+# Known test fixtures, not credentials. Add a finding here only after confirming it is a placeholder;
+# rotate anything real instead. Format: <commit>:<file>:<rule>:<line> (the Fingerprint gitleaks prints).
+
+# JWT signing key used only by Core's in-process tests.
+5600b079e73a446e8d9f7171ec324fef973cad09:services/core/src/test/java/com/sarvaikam/core/learning/ProgressApiTest.java:generic-api-key:45
+5600b079e73a446e8d9f7171ec324fef973cad09:services/core/src/test/java/com/sarvaikam/core/identity/SessionFlowTest.java:generic-api-key:49
+
+# Sample sign-up passwords in auth-service tests.
+9f351eb036f92f5cd9c7ec236656731bb674001c:services/auth-service/test/profile-client.test.cjs:generic-api-key:25
+9f351eb036f92f5cd9c7ec236656731bb674001c:services/auth-service/test/profile-client.test.cjs:generic-api-key:38
+9f351eb036f92f5cd9c7ec236656731bb674001c:services/auth-service/test/access.test.cjs:generic-api-key:118
