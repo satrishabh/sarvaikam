@@ -33,6 +33,12 @@ public class Lesson {
 
     private boolean exclusive;
 
+    /** The seed version this lesson still matches, or "edited" (V10; see SeedLoader). */
+    @Column(name = "seed_sha256")
+    private String seedSha256;
+    public String getSeedSha256() { return seedSha256; }
+    public void setSeedSha256(String seedSha256) { this.seedSha256 = seedSha256; }
+
     private String stage = "STARTER";
 
     private OffsetDateTime updatedAt = OffsetDateTime.now();
