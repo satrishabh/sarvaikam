@@ -254,5 +254,1029 @@
       "Consider schema compatibility and verify service recovery.",
       "Capture a timeline and prevention actions after the incident."
     ]
+  },
+  {
+    "id": "valid-brackets",
+    "category": "Coding",
+    "title": "Check balanced brackets",
+    "difficulty": "Foundation",
+    "minutes": 10,
+    "topic": "coding-interviews",
+    "prompt": "Given a string containing the characters ()[]{} and other text, return whether every bracket is closed by the matching type in the correct order. Explain your approach before writing code.",
+    "constraints": [
+      "Characters other than brackets are ignored.",
+      "An empty string counts as balanced.",
+      "The input can be long, so avoid repeated rescanning."
+    ],
+    "hints": [
+      "Which opening bracket must a closing bracket match?",
+      "A stack holds the openings that are still waiting to be closed."
+    ],
+    "criteria": [
+      "I explained why a stack fits the problem.",
+      "I rejected a closing bracket that arrives with an empty stack.",
+      "I rejected leftover openings at the end.",
+      "I tested nested, interleaved and empty inputs.",
+      "I stated linear time and worst-case linear space."
+    ],
+    "outline": [
+      "Map each closing bracket to its opening partner.",
+      "Push openings; on a closing bracket, pop and compare.",
+      "Fail fast on a mismatch or an empty stack.",
+      "Succeed only if the stack is empty after the scan.",
+      "Walk through \"([)]\" and \"{[]}\" and discuss complexity."
+    ]
+  },
+  {
+    "id": "longest-unique-substring",
+    "category": "Coding",
+    "title": "Longest substring without repeats",
+    "difficulty": "Intermediate",
+    "minutes": 15,
+    "topic": "coding-interviews",
+    "prompt": "Given a string, return the length of the longest contiguous substring in which no character repeats. Describe a brute-force idea first, then improve it.",
+    "constraints": [
+      "The string may contain any Unicode characters.",
+      "Return 0 for an empty string.",
+      "Aim for better than quadratic time."
+    ],
+    "hints": [
+      "Keep a window that never contains a repeated character.",
+      "When a repeat enters, where must the window's left edge move to?"
+    ],
+    "criteria": [
+      "I explained the sliding-window invariant.",
+      "I moved the left edge past the earlier occurrence, never backwards.",
+      "I updated the best length at the right moment.",
+      "I tested \"abba\", all-same and empty strings.",
+      "I explained time and space complexity."
+    ],
+    "outline": [
+      "Describe checking every substring and why it is slow.",
+      "Keep the last index of each character in a map.",
+      "For each right index, move left to max(left, last + 1) on a repeat.",
+      "Record right - left + 1 as a candidate length.",
+      "Trace \"abba\" to show why the max() matters."
+    ]
+  },
+  {
+    "id": "lru-cache",
+    "category": "Coding",
+    "title": "Design an LRU cache",
+    "difficulty": "Advanced",
+    "minutes": 20,
+    "topic": "coding-interviews",
+    "prompt": "Implement a cache with a fixed capacity that supports get(key) and put(key, value) in constant average time. When it is full, putting a new key evicts the least recently used entry.",
+    "constraints": [
+      "Both get and a successful put count as a use.",
+      "Updating an existing key changes its value and its recency.",
+      "Explain the behaviour for capacity 1."
+    ],
+    "hints": [
+      "One structure finds entries fast; another keeps them in recency order.",
+      "A doubly linked list lets you move or remove a node in constant time."
+    ],
+    "criteria": [
+      "I combined a hash map with an ordered list correctly.",
+      "I refreshed recency on both get and put.",
+      "I evicted from the correct end of the list.",
+      "I tested updates, eviction order and capacity 1.",
+      "I explained why each operation is constant time."
+    ],
+    "outline": [
+      "State the operations and what counts as a use.",
+      "Use a map from key to list node and a list from most to least recent.",
+      "On get, move the node to the front and return its value.",
+      "On put, update or insert at the front, then evict the tail if over capacity.",
+      "Mention built-ins such as LinkedHashMap or OrderedDict and their trade-offs."
+    ]
+  },
+  {
+    "id": "rate-limiter-design",
+    "category": "System design",
+    "title": "Design an API rate limiter",
+    "difficulty": "Intermediate",
+    "minutes": 20,
+    "topic": "system-design-interviews",
+    "prompt": "Design a rate limiter for a public API that allows each API key a fixed number of requests per minute across a fleet of stateless servers. Explain the algorithm, where state lives, and how clients learn they are limited.",
+    "constraints": [
+      "The API runs on many servers behind a load balancer.",
+      "The limiter must add little latency to every request.",
+      "Decide what happens if the limiter's store is unavailable."
+    ],
+    "hints": [
+      "Compare fixed windows, sliding windows and token buckets for burst behaviour.",
+      "Where can counters live so every server sees the same count?"
+    ],
+    "criteria": [
+      "I chose an algorithm and explained its burst behaviour.",
+      "I kept shared counters in a fast central store with atomic updates.",
+      "I returned 429 with Retry-After and limit headers.",
+      "I chose fail-open or fail-closed deliberately.",
+      "I discussed hot keys and per-tier limits."
+    ],
+    "outline": [
+      "Clarify the limit, key, scale and accuracy needed.",
+      "Pick a token bucket or sliding window and explain it.",
+      "Store counters in Redis with atomic increments or a script, with expiry.",
+      "Describe the response headers and client retry behaviour.",
+      "Cover store outages, local fallback limits and monitoring."
+    ]
+  },
+  {
+    "id": "chat-system",
+    "category": "System design",
+    "title": "Design one-to-one chat",
+    "difficulty": "Advanced",
+    "minutes": 25,
+    "topic": "system-design-interviews",
+    "prompt": "Design a chat service where users send one-to-one messages that arrive in real time when the recipient is online and are delivered later when they are offline. Cover connections, storage, ordering and delivery receipts.",
+    "constraints": [
+      "Users can be signed in on several devices at once.",
+      "Messages in a conversation must appear in a consistent order.",
+      "A message must not be lost if a server restarts."
+    ],
+    "hints": [
+      "How does a message find the server that holds the recipient's connection?",
+      "Store first, then deliver: what does that buy you?"
+    ],
+    "criteria": [
+      "I chose a real-time transport and explained connection routing.",
+      "I persisted messages before acknowledging the sender.",
+      "I defined per-conversation ordering with sequence numbers.",
+      "I handled offline delivery and multiple devices.",
+      "I discussed sent, delivered and read receipts."
+    ],
+    "outline": [
+      "Clarify scale, features and delivery guarantees.",
+      "Use WebSockets to gateway servers and a presence map of user to gateway.",
+      "Write each message to a store partitioned by conversation, with a sequence number.",
+      "Fan out to online devices; sync missed messages from the last seen sequence.",
+      "Add receipts, retries with idempotent message IDs, and push notifications."
+    ]
+  },
+  {
+    "id": "news-feed",
+    "category": "System design",
+    "title": "Design a news feed",
+    "difficulty": "Advanced",
+    "minutes": 25,
+    "topic": "system-design-interviews",
+    "prompt": "Design the home feed for a social app: each user sees recent posts from the accounts they follow, newest first. Explain how the feed is built, stored and paginated.",
+    "constraints": [
+      "Some accounts have millions of followers.",
+      "Opening the feed must be fast.",
+      "New posts should appear within a few seconds."
+    ],
+    "hints": [
+      "Compare building feeds at write time with building them at read time.",
+      "Do celebrities need a different path from ordinary accounts?"
+    ],
+    "criteria": [
+      "I compared fan-out on write and fan-out on read.",
+      "I chose a hybrid for accounts with huge follower counts.",
+      "I stored feeds as capped lists of post IDs.",
+      "I used cursor-based pagination.",
+      "I discussed deletes, privacy changes and backfill."
+    ],
+    "outline": [
+      "Clarify read and write volumes and freshness.",
+      "Push post IDs into followers' feed lists for ordinary accounts.",
+      "Merge posts from high-follower accounts at read time.",
+      "Hydrate post details from a cache and paginate with a cursor.",
+      "Handle deletes, unfollows, ranking and cold-start users."
+    ]
+  },
+  {
+    "id": "second-highest-salary",
+    "category": "SQL",
+    "title": "Second-highest salary per department",
+    "difficulty": "Foundation",
+    "minutes": 10,
+    "topic": "sql-interviews",
+    "prompt": "Given employees(id, name, department_id, salary), return each department's second-highest distinct salary. Departments with only one distinct salary should still appear, with a null.",
+    "constraints": [
+      "Several employees can share a salary.",
+      "Salaries can be null; decide how to treat them.",
+      "Every department with employees appears exactly once."
+    ],
+    "hints": [
+      "Which ranking function gives tied salaries the same rank with no gaps?",
+      "How do you keep departments that have no second salary?"
+    ],
+    "criteria": [
+      "I used distinct salaries, not distinct rows.",
+      "I chose DENSE_RANK and explained why.",
+      "I kept single-salary departments with a null.",
+      "I stated how null salaries are treated.",
+      "I tested ties and a one-person department."
+    ],
+    "outline": [
+      "Clarify ties and null handling.",
+      "Rank distinct salaries per department with DENSE_RANK.",
+      "Select rank 2 and left join it to the list of departments.",
+      "Mention a correlated MAX(salary) < MAX(salary) alternative.",
+      "Check the result on a small example with ties."
+    ]
+  },
+  {
+    "id": "retention-cohorts",
+    "category": "SQL",
+    "title": "Weekly retention cohorts",
+    "difficulty": "Advanced",
+    "minutes": 20,
+    "topic": "sql-interviews",
+    "prompt": "Given signups(user_id, signed_up_at) and events(user_id, occurred_at), produce a table of signup week, cohort size, and the share of the cohort active in each of the following four weeks.",
+    "constraints": [
+      "A user counts once per week however many events they have.",
+      "Weeks are calendar weeks in UTC.",
+      "Cohorts with no activity still appear with zeros."
+    ],
+    "hints": [
+      "First give every event a week number relative to the user's signup week.",
+      "Count distinct users per cohort and week offset, then divide by cohort size."
+    ],
+    "criteria": [
+      "I defined the cohort and week boundaries explicitly.",
+      "I counted distinct users, not events.",
+      "I kept empty cohort weeks with zeros.",
+      "I avoided integer division in the percentages.",
+      "I checked the result on a tiny dataset."
+    ],
+    "outline": [
+      "Compute each user's signup week with date_trunc.",
+      "Join events and compute the week offset from signup.",
+      "Aggregate distinct active users by cohort and offset 1 to 4.",
+      "Join to cohort sizes and compute shares as decimals.",
+      "Discuss indexes on user_id and occurred_at, and late events."
+    ]
+  },
+  {
+    "id": "disagreed-with-decision",
+    "category": "Behavioral",
+    "title": "Disagree with a technical decision",
+    "difficulty": "Foundation",
+    "minutes": 10,
+    "topic": "behavioral-interviews",
+    "prompt": "Tell me about a time you disagreed with a technical decision made by your team or lead. What did you do, and what happened?",
+    "constraints": [
+      "Use one real situation, not a general philosophy.",
+      "Show how you engaged, not only what you thought.",
+      "Include the outcome, even if your view did not win."
+    ],
+    "hints": [
+      "What evidence did you bring, and how did you raise it?",
+      "If the decision went the other way, how did you commit to it?"
+    ],
+    "criteria": [
+      "I set up the context and stakes briefly.",
+      "I explained my concern with evidence, not opinion.",
+      "I described how I raised it respectfully and to the right people.",
+      "I showed I committed once a decision was made.",
+      "I reflected on what I learned."
+    ],
+    "outline": [
+      "Situation: the project and the decision.",
+      "Concern: what you believed and the evidence behind it.",
+      "Action: how you raised it, listened and proposed options.",
+      "Result: the decision, its outcome and your part in it.",
+      "Reflection: what you would repeat or change."
+    ]
+  },
+  {
+    "id": "missed-deadline",
+    "category": "Behavioral",
+    "title": "A project that missed its deadline",
+    "difficulty": "Intermediate",
+    "minutes": 15,
+    "topic": "behavioral-interviews",
+    "prompt": "Describe a project you worked on that was at risk of missing, or did miss, its deadline. How did you find out, what did you do, and what changed afterwards?",
+    "constraints": [
+      "Own your part rather than blaming others.",
+      "Be specific about how and when you communicated.",
+      "Include something you changed in how you work."
+    ],
+    "hints": [
+      "When did you first see the risk, and who did you tell?",
+      "What trade-offs did you offer: scope, date or people?"
+    ],
+    "criteria": [
+      "I described early warning signs and when I noticed them.",
+      "I communicated the risk early with options.",
+      "I made a concrete trade-off to recover.",
+      "I took ownership of my part.",
+      "I named a lasting change I made."
+    ],
+    "outline": [
+      "Situation: the project, deadline and your role.",
+      "The signal that showed the date was at risk.",
+      "Your actions: re-planning, cutting scope, asking for help.",
+      "The result, stated honestly.",
+      "The change you made to planning or communication."
+    ]
+  },
+  {
+    "id": "zero-downtime-migration",
+    "category": "Cloud & DevOps",
+    "title": "Change a database schema without downtime",
+    "difficulty": "Advanced",
+    "minutes": 20,
+    "topic": "devops-cloud-interviews",
+    "prompt": "You need to rename a heavily used column in a production database behind a service that is deployed with rolling updates. Describe how you would make the change without downtime or errors.",
+    "constraints": [
+      "Old and new versions of the service run at the same time during a rollout.",
+      "The table has hundreds of millions of rows.",
+      "You must be able to roll the application back."
+    ],
+    "hints": [
+      "Can both versions of the code work with the schema at every step?",
+      "Split the change into expand, migrate and contract."
+    ],
+    "criteria": [
+      "I used an expand-and-contract sequence.",
+      "I kept every step compatible with old and new code.",
+      "I backfilled in batches without long locks.",
+      "I kept rollback possible until the contract step.",
+      "I verified data before removing the old column."
+    ],
+    "outline": [
+      "Add the new column; deploy code that writes both and reads old.",
+      "Backfill in small batches and monitor lock time and replication lag.",
+      "Deploy code that reads the new column, still writing both.",
+      "Stop writing the old column once all versions are updated.",
+      "Drop the old column in a later release after verification."
+    ]
+  },
+  {
+    "id": "cloud-cost-spike",
+    "category": "Cloud & DevOps",
+    "title": "Investigate a cloud bill spike",
+    "difficulty": "Intermediate",
+    "minutes": 15,
+    "topic": "devops-cloud-interviews",
+    "prompt": "This month's cloud bill is 40% higher than last month's, and nobody announced a launch. Walk through how you would find the cause and stop it from happening again.",
+    "constraints": [
+      "Several teams share the cloud account.",
+      "Not every resource is tagged.",
+      "Some costs may be legitimate growth."
+    ],
+    "hints": [
+      "Break the bill down by service, project and day before guessing.",
+      "What guardrails would have caught this earlier?"
+    ],
+    "criteria": [
+      "I broke down costs by service, resource and time.",
+      "I separated real growth from waste or mistakes.",
+      "I involved the owning teams before deleting anything.",
+      "I proposed budgets, alerts and tagging rules.",
+      "I measured the saving after the fix."
+    ],
+    "outline": [
+      "Use the billing export or cost explorer to find which service grew and when.",
+      "Correlate the change with deploys, traffic and new resources.",
+      "Check common causes: idle instances, logs, egress, snapshots, autoscaling.",
+      "Agree fixes with owners and apply them safely.",
+      "Add budget alerts, mandatory tags and a regular cost review."
+    ]
+  },
+  {
+    "id": "python-word-frequency",
+    "category": "Coding",
+    "title": "Count words in a large file",
+    "difficulty": "Foundation",
+    "minutes": 10,
+    "topic": "python",
+    "prompt": "Write a Python function that reads a text file and returns the ten most common words with their counts. The file may be larger than the machine's memory.",
+    "constraints": [
+      "Words are case-insensitive and punctuation is not part of a word.",
+      "Do not load the whole file into memory.",
+      "Ties may be returned in any order; say so."
+    ],
+    "hints": [
+      "Iterating over a file object yields one line at a time.",
+      "The standard library already has a counter with a most_common method."
+    ],
+    "criteria": [
+      "I streamed the file line by line.",
+      "I normalised case and stripped punctuation consistently.",
+      "I used collections.Counter or an equivalent dictionary.",
+      "I opened the file with a context manager and an explicit encoding.",
+      "I tested an empty file and a file with ties."
+    ],
+    "outline": [
+      "Open the file with with open(path, encoding=\"utf-8\").",
+      "For each line, lowercase it and extract words with a regex such as [a-z']+.",
+      "Update a Counter with the words.",
+      "Return counter.most_common(10).",
+      "Discuss memory: the counter grows with distinct words, not file size."
+    ]
+  },
+  {
+    "id": "java-thread-safe-counter",
+    "category": "Coding",
+    "title": "Make a counter thread-safe",
+    "difficulty": "Intermediate",
+    "minutes": 15,
+    "topic": "java",
+    "prompt": "A web service counts page views in a HashMap<String, Integer> shared by all request threads, and the totals come out too low. Explain why, then fix it in two different ways and compare them.",
+    "constraints": [
+      "Many threads update the map at the same time.",
+      "Reads of the totals must not block updates for long.",
+      "Keep the public method signature: void hit(String page)."
+    ],
+    "hints": [
+      "What happens when two threads read, add one and write back at once?",
+      "Look at ConcurrentHashMap.merge and LongAdder."
+    ],
+    "criteria": [
+      "I explained the lost-update race and why HashMap is unsafe.",
+      "I gave a synchronized solution and its cost.",
+      "I gave a ConcurrentHashMap solution with an atomic update.",
+      "I compared contention and read behaviour.",
+      "I described how I would test it with many threads."
+    ],
+    "outline": [
+      "Show the read-modify-write race step by step.",
+      "Fix 1: synchronize hit() and the read method.",
+      "Fix 2: ConcurrentHashMap with merge(page, 1, Integer::sum).",
+      "For very hot keys, use computeIfAbsent(page, k -> new LongAdder()).increment().",
+      "Test with an ExecutorService and a known total."
+    ]
+  },
+  {
+    "id": "go-worker-pool",
+    "category": "Coding",
+    "title": "Build a worker pool in Go",
+    "difficulty": "Intermediate",
+    "minutes": 15,
+    "topic": "golang",
+    "prompt": "Write a Go function that downloads a list of URLs using at most five concurrent workers and returns each URL's status code or error. It must stop early if the caller's context is cancelled.",
+    "constraints": [
+      "Results must say which URL each belongs to.",
+      "No goroutine may leak after the function returns.",
+      "One failing URL must not stop the others."
+    ],
+    "hints": [
+      "A jobs channel feeds workers; a results channel collects their answers.",
+      "sync.WaitGroup tells you when it is safe to close the results channel."
+    ],
+    "criteria": [
+      "I limited concurrency to five workers.",
+      "I passed the context into each request.",
+      "I closed channels in the right order without leaks.",
+      "I kept errors per URL instead of failing everything.",
+      "I explained how I would test cancellation."
+    ],
+    "outline": [
+      "Define a Result struct with URL, Status and Err.",
+      "Start five workers reading from a jobs channel.",
+      "Each worker builds requests with http.NewRequestWithContext.",
+      "Feed jobs, close the jobs channel, and close results after wg.Wait() in a goroutine.",
+      "Collect results; on ctx.Done() stop feeding and return what finished."
+    ]
+  },
+  {
+    "id": "node-event-loop",
+    "category": "Coding",
+    "title": "Fix a blocked Node.js server",
+    "difficulty": "Intermediate",
+    "minutes": 15,
+    "topic": "nodejs",
+    "prompt": "An Express endpoint that builds a large report makes every other request on the server wait for several seconds. Explain what is happening in the event loop and give two ways to fix it.",
+    "constraints": [
+      "The report needs heavy CPU work over a large array.",
+      "Other endpoints must stay responsive.",
+      "Explain how you would confirm the cause before fixing it."
+    ],
+    "hints": [
+      "Node runs your JavaScript on a single thread.",
+      "Can the work move to another thread, or be split into smaller pieces?"
+    ],
+    "criteria": [
+      "I explained that synchronous CPU work blocks the event loop.",
+      "I measured it with event-loop delay or a profiler.",
+      "I offered worker_threads as one fix.",
+      "I offered chunking, a queue or precomputing as another.",
+      "I compared the fixes for complexity and throughput."
+    ],
+    "outline": [
+      "Describe the single-threaded event loop and why I/O is not the problem.",
+      "Confirm with perf_hooks.monitorEventLoopDelay or a CPU profile.",
+      "Move the computation to a worker thread pool.",
+      "Or run it as a background job and let the client poll for the result.",
+      "Add a timeout and load test to check other endpoints stay fast."
+    ]
+  },
+  {
+    "id": "nestjs-validation",
+    "category": "Coding",
+    "title": "Validate a NestJS request body",
+    "difficulty": "Foundation",
+    "minutes": 10,
+    "topic": "typescript-nestjs",
+    "prompt": "A NestJS endpoint POST /users accepts a JSON body with name, email and age. Show how you would validate it so bad input gets a clear 400 response and never reaches the service layer.",
+    "constraints": [
+      "Unknown properties must be rejected, not silently stored.",
+      "Age is optional but must be a whole number from 13 to 120.",
+      "Validation must apply to every controller, not just this one."
+    ],
+    "hints": [
+      "Describe the body as a DTO class with class-validator decorators.",
+      "A global ValidationPipe can whitelist and transform input."
+    ],
+    "criteria": [
+      "I wrote a DTO with the right decorators.",
+      "I enabled a global ValidationPipe.",
+      "I rejected unknown fields with whitelist and forbidNonWhitelisted.",
+      "I explained the transform option and type conversion.",
+      "I tested a valid body and three invalid ones."
+    ],
+    "outline": [
+      "Create CreateUserDto with IsString, IsEmail, IsOptional, IsInt, Min and Max.",
+      "Use the DTO as the @Body() type in the controller.",
+      "Register app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true })).",
+      "Show the 400 response shape for a bad email.",
+      "Write e2e tests with supertest for good and bad bodies."
+    ]
+  },
+  {
+    "id": "spring-n-plus-one",
+    "category": "Coding",
+    "title": "Fix an N+1 query in Spring",
+    "difficulty": "Intermediate",
+    "minutes": 15,
+    "topic": "spring-boot",
+    "prompt": "A Spring Boot endpoint lists 50 orders with their customer names, and the logs show 51 SQL queries per request. Explain the cause and fix it.",
+    "constraints": [
+      "Order has a @ManyToOne customer relation.",
+      "The endpoint returns JSON built from the entities.",
+      "Keep lazy loading elsewhere in the app."
+    ],
+    "hints": [
+      "When does Hibernate load a lazy relation?",
+      "Fetch joins, entity graphs and projections each load the data up front."
+    ],
+    "criteria": [
+      "I explained how lazy loading causes one query per order.",
+      "I confirmed it with SQL logging or statistics.",
+      "I fixed it with a fetch join or @EntityGraph.",
+      "I considered a DTO projection instead of entities.",
+      "I added a test that asserts the query count."
+    ],
+    "outline": [
+      "Show the 1 list query plus 50 customer queries.",
+      "Enable SQL logging or Hibernate statistics to confirm.",
+      "Add a repository method with join fetch o.customer or @EntityGraph(attributePaths = \"customer\").",
+      "Or select only the needed columns into a DTO record.",
+      "Mention pagination limits with collection fetch joins."
+    ]
+  },
+  {
+    "id": "docker-slim-image",
+    "category": "Cloud & DevOps",
+    "title": "Shrink a Docker image",
+    "difficulty": "Foundation",
+    "minutes": 10,
+    "topic": "docker",
+    "prompt": "A Node.js service's Docker image is 1.4 GB, takes minutes to build and runs as root. Rewrite the Dockerfile to make it smaller, faster to rebuild and safer.",
+    "constraints": [
+      "The build needs dev dependencies; the runtime does not.",
+      "Rebuilding after a code change should reuse cached layers.",
+      "The container must not run as root."
+    ],
+    "hints": [
+      "Multi-stage builds let you copy only what the runtime needs.",
+      "Order the instructions so the layers that rarely change come first."
+    ],
+    "criteria": [
+      "I used a multi-stage build.",
+      "I copied package files and installed dependencies before the source.",
+      "I used a slim or distroless base image.",
+      "I added a .dockerignore.",
+      "I ran the app as a non-root user."
+    ],
+    "outline": [
+      "Build stage: node base, copy package*.json, npm ci, copy source, build.",
+      "Runtime stage: slim base, npm ci --omit=dev or copy pruned node_modules.",
+      "Copy only the build output from the first stage.",
+      "Add .dockerignore for node_modules, .git and logs.",
+      "Set USER node and check the size with docker image ls."
+    ]
+  },
+  {
+    "id": "k8s-crashloop",
+    "category": "Cloud & DevOps",
+    "title": "Debug a CrashLoopBackOff",
+    "difficulty": "Intermediate",
+    "minutes": 15,
+    "topic": "kubernetes",
+    "prompt": "After a deploy, a pod is stuck in CrashLoopBackOff. Walk through the commands you would run, what each tells you, and the common causes you would check.",
+    "constraints": [
+      "The container exits a few seconds after starting.",
+      "You can use kubectl but not shell into a node.",
+      "The previous version of the deployment worked."
+    ],
+    "hints": [
+      "The logs of the previous container run often hold the answer.",
+      "Events and the last state's exit code narrow down the cause."
+    ],
+    "criteria": [
+      "I used describe to read events, exit code and reason.",
+      "I read logs from the previous container with --previous.",
+      "I checked config: env vars, secrets, config maps and command.",
+      "I checked probes and resource limits, including OOMKilled.",
+      "I compared with the last good revision and considered a rollback."
+    ],
+    "outline": [
+      "kubectl get pods to confirm restarts and status.",
+      "kubectl describe pod for events, exit code and last state.",
+      "kubectl logs <pod> --previous for the crash output.",
+      "Check missing env or secrets, a bad command, a failing liveness probe or OOM.",
+      "kubectl rollout undo if needed, then fix and redeploy."
+    ]
+  },
+  {
+    "id": "terraform-state",
+    "category": "Cloud & DevOps",
+    "title": "Share Terraform state safely",
+    "difficulty": "Intermediate",
+    "minutes": 15,
+    "topic": "terraform",
+    "prompt": "Three engineers apply Terraform from their laptops with local state files, and resources keep drifting or getting duplicated. Design a setup that fixes this.",
+    "constraints": [
+      "Two people may run apply at the same time.",
+      "State files contain secrets.",
+      "Changes should be reviewed before they are applied."
+    ],
+    "hints": [
+      "Where should the single copy of state live?",
+      "What stops two applies from writing state at once?"
+    ],
+    "criteria": [
+      "I moved state to a remote backend.",
+      "I enabled state locking.",
+      "I protected state with encryption and access control.",
+      "I ran plan and apply from CI with review.",
+      "I explained how to import existing resources and migrate state."
+    ],
+    "outline": [
+      "Configure a remote backend such as GCS or S3.",
+      "Use the backend's locking, for example a DynamoDB table or native GCS locking.",
+      "Restrict access to the bucket and enable versioning.",
+      "Run plan on pull requests and apply after merge from CI.",
+      "Migrate with terraform init -migrate-state and import any orphans."
+    ]
+  },
+  {
+    "id": "aws-public-bucket",
+    "category": "Cloud & DevOps",
+    "title": "Serve files without a public bucket",
+    "difficulty": "Foundation",
+    "minutes": 10,
+    "topic": "aws",
+    "prompt": "An app stores user uploads in an S3 bucket that was made public so the frontend could show them. Redesign access so only signed-in users can fetch their own files.",
+    "constraints": [
+      "Files can be large, so they should not stream through the app server.",
+      "Links shared by accident should stop working quickly.",
+      "The bucket must not be public."
+    ],
+    "hints": [
+      "Can the app grant short-lived access to one object?",
+      "Which setting stops anyone making the bucket public again?"
+    ],
+    "criteria": [
+      "I turned on Block Public Access.",
+      "I issued short-lived pre-signed URLs after checking ownership.",
+      "I gave the app an IAM role with least privilege.",
+      "I considered CloudFront with signed URLs for heavy traffic.",
+      "I planned to audit and rotate old public links."
+    ],
+    "outline": [
+      "Enable Block Public Access on the bucket and account.",
+      "Store an owner ID with each object key.",
+      "Add an endpoint that checks the user and returns a pre-signed GET URL valid for minutes.",
+      "Grant the app role only s3:GetObject and s3:PutObject on that prefix.",
+      "Review access logs and remove any old public policies."
+    ]
+  },
+  {
+    "id": "ci-pipeline-design",
+    "category": "Cloud & DevOps",
+    "title": "Design a CI pipeline",
+    "difficulty": "Foundation",
+    "minutes": 10,
+    "topic": "ci-cd",
+    "prompt": "Design a CI pipeline for a web service that runs on every pull request and on merges to main. Say which stages run, in what order, and what blocks a merge.",
+    "constraints": [
+      "Developers want feedback in under ten minutes.",
+      "The same artifact that was tested must be the one deployed.",
+      "Secrets must not leak into logs or forks."
+    ],
+    "hints": [
+      "Which checks are fast enough to run first?",
+      "Build once, then promote the same image."
+    ],
+    "criteria": [
+      "I ordered stages from fastest to slowest.",
+      "I ran independent jobs in parallel and cached dependencies.",
+      "I built one immutable artifact tagged with the commit SHA.",
+      "I made tests and scans required checks.",
+      "I kept secrets away from untrusted pull requests."
+    ],
+    "outline": [
+      "Lint and unit tests in parallel, with dependency caching.",
+      "Build the image once and tag it with the commit SHA.",
+      "Run integration tests and a vulnerability scan on that image.",
+      "On main, push the image and deploy it to staging.",
+      "Promote the same image to production after checks pass."
+    ]
+  },
+  {
+    "id": "observability-slo",
+    "category": "Cloud & DevOps",
+    "title": "Set an SLO and its alert",
+    "difficulty": "Intermediate",
+    "minutes": 15,
+    "topic": "observability",
+    "prompt": "Your team gets paged dozens of times a week for brief CPU spikes, yet users still report slow checkouts that nobody is alerted about. Define an SLO for checkout and an alert that pages only when users are hurt.",
+    "constraints": [
+      "Checkout must be fast and succeed, not just be up.",
+      "Pages should be rare and actionable.",
+      "You have request metrics with status and latency."
+    ],
+    "hints": [
+      "Measure what users experience: success and latency of requests.",
+      "Alert on how fast the error budget is burning, not on single spikes."
+    ],
+    "criteria": [
+      "I chose user-facing SLIs for success rate and latency.",
+      "I set an SLO target and a window, and computed the error budget.",
+      "I used burn-rate alerts over two windows.",
+      "I moved CPU alerts to dashboards or tickets.",
+      "I linked the alert to a runbook."
+    ],
+    "outline": [
+      "SLI: share of checkout requests that succeed in under 1 second.",
+      "SLO: 99.5% over 30 days, so the budget is 0.5% of requests.",
+      "Page when the burn rate is high over both 1 hour and 5 minutes.",
+      "Open a ticket for slow burns over 6 hours.",
+      "Retire noisy resource alerts and write a runbook."
+    ]
+  },
+  {
+    "id": "sql-slow-query",
+    "category": "SQL",
+    "title": "Speed up a slow query",
+    "difficulty": "Intermediate",
+    "minutes": 15,
+    "topic": "databases-sql",
+    "prompt": "SELECT * FROM orders WHERE customer_id = $1 AND status = 'paid' ORDER BY created_at DESC LIMIT 20 takes two seconds on a table of 50 million rows. Explain how you would diagnose it and make it fast.",
+    "constraints": [
+      "The table receives many inserts per second.",
+      "You cannot change the application's query today.",
+      "Explain what you would look for in the query plan."
+    ],
+    "hints": [
+      "Run EXPLAIN (ANALYZE, BUFFERS) and look for sequential scans and sorts.",
+      "Which column order lets an index serve both the filter and the sort?"
+    ],
+    "criteria": [
+      "I read the plan and named the slow step.",
+      "I proposed a composite index on (customer_id, status, created_at DESC).",
+      "I explained why column order matters.",
+      "I weighed the write cost of the new index.",
+      "I created it without blocking writes and checked the new plan."
+    ],
+    "outline": [
+      "Run EXPLAIN (ANALYZE, BUFFERS) on the query.",
+      "Spot the sequential scan or the sort of many rows.",
+      "Create the composite index CONCURRENTLY.",
+      "Consider a partial index WHERE status = 'paid'.",
+      "Re-run the plan and check index-only access and timing."
+    ]
+  },
+  {
+    "id": "redis-cache-aside",
+    "category": "System design",
+    "title": "Add a Redis cache to an API",
+    "difficulty": "Foundation",
+    "minutes": 10,
+    "topic": "redis",
+    "prompt": "A product-detail API reads from Postgres on every request and the database is overloaded. Add Redis as a cache and explain how reads, writes and expiry work.",
+    "constraints": [
+      "Prices change and must not stay stale for more than a minute.",
+      "A cache outage must not take the API down.",
+      "Popular products get thousands of requests per second."
+    ],
+    "hints": [
+      "Cache-aside: read the cache first, then the database on a miss.",
+      "What happens when a hot key expires and many requests miss at once?"
+    ],
+    "criteria": [
+      "I described the cache-aside read path.",
+      "I invalidated or updated the cache on writes.",
+      "I set a TTL that matches the staleness limit.",
+      "I protected hot keys from stampedes.",
+      "I fell back to the database if Redis fails."
+    ],
+    "outline": [
+      "GET product:{id} from Redis; on a hit, return it.",
+      "On a miss, load from Postgres and SET it with a 60-second TTL.",
+      "On price updates, delete the key after the database commit.",
+      "Use a short lock or request coalescing for hot keys, plus TTL jitter.",
+      "Use timeouts on Redis and serve from the database when it is down."
+    ]
+  },
+  {
+    "id": "kafka-exactly-once",
+    "category": "System design",
+    "title": "Process payments from Kafka once",
+    "difficulty": "Advanced",
+    "minutes": 20,
+    "topic": "kafka",
+    "prompt": "A consumer reads payment events from Kafka and credits user wallets. After a crash, some users were credited twice. Explain why and redesign the consumer so each payment is applied once.",
+    "constraints": [
+      "Consumers can crash at any point.",
+      "Kafka delivers at least once to this consumer.",
+      "The wallet balance lives in Postgres."
+    ],
+    "hints": [
+      "When does the consumer commit its offset relative to updating the wallet?",
+      "Could the database itself remember which payments it has applied?"
+    ],
+    "criteria": [
+      "I explained the commit-after-process window that causes duplicates.",
+      "I made the handler idempotent with a unique payment ID.",
+      "I applied the credit and recorded the ID in one transaction.",
+      "I discussed ordering by partition key.",
+      "I described monitoring for consumer lag and failures."
+    ],
+    "outline": [
+      "Show the crash between updating the wallet and committing the offset.",
+      "Add a processed_payments table with a unique payment_id.",
+      "In one transaction, insert the ID and update the balance; skip if the insert conflicts.",
+      "Commit offsets after the transaction; duplicates become no-ops.",
+      "Key events by user ID for ordering, and add a dead-letter topic."
+    ]
+  },
+  {
+    "id": "microservices-saga",
+    "category": "System design",
+    "title": "Place an order across services",
+    "difficulty": "Advanced",
+    "minutes": 20,
+    "topic": "microservices",
+    "prompt": "Placing an order touches three services: orders, payments and inventory, each with its own database. Design the flow so a failure part-way never leaves money taken without stock reserved, or the reverse.",
+    "constraints": [
+      "There is no shared database or distributed transaction.",
+      "Any service can be slow or down for a while.",
+      "Customers should see a clear order status."
+    ],
+    "hints": [
+      "A saga is a series of local transactions with compensating steps.",
+      "How do you publish an event reliably after a local commit?"
+    ],
+    "criteria": [
+      "I designed a saga and chose orchestration or choreography.",
+      "I defined a compensation for each step.",
+      "I used an outbox to publish events reliably.",
+      "I made every step idempotent.",
+      "I exposed order states such as pending, confirmed and cancelled."
+    ],
+    "outline": [
+      "Create the order as pending and write an event to the outbox in the same transaction.",
+      "Reserve inventory, then charge payment, each reacting to the previous event.",
+      "On failure, release inventory or refund payment as compensation.",
+      "Use idempotency keys and retries with backoff.",
+      "Mark the order confirmed or cancelled and notify the customer."
+    ]
+  },
+  {
+    "id": "llm-prompt-evaluation",
+    "category": "AI engineering",
+    "title": "Evaluate a prompt change",
+    "difficulty": "Intermediate",
+    "minutes": 15,
+    "topic": "llms",
+    "prompt": "Your team wants to change the prompt of an LLM feature that summarises support tickets. Describe how you would decide, with evidence, whether the new prompt is better before shipping it.",
+    "constraints": [
+      "Outputs are free text, so exact matching does not work.",
+      "Some tickets contain personal data.",
+      "The change must not raise cost or latency much."
+    ],
+    "hints": [
+      "Start with a fixed set of real examples and a clear definition of good.",
+      "Combine automatic checks, a model grader and human review."
+    ],
+    "criteria": [
+      "I built a representative evaluation set, including hard cases.",
+      "I wrote explicit criteria for a good summary.",
+      "I compared old and new prompts on the same inputs.",
+      "I checked grader agreement with human ratings.",
+      "I tracked cost, latency and privacy alongside quality."
+    ],
+    "outline": [
+      "Collect 100 to 200 real tickets, redact personal data and include edge cases.",
+      "Define criteria: accuracy, coverage of key facts, length and tone.",
+      "Run both prompts and score with checks and an LLM grader using a rubric.",
+      "Spot-check a sample by hand to validate the grader.",
+      "Ship behind a flag and watch user feedback and metrics."
+    ]
+  },
+  {
+    "id": "vector-search-design",
+    "category": "AI engineering",
+    "title": "Build retrieval for a docs assistant",
+    "difficulty": "Intermediate",
+    "minutes": 15,
+    "topic": "vector-databases",
+    "prompt": "Design the retrieval step for an assistant that answers questions from 20,000 internal documents. Explain chunking, embedding, indexing, search and how you would measure retrieval quality.",
+    "constraints": [
+      "Documents are updated daily.",
+      "Some users may not see some documents.",
+      "Answers must cite their sources."
+    ],
+    "hints": [
+      "Chunk size trades context against precision.",
+      "Pure vector search can miss exact terms such as error codes."
+    ],
+    "criteria": [
+      "I chose a chunking strategy with overlap and metadata.",
+      "I chose an embedding model and an approximate index.",
+      "I combined vector and keyword search.",
+      "I filtered results by the user's permissions.",
+      "I measured recall on a labelled question set."
+    ],
+    "outline": [
+      "Split documents by headings into chunks of a few hundred tokens with overlap.",
+      "Store each chunk's embedding with document ID, section and access labels.",
+      "Search with an HNSW index plus keyword search, filtered by permission.",
+      "Re-rank the top results and pass a few chunks, with citations, to the model.",
+      "Re-embed changed documents daily and track recall at k."
+    ]
+  },
+  {
+    "id": "ml-model-drift",
+    "category": "AI engineering",
+    "title": "A model that got worse in production",
+    "difficulty": "Intermediate",
+    "minutes": 15,
+    "topic": "machine-learning",
+    "prompt": "A fraud model that scored well offline catches far fewer frauds three months after launch. Explain how you would find out why and what you would change.",
+    "constraints": [
+      "Labels arrive weeks after each transaction.",
+      "You can see the model's inputs and scores in production.",
+      "Retraining takes a day."
+    ],
+    "hints": [
+      "Compare the data the model sees now with its training data.",
+      "Did the inputs change, or did the meaning of fraud change?"
+    ],
+    "criteria": [
+      "I separated data drift from concept drift.",
+      "I compared feature distributions over time.",
+      "I checked for training-serving skew and pipeline bugs.",
+      "I proposed monitoring that does not wait for labels.",
+      "I planned retraining and a safe rollout."
+    ],
+    "outline": [
+      "Check the pipeline first: missing features, unit changes, defaults.",
+      "Compare feature and score distributions with the training data, for example with PSI.",
+      "Analyse recent labelled fraud the model missed.",
+      "Retrain on recent data and evaluate on a time-based split.",
+      "Monitor drift and score distributions daily, and shadow-test the new model."
+    ]
+  },
+  {
+    "id": "gitops-rollback",
+    "category": "Cloud & DevOps",
+    "title": "Roll back with GitOps",
+    "difficulty": "Intermediate",
+    "minutes": 15,
+    "topic": "helm-gitops",
+    "prompt": "Your services are deployed by Argo CD from Helm charts in a Git repository. A bad release has just gone out. Explain how you would roll back, and why running kubectl or helm rollback by hand is a problem.",
+    "constraints": [
+      "Argo CD auto-syncs from the main branch.",
+      "The release included a values change and a new image tag.",
+      "The team needs an audit trail of what ran when."
+    ],
+    "hints": [
+      "In GitOps, the repository is the source of truth.",
+      "What does auto-sync do to a manual change in the cluster?"
+    ],
+    "criteria": [
+      "I rolled back by reverting the commit in Git.",
+      "I explained that manual changes are drift that auto-sync undoes.",
+      "I verified the sync and the app's health after the revert.",
+      "I mentioned pausing auto-sync only as a deliberate emergency step.",
+      "I proposed safeguards such as progressive delivery."
+    ],
+    "outline": [
+      "Revert the release commit and let Argo CD sync it.",
+      "Watch the Argo CD app status, pods and key metrics recover.",
+      "Explain why helm rollback or kubectl edits get overwritten and leave no Git record.",
+      "If Git is unavailable, pause sync, mitigate, then record the change in Git.",
+      "Add canary or blue-green rollouts and automated analysis."
+    ]
   }
 ]
