@@ -19,7 +19,7 @@ import { useAuth } from "../auth";
 import LessonAssets from "../components/LessonAssets";
 import QuickCheck from "../components/QuickCheck";
 import Icon from "../components/Icon";
-import { LearningPath, nextInPath, readFollowedPath, stageName } from "../learning";
+import { LearningPath, levelName, nextInPath, readFollowedPath, stageName } from "../learning";
 import { PracticeQuestion, practiceForTopic } from "../practice";
 import { readingMinutes } from "../engagement";
 import { applyPageMeta, defaultDescription, describeMarkdown, lessonStructuredData } from "../seo";
@@ -208,7 +208,7 @@ export default function LessonPage() {
             {
               ...lesson,
               topicSummary: summary,
-              level: topic?.slug === lesson.topicSlug ? topic.level : undefined,
+              level: topic?.slug === lesson.topicSlug && topic.level ? levelName(topic.level) : undefined,
               minutes: readingMinutes(lesson.contentMd),
             },
             origin,
