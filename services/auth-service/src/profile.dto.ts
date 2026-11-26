@@ -52,6 +52,13 @@ export class PolicyDto {
   permissions: Permission[];
 }
 
+export class LearningPreferencesDto {
+  @IsString() @MaxLength(100) @Matches(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)
+  path: string;
+  @IsIn([1, 3, 5])
+  dailyGoal: 1 | 3 | 5;
+}
+
 export class ReaderPreferencesDto {
   @IsIn([16, 18, 20, 22])
   size: 16 | 18 | 20 | 22;

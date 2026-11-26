@@ -6,6 +6,8 @@ COPY . .
 RUN npm run build
 
 FROM nginx:1.27-alpine
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# The nginx image fills ${PROGRESS_UPSTREAM} in templates when the container starts; nginx's own $variables stay.
+COPY nginx.conf /etc/nginx/templates/default.conf.template
+ENV PROGRESS_UPSTREAM=http://core:8084
 COPY --from=build /app/dist /usr/share/nginx/html
 EXPOSE 80

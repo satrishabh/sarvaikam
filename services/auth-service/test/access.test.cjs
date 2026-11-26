@@ -49,6 +49,10 @@ for (const [description, claims] of [
   ['wrong client', { azp: 'another-app' }],
   ['empty subject', { sub: '' }],
 ]) test(`rejects ${description}`, async () => { await assert.rejects(fixture().service.exchangeProfileToken(token(claims))); });
+test('accepts tokens from the web client the Core signs learners in with', async () => {
+  const result = await fixture().service.exchangeProfileToken(token({ azp: 'sarvaikam-learn-web' }));
+  assert.equal(result.token, 'session-token');
+});
 test('normal registration creates an active user with no approval', async () => {
   const result = await fixture().service.exchangeProfileToken(token());
   assert.equal(result.user.role, 'USER'); assert.equal(result.user.businessStatus, 'NONE');
@@ -119,12 +123,55 @@ test('DTO validation rejects malformed email, weak password, and invalid website
   assert.ok((await validate(plainToInstance(BusinessApplicationDto, { organization: 'A', website: 'javascript:alert(1)', reason: 'short' }))).length >= 3);
   assert.ok((await validate(plainToInstance(PolicyDto, { permissions: ['admin.superuser'] }))).length);
 });
-test('session actions reject form CSRF and rate-limit login attempts', () => {
+test('session actions reject form CSRF and rate-limit per account, not per shared IP', async () => {
   const c = new SessionController({}, {});
-  assert.throws(() => c.check({ get: () => undefined }));
-  const req = { get: () => 'web', ip: '127.0.0.1', path: '/login' };
-  for (let i = 0; i < 12; i++) c.check(req);
-  assert.throws(() => c.check(req));
+  await assert.rejects(c.check({ get: () => undefined }, []), { status: 403 });
+  const as = email => ({ get: () => 'web', ip: '10.0.0.1', body: { email } });
+  for (let i = 0; i < 10; i++) await c.check(as('a@example.com'), c.accountRules(as('a@example.com'), 'login', 10, 300));
+  await assert.rejects(c.check(as('a@example.com'), c.accountRules(as('a@example.com'), 'login', 10, 300)), /Too many/);
+  // Another learner behind the same NAT address can still sign in.
+  await c.check(as('b@example.com'), c.accountRules(as('b@example.com'), 'login', 10, 300));
+});
+
+const { ServiceUnavailableException } = require('@nestjs/common');
+function sessionFixture(profile, auth = {}) {
+  const cleared = []; const set = [];
+  const res = { setHeader() {}, clearCookie: (name) => cleared.push(name), cookie: (name, value) => set.push([name, value]) };
+  const req = (cookie) => ({ get: () => 'web', ip: '10.0.0.1', headers: cookie ? { cookie: `sarvaikam.profile-session=${cookie}` } : {} });
+  return { c: new SessionController(profile, auth), res, req, cleared, set };
+}
+test('anonymous refresh is rejected without contacting the Profile Manager or using a rate-limit slot', async () => {
+  let calls = 0;
+  const { c, res, req } = sessionFixture({ refresh: async () => { calls++; } });
+  for (let i = 0; i < 500; i++) await assert.rejects(c.refresh(req(), res), { status: 401 });
+  assert.equal(calls, 0);
+});
+test('a Profile Manager outage during refresh keeps the session cookie', async () => {
+  const { c, res, req, cleared } = sessionFixture({ refresh: async () => { throw new ServiceUnavailableException(); } });
+  await assert.rejects(c.refresh(req('rt'), res), { status: 503 });
+  assert.deepEqual(cleared, []);
+});
+test('a rejected refresh session clears the cookie', async () => {
+  const { UnauthorizedException } = require('@nestjs/common');
+  const { c, res, req, cleared } = sessionFixture({ refresh: async () => { throw new UnauthorizedException(); } });
+  await assert.rejects(c.refresh(req('rt'), res), { status: 401 });
+  assert.deepEqual(cleared, ['sarvaikam.profile-session']);
+});
+test('logout always clears the cookie, even when revoking fails', async () => {
+  const { c, res, req, cleared } = sessionFixture({ logout: async () => { throw new ServiceUnavailableException(); } });
+  c.log = { warn() {} };
+  assert.deepEqual(await c.logout(req('rt'), res), { message: 'Signed out', revoked: false });
+  assert.deepEqual(cleared, ['sarvaikam.profile-session']);
+  assert.deepEqual(await c.logout(req(), res), { message: 'Signed out', revoked: true });
+});
+test('logout-all ends every session for the identity behind the cookie', async () => {
+  const access = ['h', Buffer.from(JSON.stringify({ sub: 'kc-123' })).toString('base64url'), 's'].join('.');
+  const ended = [];
+  const { c, res, req, cleared } = sessionFixture({ refresh: async () => ({ access_token: access }), logoutEverywhere: async s => ended.push(s) });
+  await c.logoutAll(req('rt'), res);
+  assert.deepEqual(ended, ['kc-123']);
+  assert.deepEqual(cleared, ['sarvaikam.profile-session']);
+  await assert.rejects(c.logoutAll(req(), res), { status: 401 });
 });
 test('PostgreSQL entity metadata has valid types without connecting to a database', async () => {
   const { DataSource } = require('typeorm');

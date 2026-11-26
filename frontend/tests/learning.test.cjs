@@ -177,6 +177,64 @@ test("blocked browser storage does not break the reader", (t) => {
 });
 
 test("backend path seed follows the requested engineering priority", () => {
-  assert.deepEqual(learningPaths.map(p => p.slug), ['gen-ai', 'ai-ml', 'cloud', 'full-stack', 'backend', 'forward-deployed']);
-  assert.deepEqual(learningPaths.map(p => p.priority), [1, 2, 3, 4, 5, 6]);
+  const ordered = [...learningPaths].sort((a, b) => a.priority - b.priority);
+  assert.deepEqual(ordered.map(p => p.slug), ['gen-ai', 'ai-ml', 'cloud', 'backend', 'full-stack', 'forward-deployed']);
+  assert.deepEqual(ordered.map(p => p.priority), [1, 2, 3, 4, 5, 6]);
+});
+
+const { nextInPath } = require("../../.cache/learning-tests/learning.js");
+const { practiceForTopic } = require("../../.cache/learning-tests/practice.js");
+
+test("finishing a topic leads to the next published topic, preferring the followed path", () => {
+  const paths = [
+    { slug: "backend", priority: 4, topics: ["java", "spring-boot", "databases-sql"] },
+    { slug: "full-stack", priority: 5, topics: ["java", "react"] },
+  ];
+  const categories = [{ topics: [
+    { slug: "java", lessonCount: 3 }, { slug: "spring-boot", lessonCount: 0 },
+    { slug: "databases-sql", lessonCount: 2 }, { slug: "react", lessonCount: 4 },
+  ] }];
+  assert.equal(nextInPath("java", paths, categories).topic.slug, "databases-sql", "skips empty topics, highest priority first");
+  assert.equal(nextInPath("java", paths, categories, "full-stack").topic.slug, "react", "the followed path wins");
+  assert.equal(nextInPath("databases-sql", paths, categories), null, "last topic of every path");
+  assert.equal(nextInPath("unknown", paths, categories), null);
+});
+
+test("practice opens the topic's own exercise when there is one", () => {
+  const sql = practiceForTopic("sql-interviews", practiceQuestions);
+  assert.equal(sql.topic, "sql-interviews");
+  assert.equal(practiceForTopic("no-such-topic", practiceQuestions), undefined);
+});
+
+const { snippetParts } = require("../../.cache/learning-tests/search.js");
+
+test("search snippets split into plain and matched text without HTML", () => {
+  assert.deepEqual(snippetParts("a \u0002vector\u0003 <b>store</b> \u0002db\u0003"), [
+    { text: "a ", match: false },
+    { text: "vector", match: true },
+    { text: " <b>store</b> ", match: false },
+    { text: "db", match: true },
+  ]);
+  assert.deepEqual(snippetParts("no matches"), [{ text: "no matches", match: false }]);
+  assert.deepEqual(snippetParts("cut \u0002off"), [{ text: "cut ", match: false }, { text: "off", match: true }]);
+});
+
+const { quickCheckScore } = require("../../.cache/learning-tests/quickCheck.js");
+
+test("quick check scores right answers and treats skipped questions as wrong", () => {
+  const questions = [{ answer: 1 }, { answer: 0 }, { answer: 2 }];
+  assert.equal(quickCheckScore(questions, [1, 0, 2]), 3);
+  assert.equal(quickCheckScore(questions, [1, 1, undefined]), 1);
+  assert.equal(quickCheckScore(questions, []), 0);
+});
+
+const { needsOnboarding } = require("../../.cache/learning-tests/learning.js");
+
+test("onboarding shows once per account until a path is chosen or it is skipped on this device", () => {
+  const fresh = { id: "u1", learningPreferences: null };
+  assert.equal(needsOnboarding(null, ""), false, "signed out");
+  assert.equal(needsOnboarding(fresh, ""), true);
+  assert.equal(needsOnboarding(fresh, "u1"), false, "skipped here");
+  assert.equal(needsOnboarding(fresh, "someone-else"), true, "another account skipped");
+  assert.equal(needsOnboarding({ id: "u1", learningPreferences: { path: "gen-ai", dailyGoal: 3 } }, ""), false);
 });

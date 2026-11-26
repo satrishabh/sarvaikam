@@ -1,12 +1,16 @@
 import type { ReaderPreferences } from './readerPreferences';
 import type { PracticeQuestion } from './practice';
 import type { LearningPath } from './learning';
+import type { LessonHit } from './search';
+import type { QuickCheckQuestion } from './quickCheck';
 
 export interface Reel {
   slug: string; courseSlug: string; courseName: string; lessonSlug: string;
   step: number; heading: string; content: string; sourceName: string; sourceUrl: string; published: boolean;
+  /** The lesson the reel summarises, for saving it; null for reels created before this field existed. */
+  lessonId?: number | null;
 }
-export type ReelInput = Omit<Reel, 'courseName' | 'step'>;
+export type ReelInput = Omit<Reel, 'courseName' | 'step' | 'lessonId'>;
 export interface TopicSummary {
   id: number;
   slug: string;
@@ -66,6 +70,8 @@ export interface User {
   disabled: boolean;
   createdAt: string;
   readerPreferences: ReaderPreferences | null;
+  /** Path and daily goal chosen during onboarding; null until chosen. */
+  learningPreferences: { path: string; dailyGoal: 1 | 3 | 5 } | null;
 }
 export type Role = 'ADMIN' | 'BUSINESS' | 'USER';
 export type Permission = 'content.exclusive' | 'content.manage' | 'assets.download' | 'candidates.view';
@@ -91,20 +97,49 @@ export const tokenStore = {
   },
 };
 
+/** An HTTP failure; status 0 means the request never reached the server. */
+export class ApiError extends Error {
+  constructor(message: string, readonly status: number) { super(message); }
+}
+/** True when a session was refused (sign in again), as opposed to a temporary outage worth retrying. */
+export const isSessionRejected = (error: unknown) =>
+  error instanceof ApiError && (error.status === 401 || error.status === 403);
+
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   const headers = new Headers(init.headers);
   headers.set('X-Sarvaikam-Client', 'web');
   if (init.body) headers.set('Content-Type', 'application/json');
   const token = tokenStore.get();
   if (token) headers.set('Authorization', `Bearer ${token}`);
-  const res = await fetch(path, { ...init, headers });
+  let res: Response;
+  try { res = await fetch(path, { ...init, headers }); }
+  catch { throw new ApiError('You appear to be offline. Check your connection and try again.', 0); }
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
     const msg = Array.isArray(body.message) ? body.message.join(', ') : body.message ?? body.error;
-    throw new Error(msg ?? `Request failed (${res.status})`);
+    throw new ApiError(msg ?? `Request failed (${res.status})`, res.status);
   }
   return res.status === 204 ? (undefined as T) : res.json();
 }
+
+export type SignInMode = 'keycloak' | 'password';
+let signInModeOnce: Promise<SignInMode> | null = null;
+/**
+ * How learners sign in, asked once per page load. "keycloak": the Core runs sign-in on the Keycloak login page and
+ * keeps the session in an HttpOnly cookie. Anything else, including no Core behind /api/session, falls back to
+ * the in-app email and password form served by auth-service.
+ */
+export function signInMode(): Promise<SignInMode> {
+  signInModeOnce ??= fetch('/api/session/options', { headers: { 'X-Sarvaikam-Client': 'web' } })
+    .then(res => (res.ok ? res.json() : null))
+    .then((body: { signIn?: string } | null): SignInMode => (body?.signIn === 'keycloak' ? 'keycloak' : 'password'))
+    .catch((): SignInMode => 'password');
+  return signInModeOnce;
+}
+/** Where the browser goes to sign in or create an account on the Keycloak page, and comes back to afterwards. */
+export const keycloakUrl = (screen: 'login' | 'register', returnTo: string) =>
+  `/api/session/${screen}?returnTo=${encodeURIComponent(returnTo)}`;
+const viaCore = async () => (await signInMode()) === 'keycloak';
 
 const enc = encodeURIComponent;
 const fileType = (file: File) => ({ pdf: 'application/pdf', zip: 'application/zip', mp4: 'video/mp4', webm: 'video/webm', txt: 'text/plain' }[file.name.split('.').pop()?.toLowerCase() ?? ''] ?? 'application/octet-stream');
@@ -117,7 +152,7 @@ export const api = {
     request<TopicSummary>('/api/content/admin/topics', { method: 'PUT', body: JSON.stringify(course) }),
   paths: () => request<LearningPath[]>('/api/content/paths'),
   practiceQuestions: () => request<PracticeQuestion[]>('/api/content/practice'),
-  reels: () => request<Reel[]>('/api/content/reels'),
+  reels: () => request<Reel[]>('/api/content/reels?limit=100'),
   adminReels: () => request<Reel[]>('/api/content/admin/reels'),
   saveReel: (reel: ReelInput) => request<void>('/api/content/admin/reels', { method: 'PUT', body: JSON.stringify(reel) }),
   deleteReel: (slug: string) => request<void>(`/api/content/admin/reels/${enc(slug)}`, { method: 'DELETE' }),
@@ -126,6 +161,8 @@ export const api = {
   lesson: (topic: string, lesson: string) =>
     request<Lesson>(`/api/content/topics/${enc(topic)}/lessons/${enc(lesson)}`),
   search: (q: string) => request<TopicSummary[]>(`/api/content/search?q=${enc(q)}`),
+  searchLessons: (q: string) => request<LessonHit[]>(`/api/content/search/lessons?q=${enc(q)}`),
+  quickCheck: (topic: string, lesson: string) => request<QuickCheckQuestion[]>(`/api/content/topics/${enc(topic)}/lessons/${enc(lesson)}/quick-check`),
 
   exchangeProfileToken: async (accessToken: string) => {
     const res = await fetch('/api/auth/oidc/exchange', {
@@ -141,8 +178,13 @@ export const api = {
   me: () => request<User>('/api/auth/me'),
   login: (email: string, password: string) => request<Session>('/api/auth/session/login', { method: 'POST', body: JSON.stringify({ email, password }) }),
   register: (name: string, email: string, password: string) => request<{ message: string }>('/api/auth/session/register', { method: 'POST', body: JSON.stringify({ name, email, password }) }),
-  refresh: () => request<Session>('/api/auth/session/refresh', { method: 'POST' }),
-  logout: () => request<void>('/api/auth/session/logout', { method: 'POST' }),
+  refresh: async () => (await viaCore())
+    ? request<Session>('/api/session')
+    : request<Session>('/api/auth/session/refresh', { method: 'POST' }),
+  logout: async () => request<{ message: string; revoked: boolean }>(
+    (await viaCore()) ? '/api/session/logout' : '/api/auth/session/logout', { method: 'POST' }),
+  logoutEverywhere: async () => request<{ message: string }>(
+    (await viaCore()) ? '/api/session/logout-all' : '/api/auth/session/logout-all', { method: 'POST' }),
   emailAction: (action: 'recover' | 'verify-email', email: string) => request<{ message: string }>(`/api/auth/session/${action}`, { method: 'POST', body: JSON.stringify({ email }) }),
   applyBusiness: (body: { organization: string; website: string; reason: string }) => request<User>('/api/auth/me/business-application', { method: 'POST', body: JSON.stringify(body) }),
   users: (q: string, status: string, page: number) => request<{ items: User[]; total: number; page: number; pageSize: number }>(`/api/auth/admin/users?q=${enc(q)}&status=${enc(status)}&page=${page}`),
@@ -170,6 +212,8 @@ export const api = {
     request<void>(`/api/progress/lessons/${lessonId}/complete`, { method: 'DELETE' }),
   updateReaderPreferences: (prefs: ReaderPreferences) =>
     request<User>('/api/auth/me/reader-preferences', { method: 'PUT', body: JSON.stringify(prefs) }),
+  updateLearningPreferences: (prefs: { path: string; dailyGoal: 1 | 3 | 5 }) =>
+    request<User>('/api/auth/me/learning-preferences', { method: 'PUT', body: JSON.stringify(prefs) }),
   bookmarks: () => request<BookmarkItem[]>('/api/progress/me/bookmarks'),
   bookmark: (lessonId: number, topicSlug: string) =>
     request<void>(`/api/progress/lessons/${lessonId}/bookmark`, {

@@ -5,13 +5,15 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"log"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"os"
+	"os/signal"
 	"regexp"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -46,6 +48,7 @@ type server struct {
 	secret    []byte
 	readyURLs []string
 	client    *http.Client
+	sessions  *sessionCache // nil disables caching
 }
 
 type progressItem struct {
@@ -60,20 +63,27 @@ type bookmarkItem struct {
 	CreatedAt time.Time `json:"createdAt"`
 }
 
+var placeholderSecret = regexp.MustCompile(`(?i)change-?me|example|placeholder`)
+
 func main() {
+	setupLogging(env("LOG_FORMAT", "text"), os.Stdout)
 	ctx := context.Background()
 	db, err := connect(ctx, env("DATABASE_URL", "postgres://sarvaikam:sarvaikam@localhost:5432/sarvaikam?sslmode=disable"))
 	if err != nil {
-		log.Fatalf("db: %v", err)
+		fatal("db: %v", err)
 	}
 	defer db.Close()
 	if _, err := db.Exec(ctx, schema); err != nil {
-		log.Fatalf("migrate: %v", err)
+		fatal("migrate: %v", err)
 	}
 
 	jwtSecret := env("JWT_SECRET", "")
 	if len(jwtSecret) < 32 {
-		log.Fatal("JWT_SECRET must be set to at least 32 characters")
+		fatal("JWT_SECRET must be set to at least 32 characters")
+	}
+	// Published placeholder values are public knowledge; outside dev they would let anyone mint tokens.
+	if env("APP_ENV", "prod") != "dev" && placeholderSecret.MatchString(jwtSecret) {
+		fatal("JWT_SECRET is a published placeholder value; generate one with: openssl rand -base64 48")
 	}
 
 	s := &server{
@@ -81,10 +91,19 @@ func main() {
 		secret:    []byte(jwtSecret),
 		readyURLs: splitList(os.Getenv("READY_URLS")),
 		client:    &http.Client{Timeout: 2 * time.Second},
+		sessions: newSessionCache(
+			time.Duration(envInt("SESSION_CACHE_TTL_SECONDS", 30))*time.Second,
+			time.Duration(envInt("SESSION_CACHE_STALE_SECONDS", 300))*time.Second,
+			10000),
 	}
 
 	r := chi.NewRouter()
-	r.Use(middleware.RequestID, middleware.RealIP, middleware.Logger, middleware.Recoverer)
+	r.Use(middleware.RequestID, middleware.RealIP)
+	if env("LOG_FORMAT", "text") == "json" {
+		r.Use(recoverJSON) // nginx's access log already records every request
+	} else {
+		r.Use(middleware.Logger, middleware.Recoverer)
+	}
 	r.Route("/api/progress", func(r chi.Router) {
 		r.Get("/health", func(w http.ResponseWriter, _ *http.Request) { writeJSON(w, 200, map[string]string{"status": "UP"}) })
 		r.Get("/ready", s.ready)
@@ -102,9 +121,34 @@ func main() {
 	})
 
 	addr := ":" + env("PORT", "8083")
-	log.Printf("progress-service listening on %s", addr)
-	srv := &http.Server{Addr: addr, Handler: r, ReadHeaderTimeout: 5 * time.Second}
-	log.Fatal(srv.ListenAndServe())
+	slog.Info("progress-service listening", "addr", addr)
+	srv := &http.Server{Addr: addr, Handler: r, ReadHeaderTimeout: 5 * time.Second,
+		ReadTimeout: 15 * time.Second, WriteTimeout: 30 * time.Second, IdleTimeout: 60 * time.Second}
+	go func() {
+		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			fatal("listen: %v", err)
+		}
+	}()
+
+	// Drain in-flight requests on SIGTERM (Kubernetes rollout, supervisord stop) instead of dropping them.
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, syscall.SIGTERM, os.Interrupt)
+	<-stop
+	slog.Info("progress-service shutting down")
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	defer cancel()
+	if err := srv.Shutdown(shutdownCtx); err != nil {
+		slog.Warn("shutdown", "error", err)
+	}
+	db.Close()
+}
+
+// envInt reads a non-negative integer setting, falling back to def when unset or invalid.
+func envInt(key string, def int) int {
+	if n, err := strconv.Atoi(os.Getenv(key)); err == nil && n >= 0 {
+		return n
+	}
+	return def
 }
 
 // connect retries so the service tolerates Postgres starting slowly in k8s.
@@ -142,7 +186,16 @@ func (s *server) auth(next http.Handler) http.Handler {
 			writeErr(w, http.StatusUnauthorized, "invalid token subject")
 			return
 		}
-		// Current profile permissions, not stale JWT role claims, govern every request.
+		serve := func(permissions []string) {
+			ctx := context.WithValue(r.Context(), ctxKey{}, sub)
+			ctx = context.WithValue(ctx, permissionsKey{}, permissions)
+			next.ServeHTTP(w, r.WithContext(ctx))
+		}
+		// Current profile permissions, not stale JWT role claims, govern every request (cached briefly; see sessions.go).
+		if permissions, ok := s.sessions.fresh(sub); ok {
+			serve(permissions)
+			return
+		}
 		req, err := http.NewRequestWithContext(r.Context(), http.MethodGet, env("AUTH_SERVICE_URL", "http://localhost:8082")+"/api/auth/me", nil)
 		if err != nil {
 			writeErr(w, 503, "session validation unavailable")
@@ -150,7 +203,16 @@ func (s *server) auth(next http.Handler) http.Handler {
 		}
 		req.Header.Set("Authorization", r.Header.Get("Authorization"))
 		res, err := s.client.Do(req)
+		if err == nil && res.StatusCode >= 500 {
+			res.Body.Close()
+			err = errors.New("auth-service returned " + res.Status)
+		}
 		if err != nil {
+			// auth-service is down: keep recently validated learners working instead of failing every request.
+			if permissions, ok := s.sessions.stale(sub); ok {
+				serve(permissions)
+				return
+			}
 			writeErr(w, 503, "session validation unavailable")
 			return
 		}
@@ -160,12 +222,12 @@ func (s *server) auth(next http.Handler) http.Handler {
 			Permissions []string `json:"permissions"`
 		}
 		if res.StatusCode != http.StatusOK || json.NewDecoder(res.Body).Decode(&profile) != nil || profile.ID != sub {
+			s.sessions.forget(sub)
 			writeErr(w, http.StatusUnauthorized, "account unavailable")
 			return
 		}
-		ctx := context.WithValue(r.Context(), ctxKey{}, sub)
-		ctx = context.WithValue(ctx, permissionsKey{}, profile.Permissions)
-		next.ServeHTTP(w, r.WithContext(ctx))
+		s.sessions.store(sub, profile.Permissions)
+		serve(profile.Permissions)
 	})
 }
 

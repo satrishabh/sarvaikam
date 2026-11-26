@@ -69,7 +69,7 @@
   },
   {
     "slug": "full-stack",
-    "name": "Full Stack Engineering",
+    "name": "Full-stack Foundations",
     "subtitle": "Connect the application from interface to data.",
     "icon": "code",
     "tone": "violet",
@@ -88,7 +88,7 @@
       "Build and test typed application code",
       "Deliver a working application"
     ],
-    "priority": 4
+    "priority": 5
   },
   {
     "slug": "backend",
@@ -110,7 +110,7 @@
       "Choose data and caching strategies",
       "Explain system trade-offs"
     ],
-    "priority": 5
+    "priority": 4
   },
   {
     "slug": "forward-deployed",

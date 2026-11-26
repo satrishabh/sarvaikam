@@ -13,7 +13,7 @@
   display: none;
 }
 .reels-feed:focus-visible {
-  outline: 2px solid #a74412;
+  outline: 2px solid var(--color-focus);
   outline-offset: 4px;
 }
 
@@ -24,9 +24,9 @@
   justify-content: space-between;
   gap: 24px;
   padding: 28px 24px;
-  border: 1px solid #e3e7ed;
+  border: 1px solid var(--color-chrome-line);
   border-radius: 22px;
-  background: linear-gradient(160deg, #ffffff 0%, #fff6ef 100%);
+  background: linear-gradient(160deg, var(--color-surface) 0%, var(--color-reel-wash) 100%);
   scroll-snap-align: start;
   scroll-snap-stop: always;
   touch-action: pan-y;
@@ -38,13 +38,13 @@
   font-weight: 600;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #526579;
+  color: var(--color-chrome-subtle);
 }
 .reel-title {
   font-size: 1.75rem;
   line-height: 1.2;
   font-weight: 600;
-  color: #10231e;
+  color: var(--color-brand);
 }
 .reel-lines {
   display: grid;
@@ -54,11 +54,11 @@
   list-style: none;
   font-size: 1.125rem;
   line-height: 1.55;
-  color: #1f2d3d;
+  color: var(--color-reel-ink);
 }
 .reel-lines li {
   padding-left: 14px;
-  border-left: 3px solid #a74412;
+  border-left: 3px solid var(--color-accent);
 }
 .reel-footer {
   display: flex;
@@ -67,13 +67,13 @@
   justify-content: space-between;
   gap: 12px;
   padding-top: 16px;
-  border-top: 1px solid #e3e7ed;
+  border-top: 1px solid var(--color-chrome-line);
 }
 .reel-source {
   flex: 1 1 140px;
   min-width: 0;
   font-size: 13px;
-  color: #526579;
+  color: var(--color-chrome-subtle);
   overflow-wrap: anywhere;
 }
 
@@ -91,7 +91,7 @@
   gap: 6px;
   font-size: 14px;
   font-weight: 600;
-  color: #10231e;
+  color: var(--color-brand);
 }
 .reels-count {
   display: none;
@@ -148,8 +148,8 @@
   .app-shell.is-reels .reels-back {
     padding: 8px 14px;
     border-radius: 999px;
-    background: #ffffff;
-    box-shadow: 0 6px 20px rgb(16 35 30 / 0.15);
+    background: var(--color-surface);
+    box-shadow: 0 6px 20px rgb(var(--color-brand-rgb) / 0.15);
     white-space: nowrap;
   }
   .app-shell.is-reels .reels-count {
@@ -157,8 +157,8 @@
     margin: 0;
     padding: 6px 12px;
     border-radius: 999px;
-    background: rgb(16 35 30 / 0.78);
-    color: #ffffff;
+    background: rgb(var(--color-brand-rgb) / 0.78);
+    color: var(--color-on-brand);
     font-size: 12px;
     font-weight: 600;
     font-variant-numeric: tabular-nums;

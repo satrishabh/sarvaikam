@@ -1,0 +1,127 @@
+{
+  "python/basics": [
+    {"question": "In the example, what does `advanced` contain after the comprehension runs?", "options": ["[\"python\"]", "[\"python\", \"go\"]", "[\"rust\"]", "{\"python\": 3}"], "answer": 0, "explain": "Only python has a level of 2 or more; the comprehension keeps names, not the dict."},
+    {"question": "What does `skills[\"rust\"] = 0` do to the dict?", "options": ["Adds a new key rust with value 0", "Raises a KeyError because rust is missing", "Removes rust from the dict", "Replaces the whole dict"], "answer": 0, "explain": "Assigning to a missing key adds it."}
+  ],
+  "python/environments": [
+    {"question": "Why create a virtual environment for each project?", "options": ["To isolate each project's packages", "To make Python run faster", "To share one set of packages across all projects", "To avoid writing a pyproject.toml"], "answer": 0, "explain": "The lesson's rule is to isolate each project."},
+    {"question": "Which command creates a virtual environment in `.venv`?", "options": ["python -m venv .venv", "pip install .venv", "uv activate .venv", "python .venv/bin/activate"], "answer": 0, "explain": "`python -m venv .venv` creates it; activate is a separate step."},
+    {"question": "Which file do modern tools such as uv and poetry use to describe a project?", "options": ["pyproject.toml", "setup.cfg only", "requirements.lock", "venv.json"], "answer": 0, "explain": "The lesson names `pyproject.toml` with uv or poetry."}
+  ],
+  "python/typing-testing": [
+    {"question": "What does `@dataclass(frozen=True)` give the Lesson class?", "options": ["Instances whose fields cannot be reassigned", "A class that cannot be instantiated", "Automatic type checking at runtime", "A database table"], "answer": 0, "explain": "frozen=True makes instances immutable."},
+    {"question": "Which tool does the lesson use to check types?", "options": ["mypy", "ruff", "pytest", "pip"], "answer": 0, "explain": "mypy checks types, ruff lints, pytest runs tests."}
+  ],
+  "python/apis-async": [
+    {"question": "In the FastAPI example, what does a GET request to /health return?", "options": ["{\"status\": \"UP\"}", "An HTML page", "Nothing until uvicorn restarts", "The list of routes"], "answer": 0, "explain": "The handler returns that dict, which FastAPI sends as JSON."},
+    {"question": "Which command serves the app during development with auto-reload?", "options": ["uvicorn main:app --reload", "python -m fastapi", "pip run main.py", "fastapi serve --watch app"], "answer": 0, "explain": "uvicorn runs the `app` object in `main.py`; --reload restarts on changes."}
+  ],
+  "python/data-stack": [
+    {"question": "Which library does the lesson describe as Rust-powered, multi-threaded and lazy?", "options": ["Polars", "pandas", "NumPy", "Matplotlib"], "answer": 0, "explain": "Polars is the Rust-powered DataFrame library."},
+    {"question": "What is the main performance advice for NumPy?", "options": ["Vectorize instead of looping", "Convert arrays to lists first", "Use one thread per element", "Store arrays as CSV"], "answer": 0, "explain": "NumPy is fast when whole arrays are processed at once."},
+    {"question": "In the pandas example, what does `.unstack(fill_value=0)` produce?", "options": ["A table with one column per topic and 0 for missing counts", "A list of events", "A sorted CSV file", "A single total"], "answer": 0, "explain": "It pivots the topic level into columns and fills gaps with 0."}
+  ],
+  "python/advanced-python": [
+    {"question": "What does a generator such as `read_chunks` do?", "options": ["Produces values lazily, one at a time", "Reads the whole file into memory first", "Runs in a separate process", "Caches every chunk it returns"], "answer": 0, "explain": "`yield` hands back one chunk at a time."},
+    {"question": "Why does the `timed` decorator use `functools.wraps`?", "options": ["To keep the wrapped function's name and metadata", "To make the function run faster", "To run the function asynchronously", "To retry the function on errors"], "answer": 0, "explain": "wraps copies `__name__` and other metadata to the wrapper."},
+    {"question": "For CPU-bound work, what does the lesson recommend instead of threads?", "options": ["multiprocessing or ProcessPoolExecutor", "asyncio.gather", "More threads", "Generators"], "answer": 0, "explain": "The GIL limits CPU-bound threads, so use separate processes."}
+  ],
+  "transformers/attention": [
+    {"question": "Which three vectors does each token create in self-attention?", "options": ["Query, key and value", "Input, hidden and output", "Encoder, decoder and position", "Weight, bias and gradient"], "answer": 0, "explain": "Each token creates a query, key and value."},
+    {"question": "In `softmax(QK^T / sqrt(d))`, what are the resulting weights used for?", "options": ["Mixing the values", "Choosing the next token directly", "Sorting the tokens", "Updating the embeddings during training only"], "answer": 0, "explain": "The attention weights mix the value vectors."},
+    {"question": "Why run several attention heads side by side?", "options": ["To learn different relationships", "To process tokens one at a time", "To reduce the vocabulary", "To remove the need for positions"], "answer": 0, "explain": "Multi-head attention lets the model learn different relationships."}
+  ],
+  "transformers/architecture": [
+    {"question": "Which kind of model is GPT or Llama?", "options": ["Decoder-only", "Encoder-only", "Encoder-decoder", "Recurrent"], "answer": 0, "explain": "Decoder-only models are used for text generation."},
+    {"question": "Which architecture does the lesson list for translation and summarization?", "options": ["Encoder-decoder (T5)", "Encoder-only (BERT)", "Decoder-only (GPT)", "Mixture of Experts"], "answer": 0, "explain": "T5 is the encoder-decoder example."},
+    {"question": "Why are positional encodings such as RoPE needed?", "options": ["Attention ignores token order", "Attention is too slow without them", "They replace the vocabulary", "They compress the model"], "answer": 0, "explain": "Without them the model cannot tell token order."}
+  ],
+  "transformers/hugging-face": [
+    {"question": "What does `pipeline(\"sentiment-analysis\")` give you?", "options": ["A ready-to-use classifier from a pretrained model", "A dataset of reviews", "A training loop", "A tokenizer only"], "answer": 0, "explain": "pipeline wraps a pretrained model for a task."},
+    {"question": "Where does the lesson point you to find models?", "options": ["The Hugging Face Hub", "PyPI", "Docker Hub", "The tokenizers library"], "answer": 0, "explain": "Models are on the Hub; tokenizers and datasets are companion libraries."}
+  ],
+  "transformers/fine-tuning": [
+    {"question": "How does LoRA make fine-tuning cheaper?", "options": ["It trains small adapter matrices instead of every weight", "It skips evaluation", "It uses a smaller vocabulary", "It removes attention layers"], "answer": 0, "explain": "LoRA/QLoRA train small adapters, often on one GPU."},
+    {"question": "What should you try before fine-tuning?", "options": ["Better prompts or retrieval", "A bigger model", "Training from scratch", "Removing the baseline"], "answer": 0, "explain": "Choose the smallest change that works."},
+    {"question": "What should a fine-tuned model always be evaluated against?", "options": ["A held-out set and a baseline", "Its own training data", "Nothing if the loss went down", "A random model only"], "answer": 0, "explain": "The lesson says to compare against a held-out set and a baseline."}
+  ],
+  "transformers/build-from-scratch": [
+    {"question": "What does `x = x + self.attn(self.ln1(x))` add around the attention layer?", "options": ["A residual connection", "A dropout layer", "A positional encoding", "A softmax"], "answer": 0, "explain": "Adding the input back is a residual connection."},
+    {"question": "What does `is_causal=True` ensure in the attention call?", "options": ["Each token only attends to earlier tokens", "Attention runs on the CPU", "Keys and values are cached", "Heads are merged"], "answer": 0, "explain": "Causal masking stops tokens from seeing the future, as a GPT needs."},
+    {"question": "What turns the final block output into next-token predictions?", "options": ["A linear layer to vocabulary logits", "Another attention head", "The LayerNorm", "The position embeddings"], "answer": 0, "explain": "The output layer maps to logits over the vocabulary."}
+  ],
+  "transformers/efficiency": [
+    {"question": "What does a KV cache reuse during generation?", "options": ["Keys and values of previous tokens", "The whole model weights", "The tokenizer", "Previous user prompts"], "answer": 0, "explain": "It avoids recomputing keys and values for tokens already processed."},
+    {"question": "How does speculative decoding work?", "options": ["A small draft model proposes tokens and the big model verifies them", "The model guesses several answers and picks one at random", "Tokens are generated in reverse", "Weights are stored in 4-bit"], "answer": 0, "explain": "The draft model speeds things up; the big model keeps quality."},
+    {"question": "What does 4-bit or 8-bit quantization mainly cut?", "options": ["Memory, by 2-4x", "The context window", "The number of experts", "Training data"], "answer": 0, "explain": "Lower-precision weights take less memory."}
+  ],
+  "llms/how-llms-work": [
+    {"question": "What are LLMs trained to do on huge corpora?", "options": ["Predict the next token", "Classify documents", "Translate between two languages", "Retrieve documents"], "answer": 0, "explain": "Next-token prediction, then alignment."},
+    {"question": "What happens after pre-training to make an LLM follow instructions?", "options": ["Instruction tuning and RLHF", "Quantization", "Adding a vector database", "Tokenization"], "answer": 0, "explain": "The lesson names instruction tuning and RLHF."}
+  ],
+  "llms/prompting": [
+    {"question": "How do you reduce prompt injection?", "options": ["Separate instructions from untrusted input", "Use a higher temperature", "Put user input first", "Ask the model to ignore attackers"], "answer": 0, "explain": "Keep instructions and untrusted input clearly apart."},
+    {"question": "What should you do with structured JSON output?", "options": ["Validate it", "Trust it as-is", "Convert it to plain text", "Ask for it only in examples"], "answer": 0, "explain": "Ask for JSON and validate it."},
+    {"question": "What does treating prompts like code mean?", "options": ["Version and test them", "Write them in Python", "Compile them", "Keep them secret"], "answer": 0, "explain": "Version prompts and test them."}
+  ],
+  "llms/embeddings-rag": [
+    {"question": "What is the first step of the RAG pipeline in the lesson?", "options": ["Split documents into chunks", "Generate the answer", "Fine-tune the model", "Embed the question"], "answer": 0, "explain": "Chunk, embed and store; then retrieve and generate."},
+    {"question": "What should you evaluate separately from answer quality?", "options": ["Retrieval quality", "Model size", "Prompt length", "Token cost"], "answer": 0, "explain": "Bad retrieval and bad generation need different fixes."}
+  ],
+  "llms/agents-production": [
+    {"question": "What do agents let an LLM do?", "options": ["Call tools such as APIs, SQL or search in a loop", "Train itself", "Run without prompts", "Avoid evaluation"], "answer": 0, "explain": "Agents call tools in a loop."},
+    {"question": "Which of these does the lesson list for running agents in production?", "options": ["Evaluation sets that run in CI", "Disabling logs to save cost", "Always using the largest model", "Skipping output validation"], "answer": 0, "explain": "Guardrails, cost control, observability and CI evals."}
+  ],
+  "llms/build-rag-app": [
+    {"question": "Why do the chunks overlap (size 800, overlap 100)?", "options": ["So text cut at a chunk boundary still appears whole in one chunk", "To store fewer rows", "To make embeddings smaller", "To sort the chunks"], "answer": 0, "explain": "Overlap keeps sentences that span a boundary retrievable."},
+    {"question": "What does `ORDER BY embedding <=> %s LIMIT %s` return?", "options": ["The k chunks closest to the question's embedding", "Chunks in insertion order", "Exact keyword matches", "Every chunk"], "answer": 0, "explain": "`<=>` is pgvector's cosine distance; LIMIT k keeps the nearest."},
+    {"question": "What should the prompt tell the model to do when the context lacks the answer?", "options": ["Say it doesn't know", "Guess from general knowledge", "Return the context", "Ask for more chunks"], "answer": 0, "explain": "That instruction reduces made-up answers."}
+  ],
+  "llms/agents-mcp": [
+    {"question": "In tool calling, who executes the function?", "options": ["Your code, which feeds the result back to the model", "The model itself", "The MCP registry", "The user"], "answer": 0, "explain": "The model returns a structured call; your code runs it."},
+    {"question": "What is the Model Context Protocol for?", "options": ["Exposing tools, resources and prompts to any LLM client", "Training models faster", "Compressing context windows", "Encrypting prompts"], "answer": 0, "explain": "One MCP server integration works across many assistants."},
+    {"question": "How should an agent treat tool output?", "options": ["As untrusted input", "As trusted instructions", "As the final answer", "As training data"], "answer": 0, "explain": "Tool output can carry prompt injection."}
+  ],
+  "llms/llmops": [
+    {"question": "When should LLM evals run in CI?", "options": ["Whenever prompts or models change", "Only before the first launch", "Once a year", "Never; use user feedback only"], "answer": 0, "explain": "Changes to prompts or models can regress quality."},
+    {"question": "Which is a way to control cost and latency?", "options": ["Route easy requests to small models", "Disable streaming", "Send every request to the largest model", "Log nothing"], "answer": 0, "explain": "Routing, caching and streaming all help."},
+    {"question": "What does `vllm serve` provide in the example?", "options": ["Production GPU serving with an OpenAI-compatible API", "A local chat UI only", "Model training", "A vector database"], "answer": 0, "explain": "vLLM serves models behind an OpenAI-compatible API."}
+  ],
+  "vector-databases/embeddings": [
+    {"question": "What does an embedding do?", "options": ["Maps content to a vector where similar meanings are close", "Compresses text into a ZIP", "Translates text into SQL", "Counts words"], "answer": 0, "explain": "Similar meanings end up near each other."},
+    {"question": "In the example, which pair should have the higher cosine similarity?", "options": ["'deploy a container' and 'run a docker image'", "'deploy a container' and 'bake a cake'", "Both pairs are equal", "Neither; cosine needs images"], "answer": 0, "explain": "The two container phrases mean nearly the same thing."},
+    {"question": "When do cosine similarity and dot product become equivalent?", "options": ["When vectors are normalized", "When vectors are very long", "Never", "Only for images"], "answer": 0, "explain": "For unit-length vectors the dot product is the cosine."}
+  ],
+  "vector-databases/ann-indexes": [
+    {"question": "What do ANN indexes trade for big speed-ups?", "options": ["A little recall", "All accuracy", "Storage durability", "Write support"], "answer": 0, "explain": "Approximate search misses a few true neighbours."},
+    {"question": "Which index is a layered proximity graph with high recall and more memory?", "options": ["HNSW", "IVF", "PQ", "B-tree"], "answer": 0, "explain": "HNSW is the graph index."},
+    {"question": "How should you check an ANN index?", "options": ["Measure recall@k against exact search on a sample", "Trust the default settings", "Count the vectors", "Compare index sizes only"], "answer": 0, "explain": "Recall@k shows how many true neighbours you keep."}
+  ],
+  "vector-databases/choosing": [
+    {"question": "When is pgvector the simplest choice?", "options": ["When you already run Postgres", "When you need billions of vectors", "When you have no relational data", "Only on Snowflake"], "answer": 0, "explain": "It keeps vectors next to your relational data."},
+    {"question": "Which is a feature the lesson says to compare between vector stores?", "options": ["Metadata filtering", "Logo colour", "Programming language of the client", "Number of employees"], "answer": 0, "explain": "Also hybrid search, multi-tenancy, hosting and cost."}
+  ],
+  "vector-databases/hybrid-search": [
+    {"question": "Why combine keyword and vector search?", "options": ["Vectors miss exact terms and keywords miss synonyms", "Keyword search is always better", "It removes the need for embeddings", "It makes results random"], "answer": 0, "explain": "Each method covers the other's blind spot."},
+    {"question": "What does Reciprocal Rank Fusion do?", "options": ["Merges ranked lists into one", "Trains the embedding model", "Removes duplicate documents only", "Compresses vectors"], "answer": 0, "explain": "RRF scores documents by their rank in each list."},
+    {"question": "Where does the cross-encoder re-ranker fit?", "options": ["On the top ~50 results, for the best precision", "Before any retrieval", "On every document in the store", "Instead of embeddings"], "answer": 0, "explain": "Re-rankers are accurate but slow, so they run on a short list."}
+  ],
+  "mlops/lifecycle": [
+    {"question": "Where does the lesson say most ML projects fail?", "options": ["After the notebook", "During data collection", "In the first meeting", "At model training"], "answer": 0, "explain": "Getting from notebook to production is the hard part MLOps addresses."},
+    {"question": "What does a model registry hold?", "options": ["Versioned, approved models with stages", "Raw training data", "Experiment notes only", "Server logs"], "answer": 0, "explain": "The registry tracks model versions and their stage."}
+  ],
+  "mlops/mlflow": [
+    {"question": "What does `mlflow.log_metric('f1', ...)` record?", "options": ["The run's F1 score, for comparing runs", "The model file", "The training data", "The experiment name"], "answer": 0, "explain": "Metrics are what you compare in the MLflow UI."},
+    {"question": "How do you load the promoted model anywhere?", "options": ["models:/churn-model@champion", "The run's local folder path", "mlflow ui", "pip install churn-model"], "answer": 0, "explain": "An alias such as champion points at the promoted version."}
+  ],
+  "mlops/serving": [
+    {"question": "Which pattern fits nightly predictions written to a table?", "options": ["Batch scoring", "REST API", "Streaming", "Embedded"], "answer": 0, "explain": "Batch scoring runs on a schedule."},
+    {"question": "Which pattern fits low-latency, per-request predictions?", "options": ["REST API", "Batch scoring", "Nightly export", "Model registry"], "answer": 0, "explain": "A REST service answers each request directly."},
+    {"question": "What does the lesson suggest before a full rollout?", "options": ["Shadow deployments and A/B tests", "Deleting the old model first", "Skipping monitoring", "Training on production traffic"], "answer": 0, "explain": "Compare the new model safely before switching everyone."}
+  ],
+  "mlops/monitoring": [
+    {"question": "What is concept drift?", "options": ["The relationship between inputs and labels changes", "Input distributions shift", "Latency rises", "The model file changes"], "answer": 0, "explain": "Data drift is about inputs; concept drift is about the input-label relationship."},
+    {"question": "When can you track accuracy or AUC over time?", "options": ["Once ground-truth labels arrive", "Before deployment only", "Never in production", "Only with streaming"], "answer": 0, "explain": "Performance metrics need the true labels."},
+    {"question": "When drift crosses a threshold, what should the loop do?", "options": ["Retrain, evaluate against the champion, promote only if better", "Promote the new model immediately", "Delete the old data", "Raise the threshold"], "answer": 0, "explain": "Automate retraining but keep the champion unless the new one wins."}
+  ]
+}

@@ -2,6 +2,8 @@ package com.sarvaikam.content.api;
 
 import com.sarvaikam.content.api.Dtos.*;
 import com.sarvaikam.content.service.ContentService;
+import com.sarvaikam.content.service.LessonSearch;
+import com.sarvaikam.content.service.QuickChecks;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -11,9 +13,13 @@ import java.util.List;
 @RestController
 public class ContentController {
     private final ContentService service;
+    private final LessonSearch lessonSearch;
+    private final QuickChecks quickChecks;
 
-    public ContentController(ContentService service) {
+    public ContentController(ContentService service, LessonSearch lessonSearch, QuickChecks quickChecks) {
         this.service = service;
+        this.lessonSearch = lessonSearch;
+        this.quickChecks = quickChecks;
     }
 
     @GetMapping("/categories")
@@ -27,8 +33,18 @@ public class ContentController {
         return service.getLesson(topicSlug, lessonSlug);
     }
 
+    /** The lesson's quick check (empty when it has none), with the same access rules as the lesson. */
+    @GetMapping("/topics/{topicSlug}/lessons/{lessonSlug}/quick-check")
+    public List<QuickChecks.Question> quickCheck(@PathVariable String topicSlug, @PathVariable String lessonSlug) {
+        return quickChecks.forLesson(topicSlug, lessonSlug);
+    }
+
     @GetMapping("/search")
     public List<TopicSummary> search(@RequestParam String q) { return service.search(q.trim()); }
+
+    /** Full-text search over lesson titles and bodies, best match first (at most 20). */
+    @GetMapping("/search/lessons")
+    public List<LessonSearch.Hit> searchLessons(@RequestParam(defaultValue = "") String q) { return lessonSearch.search(q); }
 
     @GetMapping("/lessons/{id}/access")
     public java.util.Map<String, Object> lessonAccess(@PathVariable long id, @RequestParam String topicSlug) {

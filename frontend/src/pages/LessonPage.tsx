@@ -1,19 +1,28 @@
-﻿import {
-  Children,
-  isValidElement,
-  ReactNode,
-  useEffect,
-  useState,
-} from "react";
+﻿import { ReactNode, useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { Link, useParams } from "react-router-dom";
+import rehypeHighlight, { type Options as HighlightOptions } from "rehype-highlight";
 import remarkGfm from "remark-gfm";
-import { api, Lesson, Topic } from "../api";
+import bash from "highlight.js/lib/languages/bash";
+import dockerfile from "highlight.js/lib/languages/dockerfile";
+import go from "highlight.js/lib/languages/go";
+import java from "highlight.js/lib/languages/java";
+import javascript from "highlight.js/lib/languages/javascript";
+import json from "highlight.js/lib/languages/json";
+import python from "highlight.js/lib/languages/python";
+import sql from "highlight.js/lib/languages/sql";
+import typescript from "highlight.js/lib/languages/typescript";
+import xml from "highlight.js/lib/languages/xml";
+import yaml from "highlight.js/lib/languages/yaml";
+import { api, Category, Lesson, Topic } from "../api";
 import { useAuth } from "../auth";
 import LessonAssets from "../components/LessonAssets";
+import QuickCheck from "../components/QuickCheck";
 import Icon from "../components/Icon";
-import { stageName } from "../learning";
+import { LearningPath, levelName, nextInPath, readFollowedPath, stageName } from "../learning";
+import { PracticeQuestion, practiceForTopic } from "../practice";
 import { readingMinutes } from "../engagement";
+import { applyPageMeta, defaultDescription, describeMarkdown, lessonStructuredData } from "../seo";
 import MobileSheet from "../components/MobileSheet";
 import LessonOutline from "../components/LessonOutline";
 import LessonSearch from "../components/LessonSearch";
@@ -27,13 +36,19 @@ import {
   readResumePoint,
 } from "../readingOutline";
 
+// Only the languages lessons use, so the lesson chunk stays small. Fences without a language stay plain.
+const highlightOptions: HighlightOptions = {
+  languages: { bash, dockerfile, go, java, javascript, json, python, sql, typescript, xml, yaml },
+  aliases: { bash: ["sh", "shell", "zsh"], javascript: ["js"], typescript: ["ts"], xml: ["html"], yaml: ["yml"] },
+  plainText: ["text", "txt", "hcl", "promql"],
+};
+
 function CodeBlock({ children }: { children?: ReactNode }) {
   const [status, setStatus] = useState("");
+  const pre = useRef<HTMLPreElement>(null);
   const copy = async () => {
-    const child = Children.toArray(children).find(isValidElement);
-    const text = child
-      ? String((child.props as { children?: ReactNode }).children ?? "")
-      : "";
+    // Read the rendered text: highlighted code is a tree of spans, not one string.
+    const text = pre.current?.textContent ?? "";
     try {
       await navigator.clipboard.writeText(text.replace(/\n$/, ""));
       setStatus("Copied");
@@ -42,11 +57,11 @@ function CodeBlock({ children }: { children?: ReactNode }) {
     }
   };
   return (
-    <div className="not-prose my-6 overflow-hidden rounded-xl border border-line bg-[#102c43]">
-      <div className="flex min-h-11 items-center justify-between gap-3 border-b border-white/10 px-4 text-[11px] text-[#c2cfdb]">
+    <div className="not-prose my-6 overflow-hidden rounded-xl border border-line bg-code-surface">
+      <div className="flex min-h-11 items-center justify-between gap-3 border-b border-white/10 px-4 text-[11px] text-code-muted">
         <span>Code example</span>
         <button
-          className="min-h-11 px-2 font-medium text-[#a4ded2]"
+          className="min-h-11 px-2 font-medium text-code-accent"
           onClick={() => void copy()}
         >
           Copy code
@@ -56,6 +71,7 @@ function CodeBlock({ children }: { children?: ReactNode }) {
         </span>
       </div>
       <pre
+        ref={pre}
         tabIndex={0}
         role="region"
         aria-label="Scrollable code example"
@@ -63,13 +79,27 @@ function CodeBlock({ children }: { children?: ReactNode }) {
       >
         {children}
       </pre>
-      <p className="px-5 pb-3 text-xs !text-[#c2cfdb] lg:hidden">
+      <p className="px-5 pb-3 text-xs !text-code-muted lg:hidden">
         Swipe sideways to read long lines of code.
       </p>
-      {status && <p className="px-5 pb-3 text-xs text-[#a4ded2]">{status}</p>}
+      {status && <p className="px-5 pb-3 text-xs text-code-accent">{status}</p>}
     </div>
   );
 }
+// Paths, catalogue and practice change rarely: load them once per visit for "what's next" links.
+let journeyData: Promise<[LearningPath[], Category[], PracticeQuestion[]]> | null = null;
+function loadJourneyData() {
+  journeyData ??= Promise.all([api.paths(), api.categories(), api.practiceQuestions()]).catch((cause) => {
+    journeyData = null;
+    throw cause;
+  });
+  return journeyData;
+}
+interface Journey {
+  next: ReturnType<typeof nextInPath>;
+  practice?: PracticeQuestion;
+}
+
 export default function LessonPage() {
   const { topicSlug = "", lessonSlug = "" } = useParams();
   const { user, ready } = useAuth();
@@ -95,6 +125,23 @@ export default function LessonPage() {
   const [bookmarked, setBookmarked] = useState(false);
   const [bookmarkError, setBookmarkError] = useState("");
   const [cardsOpen, setCardsOpen] = useState(false);
+  const [journey, setJourney] = useState<Journey | null>(null);
+  useEffect(() => {
+    let active = true;
+    setJourney(null);
+    loadJourneyData()
+      .then(([paths, categories, questions]) => {
+        if (active)
+          setJourney({
+            next: nextInPath(topicSlug, paths, categories, readFollowedPath()),
+            practice: practiceForTopic(topicSlug, questions),
+          });
+      })
+      .catch(() => {}); // the plain topic and practice-room links still work
+    return () => {
+      active = false;
+    };
+  }, [topicSlug]);
   useEffect(() => {
     setResumeId(lesson ? (readResumePoint(lesson.id)?.id ?? "") : "");
   }, [lesson?.id]);
@@ -141,6 +188,34 @@ export default function LessonPage() {
       active = false;
     };
   }, [topicSlug]);
+  // Search and share metadata for this lesson. Exclusive lessons describe only their topic, so none of their
+  // text reaches the page head.
+  useEffect(() => {
+    if (!lesson) return;
+    const origin = window.location.origin;
+    const url = `${origin}/topics/${lesson.topicSlug}/${lesson.slug}`;
+    const title = `${lesson.title} · ${lesson.topicName} | Sarvaikam`;
+    document.title = title;
+    const summary = topic?.slug === lesson.topicSlug ? topic.summary : "";
+    const description = (!lesson.exclusive && describeMarkdown(lesson.contentMd)) || summary || defaultDescription();
+    applyPageMeta({
+      title,
+      description,
+      url,
+      structuredData: lesson.exclusive
+        ? null
+        : lessonStructuredData(
+            {
+              ...lesson,
+              topicSummary: summary,
+              level: topic?.slug === lesson.topicSlug && topic.level ? levelName(topic.level) : undefined,
+              minutes: readingMinutes(lesson.contentMd),
+            },
+            origin,
+            description,
+          ),
+    });
+  }, [lesson, topic]);
   useEffect(() => {
     let active = true;
     setCompleted(false);
@@ -162,7 +237,7 @@ export default function LessonPage() {
       .catch(() => {
         if (active)
           setSaveError(
-            "Your saved progress could not be loaded. Retry before changing this lessonâ€™s completion.",
+            "Your saved progress could not be loaded. Retry before changing this lesson’s completion.",
           );
       })
       .finally(() => {
@@ -226,7 +301,7 @@ export default function LessonPage() {
       <div className="surface mx-auto max-w-2xl p-9">
         <p className="eyebrow">LESSON UNAVAILABLE</p>
         <h1 className="mt-3 text-3xl font-semibold">
-          Letâ€™s find your next step.
+          Let’s find your next step.
         </h1>
         <p className="mt-4 text-muted">{error}</p>
         <div className="mt-7 flex flex-wrap gap-3">
@@ -263,6 +338,10 @@ export default function LessonPage() {
   const headingId = (node?: { position?: { start: { line: number } } }) =>
     node?.position ? headingIds.get(node.position.start.line) : undefined;
   const resumeItem = outline.find((item) => item.id === resumeId);
+  const practiceLink = journey?.practice
+    ? `/practice?question=${encodeURIComponent(journey.practice.id)}`
+    : "/practice";
+  const nextTopic = journey?.next ?? null;
   const sequence = (
     <nav aria-label="Topic lessons" className="mt-4 space-y-1">
       {topic?.lessons.map((item, i) => (
@@ -347,10 +426,10 @@ export default function LessonPage() {
         <LessonOutline items={outline} />
         <Link
           className="mt-7 flex items-center gap-2 rounded-xl border border-line bg-surface p-4 text-xs font-medium text-accent"
-          to="/practice"
+          to={practiceLink}
         >
-          <Icon name="target" className="h-4 w-4" />
-          Put it into practice
+          <Icon name="target" className="h-4 w-4 shrink-0" />
+          {journey?.practice ? `Practise: ${journey.practice.title}` : "Put it into practice"}
         </Link>
       </aside>
       <article className="reader-article min-w-0 max-w-[68ch]">
@@ -376,7 +455,7 @@ export default function LessonPage() {
             <Icon name="clock" className="h-3.5 w-3.5" />
             About {readingMinutes(lesson.contentMd)} min reading
           </span>
-          <span className="badge">{stageName(lesson.stage)}{lesson.stage === "DEEP_DIVE" ? " Â· Optional" : ""}</span>
+          <span className="badge">{stageName(lesson.stage)}{lesson.stage === "DEEP_DIVE" ? " · Optional" : ""}</span>
           {lesson.exclusive && <span className="badge">Exclusive</span>}
         </div>
         <h1 className="mt-5 text-[clamp(2rem,4vw,3rem)] font-semibold leading-[1.15] tracking-tightest">
@@ -430,7 +509,7 @@ export default function LessonPage() {
             className="mt-5 flex min-h-11 items-center gap-2 rounded-xl bg-accent-soft p-4 text-sm font-medium text-accent-strong"
           >
             <Icon name="chevron" className="h-4 w-4 shrink-0" />
-            <span>Continue from â€œ{resumeItem.text}â€</span>
+            <span>Continue from “{resumeItem.text}”</span>
           </a>
         )}
         {saveError && (
@@ -461,6 +540,7 @@ export default function LessonPage() {
         >
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}
+            rehypePlugins={[[rehypeHighlight, highlightOptions]]}
             components={{
               h2: ({ node, children }) => (
                 <h2 id={headingId(node)}>{children}</h2>
@@ -484,6 +564,7 @@ export default function LessonPage() {
             {lesson.contentMd}
           </ReactMarkdown>
         </div>
+        <QuickCheck topicSlug={topicSlug} lessonSlug={lesson.slug} />
         <section className="reader-reflection mt-10 rounded-2xl border border-accent/15 bg-accent-soft p-6">
           <p className="text-sm font-medium">Before you move on</p>
           <h2 className="mt-3 text-xl font-semibold">
@@ -496,6 +577,36 @@ export default function LessonPage() {
           </p>
         </section>
         <LessonAssets key={lesson.id} lessonId={lesson.id} />
+        {!lesson.next && (
+          <section aria-labelledby="whats-next" className="mt-10 rounded-2xl border border-line bg-surface p-6">
+            <p className="text-sm font-medium text-muted">
+              Last lesson in {lesson.topicName}
+            </p>
+            <h2 id="whats-next" className="mt-2 text-xl font-semibold">
+              What’s next
+            </h2>
+            <div className="mt-5 flex flex-wrap gap-3">
+              {nextTopic ? (
+                <Link className="btn" to={`/topics/${nextTopic.topic.slug}`}>
+                  Next in {nextTopic.path.name}: {nextTopic.topic.name}
+                  <Icon name="arrow" className="h-4 w-4" />
+                </Link>
+              ) : (
+                <Link className="btn" to="/paths">
+                  Choose your next path
+                  <Icon name="arrow" className="h-4 w-4" />
+                </Link>
+              )}
+              <Link className="outline-btn" to={practiceLink}>
+                <Icon name="target" className="h-4 w-4" />
+                {journey?.practice ? `Practise: ${journey.practice.title}` : "Practice room"}
+              </Link>
+              <Link className="btn-quiet" to={`/topics/${topicSlug}`}>
+                Topic overview
+              </Link>
+            </div>
+          </section>
+        )}
       </article>
       <div className="reading-controls fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface/95 backdrop-blur-xl">
         <div className="mx-auto flex max-w-[1240px] flex-wrap items-center justify-between gap-2 px-5 py-3 sm:px-8">
@@ -535,9 +646,9 @@ export default function LessonPage() {
               >
                 {completed && <Icon name="check" className="h-4 w-4" />}
                 {saving
-                  ? "Savingâ€¦"
+                  ? "Saving…"
                   : checking
-                    ? "Loading progressâ€¦"
+                    ? "Loading progress…"
                     : completed
                       ? "Lesson complete"
                       : "Mark complete"}
@@ -553,6 +664,15 @@ export default function LessonPage() {
                 to={`/topics/${topicSlug}/${lesson.next.slug}`}
               >
                 <span>Next</span>
+                <Icon name="chevron" className="h-4 w-4" />
+              </Link>
+            ) : nextTopic ? (
+              <Link
+                className="btn-quiet px-3 text-xs"
+                to={`/topics/${nextTopic.topic.slug}`}
+                aria-label={`Finish topic and go to ${nextTopic.topic.name}`}
+              >
+                Next topic
                 <Icon name="chevron" className="h-4 w-4" />
               </Link>
             ) : (

@@ -17,6 +17,8 @@ WORKDIR /app
 ENV NODE_ENV=production
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
+# Applied by dist/main.js at startup (dist/migrate.js).
+COPY migrations ./migrations
 COPY package.json ./
 EXPOSE 8082
 CMD ["node", "dist/main.js"]

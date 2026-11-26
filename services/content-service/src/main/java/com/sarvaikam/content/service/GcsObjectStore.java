@@ -42,6 +42,12 @@ public class GcsObjectStore implements ObjectStore {
         storage().create(BlobInfo.newBuilder(bucket, key).setContentType(contentType).build(), data, Storage.BlobTargetOption.doesNotExist());
     }
 
+    @Override
+    public void createFrom(String key, InputStream in, long size, String contentType) throws java.io.IOException {
+        storage().createFrom(BlobInfo.newBuilder(bucket, key).setContentType(contentType).build(), in,
+                Storage.BlobWriteOption.doesNotExist());
+    }
+
     public byte[] read(String key) {
         Blob blob = storage().get(bucket, key);
         return blob == null ? null : blob.getContent();
@@ -64,13 +70,18 @@ public class GcsObjectStore implements ObjectStore {
         return new UploadTicket(url, Map.of("Content-Type", contentType));
     }
 
+    /*
+     * Keys are created write-once (doesNotExist / ifGenerationMatch=0), so the latest generation is the only one.
+     * The stored version is deliberately ignored: after copying between stores it holds another store's value,
+     * and pinning it would make every migrated download 404.
+     */
     public String directDownloadUrl(String key, long version, String filename) {
         return storage().signUrl(BlobInfo.newBuilder(bucket, key).build(), 5, TimeUnit.MINUTES,
                 Storage.SignUrlOption.withV4Signature(), Storage.SignUrlOption.withQueryParams(Map.of(
-                        "generation", Long.toString(version), "response-content-disposition", "attachment; filename=\"" + filename + "\""))).toString();
+                        "response-content-disposition", "attachment; filename=\"" + filename + "\""))).toString();
     }
 
     public InputStream open(String key, long version) {
-        return Channels.newInputStream(storage().reader(BlobId.of(bucket, key, version)));
+        return Channels.newInputStream(storage().reader(BlobId.of(bucket, key)));
     }
 }

@@ -28,7 +28,12 @@ public class ReelService implements ApplicationRunner {
         @NotBlank @Size(max=2000) @Pattern(regexp="https://[^\\s]+") String sourceUrl,
         boolean published) {}
     public record ReelView(String slug, String courseSlug, String courseName, String lessonSlug,
-                           int step, String heading, String content, String sourceName, String sourceUrl, boolean published) {}
+                           int step, String heading, String content, String sourceName, String sourceUrl, boolean published,
+                           Long lessonId) {}
+    /** One entry of reels-seed.json; the source is the lesson the reel summarises. */
+    record SeedReel(String slug, String courseSlug, String lessonSlug, String heading, String content) {}
+    @Value("${PUBLIC_BASE_URL:https://learn.sarvaikam.com}")
+    String publicBaseUrl = "https://learn.sarvaikam.com";
     private final JdbcTemplate db;
     private final LessonRepository lessons;
     private final BodyStorage bodies;
@@ -48,12 +53,45 @@ public class ReelService implements ApplicationRunner {
         this.lessons = lessons; this.bodies = bodies; this.db = db;
     }
     public void run(ApplicationArguments args) {
-        if (db == null || !bodies.enabled()) return;
+        if (db == null) return;
+        try (var in = new org.springframework.core.io.ClassPathResource("reels-seed.json").getInputStream()) {
+            seedDrafts(new tools.jackson.databind.ObjectMapper().readValue(in, new tools.jackson.core.type.TypeReference<List<SeedReel>>() {}));
+        } catch (java.io.IOException | RuntimeException e) {
+            org.slf4j.LoggerFactory.getLogger(ReelService.class).warn("reel seeds skipped: {}", e.getMessage());
+        }
+        if (!bodies.enabled()) return;
         for (var row : db.queryForList("SELECT slug, content FROM reels WHERE content_object IS NULL")) {
             String content = (String) row.get("content");
             String object = bodies.write("reel-bodies", content);
             db.update("UPDATE reels SET content_object = ?, content = NULL WHERE slug = ? AND content_object IS NULL AND content = ?", object, row.get("slug"), content);
         }
+    }
+    /**
+     * Adds seed reels as unpublished drafts for an editor to review in the Reel studio. Each seed is inserted at most
+     * once (reel_seeds), so deleting or editing a draft sticks. Seeds whose lesson does not exist yet are retried on
+     * the next start. Returns how many drafts were added.
+     */
+    int seedDrafts(List<SeedReel> seeds) {
+        int added = 0;
+        for (SeedReel seed : seeds) {
+            var lesson = lessons.findByTopicSlugAndSlug(seed.courseSlug(), seed.lessonSlug());
+            if (lesson.isEmpty()) continue;
+            if (db.update("INSERT INTO reel_seeds(slug) VALUES (?) ON CONFLICT DO NOTHING", seed.slug()) == 0) continue;
+            added += db.update("""
+                INSERT INTO reels(slug, course_slug, lesson_slug, heading, content, source_name, source_url, published)
+                VALUES (?, ?, ?, ?, ?, ?, ?, false) ON CONFLICT(slug) DO NOTHING
+                """, seed.slug(), seed.courseSlug(), seed.lessonSlug(), seed.heading(), seed.content(),
+                "Sarvaikam lesson: " + lesson.get().getTitle(),
+                publicBaseUrl + "/topics/" + seed.courseSlug() + "/" + seed.lessonSlug());
+        }
+        if (added > 0)
+            org.slf4j.LoggerFactory.getLogger(ReelService.class).info("added {} draft reels; publish them in the Reel studio", added);
+        return added;
+    }
+    /** Object keys of every stored reel body, for storage copies; null when no reels database is configured. */
+    public java.util.List<String> contentObjects() {
+        if (db == null) return null;
+        return db.queryForList("SELECT content_object FROM reels WHERE content_object IS NOT NULL", String.class);
     }
     private JdbcTemplate db() {
         if (db == null) throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Reels database is not configured");
@@ -74,7 +112,8 @@ public class ReelService implements ApplicationRunner {
             result.add(new ReelView((String)row.get("slug"), lesson.getTopic().getSlug(), lesson.getTopic().getName(),
                 lesson.getSlug(), lesson.getStepNumber(), (String)row.get("heading"),
                 object == null ? (String)row.get("content") : bodies.read(object),
-                (String)row.get("source_name"), (String)row.get("source_url"), (Boolean)row.get("published")));
+                (String)row.get("source_name"), (String)row.get("source_url"), (Boolean)row.get("published"),
+                lesson.getId()));
             if (result.size() == limit) break;
         }
         return result;

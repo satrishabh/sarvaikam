@@ -1,0 +1,5 @@
+# Merge into apps/sarvaikam/values-dev.yaml in the AIO GitOps repository during deployment.
+# Keep any existing envFrom entries. Do not copy Secret values into GitOps environment fields.
+envFrom:
+  - secretRef:
+      name: sarvaikam-profile-runtime

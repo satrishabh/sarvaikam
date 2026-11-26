@@ -1,13 +1,15 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: sarvaikam
+# The "sarvaikam-secrets" Secret is deliberately NOT a resource here: create it from a secret manager
+# (External Secrets / Sealed Secrets) or once by hand. See secret.example.yaml for the keys it needs.
 resources:
   - namespace.yaml
-  - secret.yaml
   - postgres.yaml
   - content-service.yaml
   - auth-service.yaml
   - progress-service.yaml
+  - core.yaml
   - frontend.yaml
   - ingress.yaml
 # Point these at your registry (ECR / ACR / Artifact Registry) - see infra/terraform outputs.
@@ -17,6 +19,8 @@ images:
   - name: sarvaikam/auth-service
     newTag: latest
   - name: sarvaikam/progress-service
+    newTag: latest
+  - name: sarvaikam/core
     newTag: latest
   - name: sarvaikam/frontend
     newTag: latest

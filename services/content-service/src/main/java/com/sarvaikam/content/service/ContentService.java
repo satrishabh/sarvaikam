@@ -12,6 +12,8 @@ import java.util.List;
 
 @Service
 public class ContentService {
+    /** lessons.seed_sha256 for a lesson an editor has saved (V10). */
+    public static final String LESSON_EDITED = "edited";
     private final CategoryRepository categories;
     private final TopicRepository topics;
     private final LessonRepository lessons;
@@ -110,8 +112,11 @@ public class ContentService {
             if (l.getContentObject() != null) throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Content bucket is not configured");
             l.setContentMd(r.contentMd());
         }
+        l.setSearchText(SearchText.plain(r.contentMd()));
         l.setExclusive(r.exclusive());
         if (r.stage() != null) l.setStage(r.stage());
+        // An editor's save: later seed versions must not overwrite it. SeedLoader records its own hash after this.
+        l.setSeedSha256(LESSON_EDITED);
         return summary(lessons.save(l));
     }
 

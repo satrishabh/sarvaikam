@@ -1,15 +1,32 @@
 # Requires an ingress controller (ingress-nginx). In k8s the Ingress acts as the API gateway,
 # so the frontend's nginx /api routes are only used by docker compose.
+#
+# TLS: the cert-manager annotation issues the certificate into the "sarvaikam-tls" Secret. It needs cert-manager
+# and a ClusterIssuer named "letsencrypt-prod" in the cluster; without them, create that Secret yourself
+# (or use a Google-managed certificate) — ingress-nginx serves its self-signed default cert until it exists.
+# With TLS configured, ingress-nginx redirects HTTP to HTTPS and sends HSTS by default.
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: sarvaikam
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
 spec:
   ingressClassName: nginx
+  tls:
+    - hosts: [learn.sarvaikam.com]
+      secretName: sarvaikam-tls
   rules:
-    - http:
+    - host: learn.sarvaikam.com
+      http:
         paths:
+          # Actuator is for in-cluster probes only: send it to the frontend nginx, which answers 404.
+          - { path: /api/content/actuator, pathType: Prefix, backend: { service: { name: frontend, port: { number: 80 } } } }
           - { path: /api/content, pathType: Prefix, backend: { service: { name: content-service, port: { number: 8081 } } } }
           - { path: /api/auth, pathType: Prefix, backend: { service: { name: auth-service, port: { number: 8082 } } } }
+          # Browser sessions (Keycloak sign-in) are served by the Core.
+          - { path: /api/session, pathType: Prefix, backend: { service: { name: core, port: { number: 8084 } } } }
+          # Strangler cut-over: change this backend to { name: core, port 8084 } once the Core is deployed and
+          # healthy. Both use the same tables, so switching back is the same one-line edit.
           - { path: /api/progress, pathType: Prefix, backend: { service: { name: progress-service, port: { number: 8083 } } } }
           - { path: /, pathType: Prefix, backend: { service: { name: frontend, port: { number: 80 } } } }

@@ -1,7 +1,10 @@
-﻿import { lazy, Suspense, useEffect, useState } from "react";
-import { Link, NavLink, Route, Routes, useLocation } from "react-router-dom";
+﻿import { lazy, Suspense, useEffect, useRef, useState } from "react";
+import { Link, NavLink, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "./auth";
 import { can } from "./api";
+import { goalStore } from "./engagement";
+import { followPath } from "./learning";
+import { applyPageMeta, defaultDescription } from "./seo";
 import Icon from "./components/Icon";
 import MobileSheet from "./components/MobileSheet";
 import HomePage from "./pages/HomePage";
@@ -24,6 +27,9 @@ const PathsPage = lazy(() => import("./pages/PathsPage"));
 const PracticePage = lazy(() => import("./pages/PracticePage"));
 const ReelsPage = lazy(() => import("./pages/ReelsPage"));
 
+// Captured before any page replaces it with its own description.
+const SITE_DESCRIPTION = defaultDescription();
+
 const navigation = [
   { to: "/", name: "Overview", icon: "book" },
   { to: "/paths", name: "Learning paths", icon: "layers" },
@@ -32,10 +38,28 @@ const navigation = [
   { to: "/skills", name: "My skills", icon: "chart" },
 ];
 export default function App() {
-  const { user, logout } = useAuth();
+  const { user, ready, logout, signedOutCount } = useAuth();
+  // The account's onboarding choices follow the learner to every device they sign in on.
+  useEffect(() => {
+    const chosen = user?.learningPreferences;
+    if (!chosen) return;
+    followPath(chosen.path);
+    goalStore.set(chosen.dailyGoal);
+  }, [user?.id, user?.learningPreferences?.path, user?.learningPreferences?.dailyGoal]);
   const [open, setOpen] = useState(false);
-  const [logoutError, setLogoutError] = useState("");
   const location = useLocation();
+  const navigate = useNavigate();
+  // Sign-out always completes locally; the person who chose it goes home.
+  const signOut = () => {
+    setOpen(false);
+    navigate("/", { replace: true });
+    void logout();
+  };
+  // A sign-out in another tab only moves this tab off pages that need an account.
+  useEffect(() => {
+    if (signedOutCount > 0 && /^\/(profile|admin)(\/|$)/.test(location.pathname)) navigate("/", { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [signedOutCount]);
   const isReader = /^\/topics\/[^/]+\/[^/]+\/?$/.test(location.pathname);
   const isReels = location.pathname === "/reels";
   const [keyboardOpen, setKeyboardOpen] = useState(false);
@@ -64,8 +88,8 @@ export default function App() {
       window.removeEventListener("resize", resize);
     };
   }, []);
+  // Title, canonical URL and share metadata follow the path only: jumping to a #section keeps a lesson's own.
   useEffect(() => {
-    setOpen(false);
     const title =
       (
         {
@@ -86,6 +110,15 @@ export default function App() {
         } as Record<string, string>
       )[location.pathname] ?? "Learn";
     document.title = `${title} | Sarvaikam`;
+    // One canonical URL per page (no query or hash), so shared and tracked links don't split search ranking.
+    const canonical = document.querySelector<HTMLLinkElement>('link[rel="canonical"]');
+    const url = new URL(location.pathname, window.location.origin).href;
+    if (canonical) canonical.href = url;
+    // Site defaults; a page with its own content (a lesson) replaces them once it has loaded.
+    applyPageMeta({ title: document.title, description: SITE_DESCRIPTION, url, structuredData: null });
+  }, [location.pathname]);
+  useEffect(() => {
+    setOpen(false);
     if (location.hash) {
       let target = location.hash.slice(1);
       try {
@@ -114,6 +147,45 @@ export default function App() {
     }
     window.scrollTo(0, 0);
   }, [location.pathname, location.hash]);
+  // After client-side navigation, move focus to the page and announce its heading, as a full page load would.
+  // Routes without a fixed title (lessons, topics) take their tab title from that heading.
+  const mainRef = useRef<HTMLElement>(null);
+  const firstRoute = useRef(true);
+  const [announcement, setAnnouncement] = useState("");
+  useEffect(() => {
+    if (firstRoute.current) {
+      firstRoute.current = false;
+      return;
+    }
+    const main = mainRef.current;
+    if (!main) return;
+    if (!location.hash) main.focus({ preventScroll: true });
+    let done = false;
+    const announce = () => {
+      const heading = main.querySelector("h1")?.textContent?.trim();
+      if (!heading) return false;
+      done = true;
+      setAnnouncement(heading);
+      if (document.title === "Learn | Sarvaikam") document.title = `${heading} | Sarvaikam`;
+      return true;
+    };
+    const observer = new MutationObserver(() => {
+      if (announce()) observer.disconnect();
+    });
+    // Wait a tick so a reused page (lesson to lesson) has cleared its previous heading.
+    const start = window.setTimeout(() => {
+      if (!announce()) observer.observe(main, { childList: true, subtree: true, characterData: true });
+    }, 0);
+    const giveUp = window.setTimeout(() => {
+      observer.disconnect();
+      if (!done) setAnnouncement(document.title.replace(/ \| Sarvaikam$/, ""));
+    }, 5000);
+    return () => {
+      observer.disconnect();
+      window.clearTimeout(start);
+      window.clearTimeout(giveUp);
+    };
+  }, [location.pathname]);
   const links = (
     <>
       {navigation.map((item) => (
@@ -156,7 +228,7 @@ export default function App() {
             aria-label="Sarvaikam home"
             className="mr-auto flex shrink-0 items-center gap-2.5 lg:mr-3"
           >
-            <svg viewBox="0 0 40 40" fill="none" aria-hidden="true" className="h-8 w-8 text-[#10231e]">
+            <svg viewBox="0 0 40 40" fill="none" aria-hidden="true" className="h-8 w-8 text-brand">
               <path d="M7 25 17 7l5 9-7 12H7Zm13 6 9-15 5 9-4 6H20Z" fill="currentColor" />
               <circle cx="30" cy="8" r="3" fill="currentColor" />
             </svg>
@@ -176,7 +248,10 @@ export default function App() {
             <NavLink to="/settings" className="workspace-nav hidden lg:inline-flex">
               Settings
             </NavLink>
-            {user ? (
+            {!ready ? (
+              // Holds the account slot's size while the session check runs, so "Sign in" never flashes.
+              <span className="block h-10 w-10 sm:w-36" aria-hidden="true" />
+            ) : user ? (
               <NavLink
                 to="/profile"
                 className="workspace-nav"
@@ -240,29 +315,26 @@ export default function App() {
           {user && (
             <button
               className="outline-btn mt-5"
-              onClick={() => {
-                setOpen(false);
-                void logout().catch((cause) => setLogoutError(cause.message));
-              }}
+              onClick={signOut}
             >
               Sign out
             </button>
           )}
         </div>
       </MobileSheet>
-      {logoutError && (
-        <p role="alert" className="mx-auto px-5 pt-4 text-danger">
-          {logoutError}
-        </p>
-      )}
+      <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+        {announcement}
+      </p>
       <main
         id="main-content"
-        className="app-main mx-auto w-full max-w-[1240px] flex-1 px-5 py-9 sm:px-8 sm:py-12"
+        ref={mainRef}
+        tabIndex={-1}
+        className="app-main outline-none mx-auto w-full max-w-[1240px] flex-1 px-5 py-9 sm:px-8 sm:py-12"
       >
         <Suspense
           fallback={
             <div role="status" className="space-y-5 py-8">
-              <p className="text-sm text-muted">Loading your workspaceâ€¦</p>
+              <p className="text-sm text-muted">Loading your workspace…</p>
               <div className="skeleton h-12 w-2/3" />
               <div className="skeleton h-48" />
             </div>
@@ -289,20 +361,7 @@ export default function App() {
             <Route path="/privacy" element={<LegalPage kind="privacy" />} />
             <Route path="/terms" element={<LegalPage kind="terms" />} />
             <Route path="/contact" element={<LegalPage kind="contact" />} />
-            <Route
-              path="*"
-              element={
-                <div className="py-24 text-center">
-                  <p className="eyebrow">404 / A SMALL DETOUR</p>
-                  <h1 className="mt-3 text-4xl font-semibold">
-                    This page doesnâ€™t exist.
-                  </h1>
-                  <Link className="btn mt-7" to="/">
-                    Back to learning
-                  </Link>
-                </div>
-              }
-            />
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
       </main>
@@ -350,7 +409,7 @@ export default function App() {
         <div className="mx-auto flex max-w-[1240px] flex-wrap items-center justify-between gap-7 px-5 py-9 sm:px-8">
           <div>
             <Link to="/" className="flex items-center gap-2 font-semibold">
-              <svg viewBox="0 0 40 40" fill="none" aria-hidden="true" className="h-6 w-6 text-[#10231e]">
+              <svg viewBox="0 0 40 40" fill="none" aria-hidden="true" className="h-6 w-6 text-brand">
                 <path d="M7 25 17 7l5 9-7 12H7Zm13 6 9-15 5 9-4 6H20Z" fill="currentColor" />
                 <circle cx="30" cy="8" r="3" fill="currentColor" />
               </svg>
@@ -384,9 +443,7 @@ export default function App() {
             </Link>
             {user ? (
               <button
-                onClick={() =>
-                  void logout().catch((cause) => setLogoutError(cause.message))
-                }
+                onClick={signOut}
                 className="hover:text-accent"
               >
                 Sign out
@@ -406,3 +463,22 @@ export default function App() {
   );
 }
 
+/** Unknown routes. nginx already answers them with HTTP 404; this keeps them out of search indexes too. */
+function NotFound() {
+  useEffect(() => {
+    const robots = document.createElement("meta");
+    robots.name = "robots";
+    robots.content = "noindex";
+    document.head.appendChild(robots);
+    return () => robots.remove();
+  }, []);
+  return (
+    <div className="py-24 text-center">
+      <p className="eyebrow">404 / A SMALL DETOUR</p>
+      <h1 className="mt-3 text-4xl font-semibold">This page doesn’t exist.</h1>
+      <Link className="btn mt-7" to="/">
+        Back to learning
+      </Link>
+    </div>
+  );
+}

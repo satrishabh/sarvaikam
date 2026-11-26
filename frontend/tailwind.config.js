@@ -1,56 +1,14 @@
 ﻿import typography from "@tailwindcss/typography";
-import { createRequire } from "node:module";
-const tokens = createRequire(import.meta.url)("./design-tokens.json").Sarvaikam;
-const color = (name) => tokens.color[name].$value;
+// Colours, fonts, type scale, radii and motion come from design-tokens.json via the generated preset
+// (npm run tokens). Colour utilities read CSS variables, so they follow data-theme.
+import tokens from "./tokens.preset.js";
 
 /** @type {import('tailwindcss').Config} */
 export default {
+  presets: [tokens],
   content: ["./index.html", "./src/**/*.{ts,tsx}"],
   theme: {
     extend: {
-      // White surfaces, warm orange accents, and gold reserved for completed lessons.
-      colors: {
-        canvas: color("canvas"),
-        surface: color("surface"),
-        ink: color("ink"),
-        muted: color("muted"),
-        line: color("line"),
-        track: color("track"),
-        accent: {
-          DEFAULT: color("accent"),
-          strong: color("accentStrong"),
-          soft: color("accentSoft"),
-        },
-        gold: { DEFAULT: color("gold"), soft: color("goldSoft") },
-        danger: color("danger"),
-      },
-      fontFamily: {
-        sans: [
-          "Archivo",
-          "-apple-system",
-          "BlinkMacSystemFont",
-          '"Segoe UI"',
-          "Roboto",
-          "sans-serif",
-        ],
-        serif: ["Playfair Display", "Georgia", '"Times New Roman"', "serif"],
-        display: [
-          "-apple-system",
-          "BlinkMacSystemFont",
-          '"SF Pro Display"',
-          '"Segoe UI"',
-          "Inter",
-          "sans-serif",
-        ],
-        mono: [
-          '"IBM Plex Mono"',
-          "ui-monospace",
-          '"SF Mono"',
-          '"Cascadia Code"',
-          "Menlo",
-          "monospace",
-        ],
-      },
       letterSpacing: { tightest: "-0.035em" },
       maxWidth: { read: "68ch" },
       keyframes: {

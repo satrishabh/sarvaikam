@@ -16,11 +16,11 @@ export const READER_THEMES: {
   ink: string;
   signedInOnly: boolean;
 }[] = [
-  { value: "device", label: "Device", note: "Follows your device's light or dark setting", page: "#ffffff", ink: "#20384e", signedInOnly: false },
-  { value: "day", label: "White", note: "The original page", page: "#ffffff", ink: "#20384e", signedInOnly: false },
-  { value: "night", label: "Dark", note: "Easy on the eyes at night", page: "#14212c", ink: "#e2eaf0", signedInOnly: false },
-  { value: "paper", label: "Warm", note: "Cream paper for long reads", page: "#f6f0e4", ink: "#3b2f24", signedInOnly: true },
-  { value: "slate", label: "Slate", note: "Cool grey with a blue accent", page: "#ffffff", ink: "#0f172a", signedInOnly: true },
+  { value: "device", label: "Device", note: "Follows your device's light or dark setting", page: "var(--reader-day-page)", ink: "var(--reader-day-text)", signedInOnly: false },
+  { value: "day", label: "White", note: "The original page", page: "var(--reader-day-page)", ink: "var(--reader-day-text)", signedInOnly: false },
+  { value: "night", label: "Dark", note: "Easy on the eyes at night", page: "var(--reader-night-page)", ink: "var(--reader-night-text)", signedInOnly: false },
+  { value: "paper", label: "Warm", note: "Cream paper for long reads", page: "var(--reader-paper-page)", ink: "var(--reader-paper-text)", signedInOnly: true },
+  { value: "slate", label: "Slate", note: "Cool grey with a blue accent", page: "var(--reader-slate-page)", ink: "var(--reader-slate-text)", signedInOnly: true },
 ];
 
 export function themeAvailable(theme: ReaderTheme, signedIn: boolean): boolean {

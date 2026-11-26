@@ -23,10 +23,21 @@ public class Lesson {
     private String contentMd;
 
     private String contentObject;
+
+    /** Plain text of the body for full-text search (V8); search_vector is generated from it by Postgres. */
+    @Column(name = "search_text", columnDefinition = "TEXT")
+    private String searchText;
+    public void setSearchText(String searchText) { this.searchText = searchText; }
     public String getContentObject() { return contentObject; }
     public void setContentObject(String contentObject) { this.contentObject = contentObject; }
 
     private boolean exclusive;
+
+    /** The seed version this lesson still matches, or "edited" (V10; see SeedLoader). */
+    @Column(name = "seed_sha256")
+    private String seedSha256;
+    public String getSeedSha256() { return seedSha256; }
+    public void setSeedSha256(String seedSha256) { this.seedSha256 = seedSha256; }
 
     private String stage = "STARTER";
 

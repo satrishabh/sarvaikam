@@ -1,0 +1,50 @@
+# Sarvaikam Core (Spring Modulith). It serves /api/progress once the Ingress routes that prefix here; see
+# ingress.yaml. progress-service keeps running until the Core has carried all traffic for a while.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: core
+spec:
+  replicas: 2
+  selector: { matchLabels: { app: core } }
+  template:
+    metadata: { labels: { app: core } }
+    spec:
+      securityContext: { runAsNonRoot: true, runAsUser: 10001 }
+      containers:
+        - name: core
+          image: sarvaikam/core
+          ports: [{ containerPort: 8084 }]
+          env:
+            - { name: APP_ENV, value: "prod" }
+            - { name: AUTH_SERVICE_URL, value: "http://auth-service:8082" }
+            - { name: CONTENT_SERVICE_URL, value: "http://content-service:8081" }
+            - { name: DB_URL, valueFrom: { secretKeyRef: { name: sarvaikam-secrets, key: CONTENT_DB_URL } } }
+            - { name: DB_USER, valueFrom: { secretKeyRef: { name: sarvaikam-secrets, key: POSTGRES_USER } } }
+            - { name: DB_PASSWORD, valueFrom: { secretKeyRef: { name: sarvaikam-secrets, key: POSTGRES_PASSWORD } } }
+            - { name: JWT_SECRET, valueFrom: { secretKeyRef: { name: sarvaikam-secrets, key: JWT_SECRET } } }
+            # Keycloak sign-in. Optional keys: without PROFILE_WEB_CLIENT_SECRET the web app keeps the in-app form.
+            - { name: PROFILE_ISSUER, value: "https://profile.sarvaikam.com/realms/sarvaikam" }
+            - { name: PROFILE_WEB_CLIENT_SECRET, valueFrom: { secretKeyRef: { name: sarvaikam-secrets, key: PROFILE_WEB_CLIENT_SECRET, optional: true } } }
+            - { name: PROFILE_REGISTRATION_CLIENT_SECRET, valueFrom: { secretKeyRef: { name: sarvaikam-secrets, key: PROFILE_REGISTRATION_CLIENT_SECRET, optional: true } } }
+          securityContext: { allowPrivilegeEscalation: false, capabilities: { drop: [ALL] } }
+          startupProbe:
+            httpGet: { path: /api/core/health, port: 8084 }
+            failureThreshold: 30
+            periodSeconds: 5
+          # /ready checks the database; /health (liveness) is process-only so a DB outage doesn't restart pods.
+          readinessProbe:
+            httpGet: { path: /api/core/ready, port: 8084 }
+          livenessProbe:
+            httpGet: { path: /api/core/health, port: 8084 }
+          resources:
+            requests: { cpu: 200m, memory: 320Mi }
+            limits: { memory: 640Mi }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: core
+spec:
+  selector: { app: core }
+  ports: [{ port: 8084, targetPort: 8084 }]

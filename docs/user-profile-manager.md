@@ -78,20 +78,13 @@ PROFILE_REGISTRATION_CLIENT_ID=sarvaikam-learn-registration
 PROFILE_REGISTRATION_CLIENT_SECRET=<different-runtime-secret>
 JWT_SECRET=<shared-random-value-at-least-32-bytes>
 APP_ENV=prod
-DB_SYNCHRONIZE=false
 AUTH_SERVICE_URL=http://auth-service:8082
 CONTENT_SERVICE_URL=http://content-service:8081
 ```
 
 `APP_ENV=prod` makes refresh cookies Secure; local HTTP development uses `APP_ENV=dev`. The cookie path is `/api/auth/session`, SameSite is Strict, and no broad CORS policy is enabled. Browser session requests require `X-Sarvaikam-Client: web`. Login, registration, email requests, and refresh have bounded per-instance IP rate limits; configure shared ingress limits when running multiple replicas. Profile Manager remains responsible for password hashing and credential brute-force protection.
 
-Apply all three auth SQL migrations in order to the existing auth database before deploying with synchronization disabled:
-
-```text
-services/auth-service/migrations/000_users_baseline.sql
-services/auth-service/migrations/001_oidc_identity.sql
-services/auth-service/migrations/002_profile_access.sql
-```
+auth-service applies `services/auth-service/migrations/*.sql` itself at startup, in file-name order. It records each file in `auth_schema_migrations` and holds a Postgres advisory lock, so replicas that start together don't race. The files are idempotent, so an existing database (built by hand or by the old TypeORM synchronize) is brought up to date safely. TypeORM `synchronize` is off unless `DB_SYNCHRONIZE=true`; use that only for a throwaway local database. Set `DB_MIGRATE=false` to skip the startup run if you apply the files yourself.
 
 The baseline creates the users table when absent and preserves existing records. Content Flyway migration `V2__exclusive_and_assets.sql` runs automatically and preserves all existing lessons as standard content. Existing local identities are never automatically linked by email; migrate stable OIDC subjects deliberately.
 

@@ -1,5 +1,5 @@
 # Full nginx config for the all-in-one image. Rendered to /tmp/runtime/nginx.conf by /entrypoint.sh
-# (placeholders: __PORT__, __ENV_HEADERS__). Runs as a non-root user: every writable path is under /tmp.
+# (placeholders: __PORT__, __ENV_HEADERS__, __PROGRESS_PORT__, __ACCESS_LOG_FORMAT__). Runs as a non-root user: every writable path is under /tmp.
 worker_processes auto;
 pid /tmp/runtime/nginx.pid;
 error_log /dev/stderr warn;
@@ -9,7 +9,14 @@ events { worker_connections 1024; }
 http {
     include       /etc/nginx/mime.types;
     default_type  application/octet-stream;
-    access_log    /dev/stdout;
+    # LOG_FORMAT=json: Cloud Logging's httpRequest shape, with 5xx as ERROR so alerts can count them.
+    map $status $log_severity { ~^5 ERROR; ~^4 WARNING; default INFO; }
+    log_format json escape=json '{"severity":"$log_severity","message":"$request_method $uri $status",'
+        '"httpRequest":{"requestMethod":"$request_method","requestUrl":"$request_uri","status":$status,'
+        '"responseSize":"$body_bytes_sent","userAgent":"$http_user_agent","remoteIp":"$remote_addr",'
+        '"referer":"$http_referer","latency":"${request_time}s","protocol":"$server_protocol"},'
+        '"requestId":"$request_id"}';
+    access_log    /dev/stdout __ACCESS_LOG_FORMAT__;
     sendfile      on;
     server_tokens off;
     gzip          on;
@@ -21,12 +28,20 @@ http {
     uwsgi_temp_path       /tmp/runtime/uwsgi;
     scgi_temp_path        /tmp/runtime/scgi;
 
+    # The scheme the browser used: the ingress's X-Forwarded-Proto when there is one, else this connection's.
+    map $http_x_forwarded_proto $forwarded_proto {
+        default $http_x_forwarded_proto;
+        ""      $scheme;
+    }
+
     server {
         listen __PORT__;
         server_name _;
         root /usr/share/nginx/html;
         index index.html;
         client_max_body_size 5m;
+        # Default for every proxied route; one that streams large files raises it in its own location.
+        proxy_read_timeout 60s;
 
         add_header X-Content-Type-Options nosniff always;
         add_header X-Frame-Options DENY always;
@@ -39,8 +54,8 @@ __ENV_HEADERS__
 
         # Liveness: the gateway process is up (supervisord restarts any crashed backend).
         location = /health { access_log off; default_type text/plain; return 200 "ok\n"; }
-        # Readiness: database + all three backends reachable (aggregated by progress-service).
-        location = /ready  { access_log off; proxy_pass http://127.0.0.1:8083/api/progress/ready; }
+        # Readiness: database + the other backends reachable, aggregated by whichever process serves /api/progress.
+        location = /ready  { access_log off; proxy_pass http://127.0.0.1:__PROGRESS_PORT__/api/progress/ready; }
         # Runtime config for the SPA (environment name), generated at container start.
         location = /config.json { alias /tmp/runtime/config.json; add_header Cache-Control no-store; }
 
@@ -48,14 +63,33 @@ __ENV_HEADERS__
         # Attachment downloads stream from Google Drive through content-service; pass bytes through without disk buffering.
         location ~ ^/api/content/assets/[0-9a-f-]+/file$ { proxy_pass http://127.0.0.1:8081; include /etc/sarvaikam/proxy_headers; proxy_buffering off; proxy_read_timeout 300s; }
         location /api/auth/     { proxy_pass http://127.0.0.1:8082; include /etc/sarvaikam/proxy_headers; }
-        location /api/progress/ { proxy_pass http://127.0.0.1:8083; include /etc/sarvaikam/proxy_headers; }
+        # Strangler routing: PROGRESS_BACKEND picks the Core (8084) or the Go progress-service (8083).
+        location /api/progress/ { proxy_pass http://127.0.0.1:__PROGRESS_PORT__; include /etc/sarvaikam/proxy_headers; }
+        # Browser sessions: sign-in on the Keycloak login page, run by the Core. When the Core is not running this
+        # answers 502 and the web app falls back to the in-app sign-in form.
+        # Keeps the ingress's X-Forwarded-Proto (https) so the Core builds an https callback URL for Keycloak.
+        location /api/session/ {
+            proxy_pass http://127.0.0.1:8084;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $forwarded_proto;
+            proxy_read_timeout 60s;
+        }
+        # The Core's own routes. Only answered when the Core is running.
+        location = /api/core/health { proxy_pass http://127.0.0.1:8084; include /etc/sarvaikam/proxy_headers; }
         # Actuator details are internal only.
         location /api/content/actuator/ { return 404; }
+        location = /sitemap.xml { proxy_pass http://127.0.0.1:8081/api/content/sitemap.xml; include /etc/sarvaikam/proxy_headers; }
 
         location = /sw.js { add_header Cache-Control "no-cache"; }
         location = /manifest.webmanifest { types { application/manifest+json webmanifest; } default_type application/manifest+json; add_header Cache-Control "no-cache"; }
         location /assets/ { expires 1y; add_header Cache-Control "public, immutable"; }
         location /fonts/ { expires 30d; add_header Cache-Control "public, max-age=2592000"; }
-        location / { try_files $uri $uri/ /index.html; }
+        # App routes (keep in sync with <Routes> in frontend/src/App.tsx) get the app shell with 200. Anything else gets
+        # the same shell with a real 404 status: people still see the app's 404 page, crawlers and monitors see 404.
+        location = / { try_files /index.html =404; }
+        location ~ ^/(paths|reels|interview-prep|practice|skills|topics|login|admin|profile|settings|privacy|terms|contact)(/|$) { try_files $uri /index.html; }
+        location / { try_files $uri =404; error_page 404 /index.html; }
     }
 }

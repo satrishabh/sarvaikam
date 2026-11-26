@@ -1,0 +1,8 @@
+User-agent: *
+Disallow: /admin
+Disallow: /profile
+Disallow: /settings
+Disallow: /login
+Disallow: /api/
+
+Sitemap: https://learn.sarvaikam.com/sitemap.xml

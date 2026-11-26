@@ -43,6 +43,14 @@ export class ProfileClient {
     if (!res.ok && res.status !== 400) throw new ServiceUnavailableException('The profile session could not be closed. Try signing out again.');
   }
 
+  /** Ends every Profile Manager session for this identity (all devices). Needs manage-users on the registration client. */
+  async logoutEverywhere(subject: string) {
+    const token = await this.adminToken();
+    const res = await this.fetch(`${this.adminUrl}/users/${encodeURIComponent(subject)}/logout`, {
+      method: 'POST', headers: { Authorization: `Bearer ${token}` } });
+    if (!res.ok) throw new ServiceUnavailableException('Other devices could not be signed out. Try again shortly.');
+  }
+
   private async adminToken(): Promise<string> {
     const res = await this.fetch(`${this.issuer}/protocol/openid-connect/token`, { method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({

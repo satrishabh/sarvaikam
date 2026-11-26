@@ -9,6 +9,12 @@ export interface ReaderPreferences {
   spacing: 'comfortable' | 'compact';
 }
 
+/** Chosen during first-run onboarding: the learning path to follow and lessons per day. */
+export interface LearningPreferences {
+  path: string;
+  dailyGoal: 1 | 3 | 5;
+}
+
 @Entity('users')
 @Index('users_oidc_sub_unique', ['oidcSub'], { unique: true, where: 'oidc_sub IS NOT NULL' })
 export class User {
@@ -56,6 +62,9 @@ export class User {
 
   @Column({ name: 'reader_preferences', type: 'jsonb', default: () => "'{}'" })
   readerPreferences: Partial<ReaderPreferences>;
+
+  @Column({ name: 'learning_preferences', type: 'jsonb', default: () => "'{}'" })
+  learningPreferences: Partial<LearningPreferences>;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt: Date;

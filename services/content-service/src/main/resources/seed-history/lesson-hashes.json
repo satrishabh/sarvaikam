@@ -1,0 +1,802 @@
+{
+ "aws/accounts-iam": [
+  "c8a8a3af0454c0da95e0253bcf492ffc9d634013e0b5359cac837744291b168b",
+  "cad46e80aceaef804bd18c052dd5ff20f86dc5541028663b0e33ddbf88830623"
+ ],
+ "aws/compute-storage": [
+  "194d31fae73506fe0cae50ea0f0c6dbcb7a88c9a6e3c4f09909309c19fb80d39",
+  "c7162c0e66fc696616afd246772247e55252af93c0e1e3aa3fe8edadf17fe0c1"
+ ],
+ "aws/databases-and-ops": [
+  "18414d01811a111bdb4c2ab9f65a498ec60b0f7071cc1430a929bb0b06f9d591",
+  "487d7256f11954aa87c62bac1a1915aa7fa5bf919adfbef16698eefffd2754bb",
+  "76fac54c9001fd91bc4cf16a2973635d99e7903599deb69a28da8d63d2c8560e"
+ ],
+ "aws/serverless": [
+  "0b5433611ade319d7c9de012fbffb7b39b80d8d677a67043cdd45f32c885d663",
+  "edab43b18df49f4ac5c11dc060315fd59219f5ba6a62f894504c5ef3fca4a2d6"
+ ],
+ "aws/vpc-networking": [
+  "2cd31daea69cfdd4c5a612c538051095a5cdc17de289c8b1111a7a168af47bf1",
+  "e68eed26dd39f03fcf59fd012e631bbcf4b572549bb60c2170d4ccc837da073e"
+ ],
+ "aws/well-architected": [
+  "4d2ad64c392321114f69f87d1772c7d3bb3863e43ef779a5e9749a91ac570e7d",
+  "67510df7451a96801c3587cdea12107c68161b0652e7a9f952e911ea1dbbbf9d"
+ ],
+ "azure/compute-containers": [
+  "546298a99fdf361677a1094465a59be8c923b37b7cfed111f7a5015441a9ead6",
+  "7fd9ef7bd2db40e9769bc28d4fa678edc6f9ee347dc5104e51496de430fe8a1f"
+ ],
+ "azure/data-and-monitoring": [
+  "83c4a2df9a88c1a6e7c6bd3bc662cd8d51259e823a75ed0ae835cfd10e8166e9",
+  "bd3a53f9fb79414dcabf0b0fdd6ca866f3b1bf68363aa9bf824ab58d3575101a",
+  "bf7f7a34970238955ce0b5ce4024731669311b83befd5f2f864e6493cfc6390a"
+ ],
+ "azure/governance": [
+  "7d948c48a0a439624e08bc40278dc79f03cc63cef40e712ffc2454231e0f1367",
+  "dc21492d28ff103c1db5f891609ec8c6380fdb919ed3f460ae61405fa896d9e3"
+ ],
+ "azure/hierarchy-identity": [
+  "150bfb4f186b5c8ae95de809bdc3ed8e640cb5c4649898a3171ce1bf6ab2132f",
+  "4e7a896cce88d07e00d716395ffba0b68585e24021016393498bac001ecfa1c9"
+ ],
+ "azure/networking": [
+  "3f572c167a5d6913607281832fa5877f300ee8655e59d8c632664ec8e28d68d5",
+  "5c4c76777aa2dcf471192fadcc3f8c9cd172e1ae91af68305638e0b3256d2e30"
+ ],
+ "azure/serverless-integration": [
+  "08f998f1cf94261fd7302828710b1200b9317d9287e61ba9c20eff8c38519c43",
+  "55c93dbd06894f0e9eeff4026aa16f9c18e04ef3a9377305e8f26c1d6c305687"
+ ],
+ "behavioral-interviews/build-your-story-bank": [
+  "1a92dcf593be11a3d9ddb551ced7031e6b0070329580c693a2621deebaad13cd",
+  "deee3f663658e41ad9a20a437a3262368514cc11182871dc8a807575dc119a9e"
+ ],
+ "behavioral-interviews/conflict-and-feedback": [
+  "073854d00dd33f2039665b4a768c69f73d6136779e8cbafc927ec75886e5fca2",
+  "ac671ab6f8b3897db78e1a42d46c8d3c911651469f2eb465a036539334a55478"
+ ],
+ "behavioral-interviews/failure-and-learning": [
+  "3eedc73e7fe9fb29e2c82e589d6be06609b914478a6c0bccd440cd2b882c89ae",
+  "74e0cd681378c7e4ca0b3b0f27cf14297715fbbff6ef0d0f5de83de155a0e7b9"
+ ],
+ "behavioral-interviews/tell-me-about-yourself": [
+  "061f968995a9bc287314b982e16cca227fcfe9bf1ae01c7a447f85f2c32145a1",
+  "266cbf0b74cc70098eabb04eeb80307f112e5e8eb2f0f5124d356c22337dc517"
+ ],
+ "ci-cd/build-push-images": [
+  "35fb38296742ad503eebe37ddc69812da49130d690ea1031960c65e92d90d70b",
+  "f1b5529f08a28a94dd8f57ed520a696593d0ca643520203200be14e7e3b4ea6c"
+ ],
+ "ci-cd/concepts": [
+  "969217e58169e4283c5aa069e56c298cd80bf0b748d07f71346e5755792bdea5",
+  "f219b779e232fcbd9d1bf72c30b510275531db8581f51b896b4be6083110172d"
+ ],
+ "ci-cd/deploy-strategies": [
+  "82e4b89fa21a2d803eae0296194d28ac04b54ffce4fe135f4942cb67d8b6dd65",
+  "d3a0195d011b79f1158e4dc9e0f7260428bdfc13e133541bad0ff6ccb2e7ec67"
+ ],
+ "ci-cd/first-workflow": [
+  "2e1e6ee39503505acb5436689cd0d05d8562a64c410964d513a582e9191f96b4",
+  "465e2285cb079169d6ce3cc4b10f18b07545222a16e5933b2521f9641da60081"
+ ],
+ "coding-interviews/brute-force-to-better": [
+  "3ebe5f8a8e16d10e329e7f8eb5a43f108dc5a1ba8cc873ca83a4c9f7d4ecdf77",
+  "501ebb04fceab871e55b49781263bfd076850bac2c42a2a4032e2f66ef149e40"
+ ],
+ "coding-interviews/clarify-before-coding": [
+  "988bdf57e761c3c9c7fd6ad5ecff94f77dcb027cc88c8b5f3a2958cce801bcbb",
+  "db9ce8940221a1b5a3556a55974e803a6705bfc5a8a19ee715b89d914ea8eb6f"
+ ],
+ "coding-interviews/recognize-common-patterns": [
+  "081b05c2d8a15933b538e20443f722a17ed71a7a2f70e507246f93e004c87163",
+  "b4c9c5c013516d60ff7d109e37b66016cb62635ac12c9ab6bb823d9bad4fdb0f"
+ ],
+ "coding-interviews/test-and-explain": [
+  "5bdcf75507fdd74bd9b768759e6e32f6326c76762c8e3f8a549879634d2fd2aa",
+  "7b0dd2d85e176b7c7750b223e80e85e9d9bf3c67f7d669138c6eeeaf59d8d94a"
+ ],
+ "databases-sql/choosing": [
+  "7342ef2eb61812a47b27be90a986da73feabda208c362c11c86d3eb080a730f6",
+  "b051ca7cf28ad448305c38afe0fb58acb73e77c8f95ae4b60761b9aae1565bf6"
+ ],
+ "databases-sql/data-modeling-warehouse": [
+  "596cf1e39ad27e1e28c274fd07306c026e96e14dfc0d14173c4eb6bab0f74bb1",
+  "bb44749e23b9d13cde87ed28cb4183778d87b826d5dfa46432438eff73a00c87"
+ ],
+ "databases-sql/indexes-transactions": [
+  "b1b8fcc778de6b1ab5f30186c7797672706dadac2cfa57165e08b403aec428db",
+  "fd0b60c9f59fc4e54cfa9f132503af75c3f9248e4bcca3ed75a7b2bde29b5a8b"
+ ],
+ "databases-sql/postgres-deep-dive": [
+  "c286e7c6a0722d8223416ca87aef4a3d6f91b60b1e6a98a059130bc5d12e36f7",
+  "cb3dfd1338812c8b6e5845e5ba623579e78e27877242196982c74dae6b400815"
+ ],
+ "databases-sql/relational-model": [
+  "8236431d9715e3ee0ca1dda9553b6f07605c8eb29c4899f6d6ec3f2573c47d94",
+  "eded03287e9f4165ef0799e98d68c5bfa5f3af9fcc633619e0c22db881886656"
+ ],
+ "databases-sql/sql-queries": [
+  "1c0d55d4b8bdadb2ad148f056aeca7da716245a08cc9e5c5b29339247c81f966",
+  "7827e2021bedb02642baeefedd167192afa8f0df3dfa44d8619058c6b1652083"
+ ],
+ "databricks/delta-medallion": [
+  "5fc83cc6732da60d8dcbd84444bb5d3e6909a644faeab9b1de92230674308764",
+  "882dec47dcf741f40732e9d8ff054296fb495352e7a11b65c3e892952b05cc15"
+ ],
+ "databricks/governance-ml": [
+  "2d42a48fe4881c2535cdc41c41846182b719c5886f67035a9165e9857926d2a1",
+  "97ad1b4e9cfb39199169b8784f026eac60742c60955d0418135f498148416094"
+ ],
+ "databricks/lakehouse": [
+  "573ae5f2f7c824962eb3fa3f5d35f23b6b56c1511f56a32e0c643d6a00043648",
+  "cd1cd67a1c434997cbc0a94b603b4dbc85c20c6a2f5b9c12f2aae219cc9b2be7"
+ ],
+ "databricks/performance-cost": [
+  "a385055dbab1a30a436367a7da1c5115e814524e9b19e67117105c3f84373ae3",
+  "ebdbad8c1c89e333c21c944adc73903da3a7b705e5294a1da3dca765f906faf6"
+ ],
+ "databricks/spark-basics": [
+  "8d354d1d3c7b4363a212bce28a72f5ca28a77712cc8268dc52aa77a1b31abccf",
+  "d3314501d089760a4d98a11e8f359e6afb4ba5b3831ea26009c7482c84752752"
+ ],
+ "databricks/structured-streaming": [
+  "14cba6df001d552c9d5279689b7e9feb7028dee0e6d50d8ef280920b5649911e",
+  "3ffd5687ded4b7159655d72ef2d181157bf8f5bfeeea9a431d43b585f0668c11"
+ ],
+ "deep-learning/cnns-rnns": [
+  "8dcef0c0466aff4ec03ccff458670229458b743215a36bfbd87634be7e3a12ea",
+  "d1232450beaa21249bbeea735c9ab84acc916ea74c17c8faf0f1751718b180ea"
+ ],
+ "deep-learning/computer-vision-project": [
+  "56d148f0caccf0c289e24f19dca36339f034fa57b29f93eb1eaa794b0d85dbe9",
+  "898a13c16b72c6b86ec47844ed4c6b398e417454717f811cc819740d634168ad"
+ ],
+ "deep-learning/generative-models": [
+  "781459d7d75d76797e91d7277db4c6bebba7276a67ed39816632f2a232962ce8",
+  "7d35deb260555e9126495ee7e6e3e03020a2b50ebab8ac1c016055fcb9fe6ce3"
+ ],
+ "deep-learning/neural-networks": [
+  "84bc8480ab630b3e8906343a0991b96deac901217adbdfa5e37e420b2042b51b",
+  "f0ce53d605ca6e1e1054d80c1ac29e9593ff1b4a66cd629025eddfeb8af20497"
+ ],
+ "deep-learning/pytorch-basics": [
+  "62b36bb18286c06b25777cac3afca62a93a69966876fd60a64c1bd3568300b3f",
+  "8ded575d6b7f0def1cbde8bc2d294d07ec743529dc4d3d563300ce8742b81dff"
+ ],
+ "deep-learning/training-tips": [
+  "6a03cf406badfa1c29af0ba26d9d3cd499d2ac25531f8c4baeeaded1180ec58d",
+  "87c3b3ddd3f27592aa094d91b222066fb824c16af215ec130e2943b1609b3cba"
+ ],
+ "devops-cloud-interviews/explain-a-delivery-pipeline": [
+  "52ea278d4591863844e9d3ecf57e11e1c40259e6a3f5a2a3bc99743b1dee27e5",
+  "7d02f36261446cccd5517510ae9ff0603be37f51e170a3e5783f262c3cc44180"
+ ],
+ "devops-cloud-interviews/kubernetes-first-response": [
+  "6fa869948d68a7d15baa7826105dda25f99401cc8a67c207792e5d552f9058fb",
+  "8be964011fa72635a64134773768d7c569b1f39b2d8396d26584f7be65333d6c"
+ ],
+ "devops-cloud-interviews/reliability-and-incidents": [
+  "44429ce9977d314ebd85f12e8038e5292c200647d559413a2c2b10505fee2007",
+  "b93f04cb5ce7e9298c67d36acd6f4ba126cd4f32dcf1e525541109f4b8c3d48c"
+ ],
+ "devops-cloud-interviews/troubleshoot-systematically": [
+  "2cc70fe9a509e5182b56c20b2308d2cb19cdf4d68ba256e4054d569e0f9ca87d",
+  "44aa4867b35845ebcdcfe6473a8469d9ebdc5b14f26980beea52c7bd2463dda0"
+ ],
+ "docker/compose": [
+  "37cde164a60ef6cd661cb66e75a1d091b89607bf24d1191c25663ab5d572706a",
+  "7e88e525768c2bea460f9f06275267fc88cce9971a347b0fe20213727ef72b48"
+ ],
+ "docker/containers-vs-vms": [
+  "16660bb38cdfeb5ff2b882a594788b85a95e9ae2aeb4699b996f4def72e4331a",
+  "fe814c36ed0dd8005b109817413fa671140e270611c45a12479fbdfa8cf9432b"
+ ],
+ "docker/dockerfile": [
+  "dc70610942a9263186e1c649a4344d389ae6d7e2d18271eaf6afd6111a838540",
+  "df46d6b6ff6b2b662224951abe1948e8d1d54cf4c726a6b1d9ad2e8cf7d87e72"
+ ],
+ "docker/multi-stage-builds": [
+  "9e873cfa01610d82bec3154ef76d82117b50d28320df71871ed7c1d2f617d1f4",
+  "f7a60bc9a8f68b6db122d813dbe2004379d5e0ea2ccf5f5be940ace7ed1bf1d5"
+ ],
+ "docker/networking-volumes": [
+  "57b14b3d4caa36c92cb4b80e930478923dc132d7294968559c83194206b201f6",
+  "e7b0d192e6a3362a5e9373765dd80b777d10f3f2161458bb37a31e71dca39c52"
+ ],
+ "docker/security-best-practices": [
+  "497b0988640f522f8e5da366d1c82747644d1005095b06e036ceda9eedc5c3a1",
+  "75a362f8cbc071f546b264c594511a1031664198c8775b12cca0a48703c4f5da"
+ ],
+ "forward-deployed-engineer/building-prototypes": [
+  "20f9da8535ffebb3e292712bdd06eece7420a39319f2c2ea86d6719a2305c177",
+  "4930560d9307601740d3bee11006a28f44ee7eca824db7f670821e6f6492a5f9"
+ ],
+ "forward-deployed-engineer/communicating-trade-offs": [
+  "123750616f83e5417979df8a5b3e3afcdc85e8893a7785d7040d27476f532ad7",
+  "e9fbfe5c380f3e9e83309419a5d72e762c9bc1c63c90890e7c370e478f4c3538"
+ ],
+ "forward-deployed-engineer/customer-discovery": [
+  "3ca1c967861f802c0b98c07f76567e474e6f582dca78442ad5b41f278aa51fef",
+  "a81d7cd25dfcc2abdb3793fbe33e0a8fc771dfe922dbe50ed29749392566821c"
+ ],
+ "forward-deployed-engineer/data-access-and-security": [
+  "4c6a191f3eebb78174df4cc523b0af98c05612579d0d6cf9fc50c0d0ba7cce0a"
+ ],
+ "forward-deployed-engineer/evaluation-and-guardrails": [
+  "c05b9447fff07cf074fe903a9c70acb723d65afbb9fd6f4c3bb822ab2f02edd4",
+  "ea5ca042871332a8f68a059b0fd8cc6e061883922d6f99bf159c581d591ab00c"
+ ],
+ "forward-deployed-engineer/measuring-impact": [
+  "86dce9fd09cd2dd79b50630bc84b4133b3b4159067f4314990ef167e74a36c1f"
+ ],
+ "forward-deployed-engineer/production-handoff": [
+  "1c98328b90febd1d51ac84287055d330dd15271d59d22b403b4ce42f41216f6e",
+  "5de7aa91d926d5d1da753e1373b6ab4dffacb0186e827b796a8df530b85897bf"
+ ],
+ "forward-deployed-engineer/role-overview": [
+  "a515a2d13f8615c456ffecfd352d2791a082b8155fa1e3e826197753f59732f0",
+  "d0300d47b2dcc3f7660d8a233ef7360fb32581153920f5e95dc6527539aa14cd"
+ ],
+ "gcp/bigquery": [
+  "077c66e1e6adbbd04ecca12e7ef7c997a952bec06d0f755390faab400a163864",
+  "fd78719eeb2f53e5dcbdba0ac2812b3a3fd17cd311522b5c0c4f3fae857fedf4"
+ ],
+ "gcp/compute": [
+  "4b0ac2dd31b6b3bb1c1f85e6e8806e730ea6998bf12e6da0de4dd1d0eb034f03",
+  "69e51c8734b03bf0e524a901f25cbb92d84e7b3bd9e23b6e16e63fcbc204c144"
+ ],
+ "gcp/data-ai": [
+  "236e258a8d8e5ab5b551171ba025317cb5ba54943d29f9307ac4a04f8cc570ca",
+  "675460d20ea6ac9ff35b26ff1c8599e906f9515fa31e45a5ff60e91b7a4c2199",
+  "aa24006afdd05bf2f603e35c38fa14c25af2535d312d3c697763098ef5aa518c"
+ ],
+ "gcp/projects-iam": [
+  "452eb41af519888b30515644c33062bbe5515381a148f28168a252972e2ac9e6",
+  "c056310d68eb3f6437e7a5ee828939c7fc00f83129757e791b0a953cede0efe2"
+ ],
+ "gcp/security-ops": [
+  "0781a0a5bc0a0eac950f520bb431a52db2ff23806c7a80dfbc8ce707113bccb4",
+  "ab6299a1c179be95db7f2ec7ed4884499a70a1ca30030e1cf82721e72523764d"
+ ],
+ "gcp/vpc": [
+  "91e37c9718b9eb8723f25740a2c070ec631d172e5d6e72877d848a7b0479e960",
+  "9b971bb60abef1ef36508e49736d8703ee3e26afcc4188934e2a7e5c2076f1dc"
+ ],
+ "golang/basics": [
+  "25f001310b5f947cd270ba44323593a932c414b9e203309c8829e6f14ab936a8",
+  "e0581173661483e8c147c39f7543b927277c718d53a8274c28208def4e318a4d"
+ ],
+ "golang/concurrency": [
+  "37d8b4197b91610ad35d7e46016a53687640d60bdcccd44ce6c1e3e231df6ed9",
+  "57fa7f524dea17e02292b4e56beae4817a6b5d2efdff4eba36c8a8e9cd9e4c37"
+ ],
+ "golang/generics-testing": [
+  "271409cc05ef1b5a90f24321533b825714d8449aea89886fa3be65443b420c24",
+  "d56547ea74a4683bd8b6c60612d7ea1f2521b6d4863c7aee6e7f5c95bd384a9d"
+ ],
+ "golang/http-services": [
+  "5c2f52002997538058343fd79d92e7e4267c23bbad114be31fffb6eee3af6572",
+  "cbde5212753a74f97b6a7757e377d9c610bca0c4e78300443029413e0ec8d43b"
+ ],
+ "golang/production-go": [
+  "c8769711891ce67392b1229779ec55e80a01116e7760ce37a866846ac26cba4b",
+  "f15e112fe1f4e65f977656f0c9f6ccf53d57abed0beefed1ea7b4dd58a34c268"
+ ],
+ "golang/structs-interfaces": [
+  "6755755191595a826527bee884c6389bc5162fa840f6b8f326a6672bd0bbe7cc",
+  "72ee8ed1d6230deca12c264544a1a45cec1e2e1e54cc9424061fb112f9ec61e2"
+ ],
+ "helm-gitops/argocd": [
+  "2d7f8c32950c503877b2f121c6e047be2e8508e22f7852e84219525d11120d3f",
+  "4d470414fa73b04bbee80b5ae922e4c60e2bde590d6e5029ec9cb9512dca8cb5"
+ ],
+ "helm-gitops/helm-basics": [
+  "a39f444f3dba2a718988fa5fa80fc7eda210b42f0fe01d13bc0cc4e3dbb74d7f",
+  "e1358057e6e1d3b5873598644791dffe7e87456885d554c72a7f885e1e4771a7"
+ ],
+ "helm-gitops/helm-vs-kustomize": [
+  "45ad7e8c411cf145675264268b201438fc4a47ccea6f108f2bd9f5b6969aeaa9",
+  "b1155451c25c6f79ca81271bbc7f734bff91c5823b3c693a8e28d8036f3a33ee",
+  "b4396454512f99ae595aca6a2982ca96c542fd5cd3e395e011b8d97351ef8ac5"
+ ],
+ "helm-gitops/progressive-delivery": [
+  "b9776411d4237dfd9c133b234cf297a65820fe1d4862bcc78f3b9cc6697a6526",
+  "bf8286b56f5fee3c60174fb3a52adf58dbc007b7a21ac2146e53940b80149460"
+ ],
+ "java/async-composition-structured-concurrency": [
+  "b5a0f633798bf7d654708170887ea326b87899f0850a1937594557c5482df503"
+ ],
+ "java/build-tools": [
+  "15c6a34e942ed2781e190bc6e85b7eddc035a7d956668a3d17e93d27dbef7c72",
+  "b59d2b4e6bf4df4a24230611aaae2e35534a3d71939d442b638986bde5499981"
+ ],
+ "java/collections-streams": [
+  "00d927c72b5d99ca5c8a5cccb8dfd0883d77ca8b306a3ec62d87ad3beba33e9d",
+  "548b255edc700dd47760a6d73599a298e85c78bfd68afb8d543d2575e4c9c81b"
+ ],
+ "java/concurrency": [
+  "ab54a2338abf10132b9fe45d9aed243c0ee89f2204b6dfc4e359700425695654",
+  "fc5b16d2f710949ce6edf5bea7dc3e7d2bff20a26c5dca54dab469ec38c87c89"
+ ],
+ "java/coordination-atomics-concurrent-collections": [
+  "da4e60d4da1074ac793cedd8ef42ee6c507c659838d231b5cca37e60040ed674"
+ ],
+ "java/executors-futures-cancellation": [
+  "2e4be4727837770c26afb077bf578bcfd5b48e9ca31d7cc24b14454dc2511550"
+ ],
+ "java/full-stack-api-integration": [
+  "1c6b4269f0cdbd30e6c8b46f97df8fa51ac3162b946c5006d75da37d56c0db5c"
+ ],
+ "java/full-stack-collections-lab": [
+  "880e932fd3a4ea540d967a4842d3e3ebd4a3ce5464aa9aec950601639d1f34df"
+ ],
+ "java/full-stack-core-java": [
+  "8a0c6295d161808bcc26dac9e18bda1d77c551a38982b88c0ed7206a8ab16107"
+ ],
+ "java/full-stack-frontend-foundations": [
+  "a37408e86cd00ee30b73aacf485cbdf0164ef9a59c8a5e5acde00f99264d25d2"
+ ],
+ "java/full-stack-hibernate-loading": [
+  "cf6569254c9976953327b12346f3ba7b21087e961ef3eca16d7ef3924361a7d8"
+ ],
+ "java/full-stack-jdbc-transactions": [
+  "a1aa2c5ff2a8dc0389cc26ca7c91cead82e792f305f857b470d29a1580489cbb"
+ ],
+ "java/full-stack-oop-design": [
+  "17ef06bcd091daeb754e84fae23946ebe6f27a5cc89815b32d34f11c414f3857"
+ ],
+ "java/full-stack-spring-service": [
+  "fd3958c1f0a426a0af10a5b3ffc06c811d670980ce2f9e9b4db97ba72cc99ae7"
+ ],
+ "java/gc-mechanics-collector-selection": [
+  "87fcb0cc8d330080059c845a185939be084226b7f4f998a7af50e5ffea786e59"
+ ],
+ "java/java21-virtual-threads": [
+  "53d3cfee73b62056396a7e7199735434ad2c9b52a10f94e430383f0ddcbb4511"
+ ],
+ "java/jvm-execution-memory-deep-dive": [
+  "76a8d31f66f27fcdd30da8bf38f2be4868b978f7fc485638dbc3fbf8b76c6f28"
+ ],
+ "java/jvm-internals": [
+  "2fa1b142908a1c5cbfae408fba4405137a968f757ea1111607b39767ba33ba3b",
+  "4fe3912ca0639cd516290ff867e62727352a4a0b0367307a632f87dfecbc1ea9"
+ ],
+ "java/jvm-performance-investigation": [
+  "cc7e8a93397ee29ffda6ac52789ea7451dce97a25674e8d5a1bb82a0ce3c2c9f"
+ ],
+ "java/locks-conditions-deadlocks": [
+  "e2ec24a9a650b11bf3ad7e60f0dab7baf25742bad2195cca43f81dd15ce8b340"
+ ],
+ "java/modern-java-clean-code-design": [
+  "9dd56f2fb4d651ebe57511b41673deb9660dc07d83a9a24f70391c12ec162545"
+ ],
+ "java/modern-patterns": [
+  "7a4f32aa88fd5bc6c140473bc06592dad1e814a93aae00d0e20729c03c1467f3",
+  "b413fd1ede5f277670906eb37921970cdddeb04f4cf7d6644ba264aa1d2eece7"
+ ],
+ "java/oop-records": [
+  "4f10731b99d24f782113fa5d653ec6add26afef6de72062626ab7e0a5cc5e2de",
+  "b69a6341990b7569ac2010eaaaed307fde26f17a1610581e7e87a65a1515ac37"
+ ],
+ "java/setup-basics": [
+  "37308a21418ff33773b1b7dcf12fe3935ea247ecf11399603f0da06815d98332",
+  "616eadfbaafa26e26ffbe484e2430aba9b5db972f30e7c2e525ba4210d032acc"
+ ],
+ "java/thread-lifecycle-memory-model": [
+  "23c099faac689beccd7e98d049db28e8bcb06e49aa243a2cc29eace51093c699"
+ ],
+ "kafka/core-concepts": [
+  "068373d7d0bce22e21da1515632e3f8cd965120e2e49e895ea54d2de2962a054",
+  "640c7b230618a8ea0a7795eca5c2b250e394999293fbbebd19415a90996a58b0"
+ ],
+ "kafka/ecosystem": [
+  "43f006233d6635ff3ded9a87639e5e91cb5d60229a365ef7bf1c8fc666cf097e",
+  "fb2e6b419c0c25dbb57e2dda3ba45720421a0a59b8a205b3dac1007a6493c274"
+ ],
+ "kafka/produce-consume": [
+  "08ae3b6adaee513a93f335140a465195f364b2ec6828d6c1772d1bf64f48aa70",
+  "a1f9fea756ff596416de3cceed01a3691aed5485f648aca99092f371b4543f99"
+ ],
+ "kafka/reliability": [
+  "8dff6b6e3818da6e8b73d198579f39c4d64536719f06cf6c5b6cb9cce7e7fbfb",
+  "ed2e36fcbf473a7d01daf39e510c513ff7ecaf36106daa625296dae6972d71c7"
+ ],
+ "kubernetes/architecture": [
+  "b1fddfdaaff3489faa4853a69547090c62c03433788632b892cf432e79187e4e",
+  "fedc0d7b69237db9160296a0a52028596481b7801f82a36f0c2f1abf7c3ff6db"
+ ],
+ "kubernetes/config-secrets": [
+  "33220f0a553d3e2a56e6311e6066fa8213c2ac3a1b8d17af927c9092cfc29127",
+  "8d060b5072c17d523b6ab5674e542e0a522ba569ce971817e764045449e74018"
+ ],
+ "kubernetes/pods-deployments": [
+  "776c2f2e189bc5a26343e43870ab008b90b004334304b415ec703bec60eefc83",
+  "b1ee5562194e6af5ce735ea51dbed2ddd25ee5f36653dbce57f863b99f059234"
+ ],
+ "kubernetes/rbac-security": [
+  "0ee6481d31d097250ff047bb63ca556fa43b925e7f164fe5ee747a82bd0cefdb",
+  "829054a8b35f222a755aa7521eb5153f38872f499eec783bbba32920f47b1e9b"
+ ],
+ "kubernetes/scaling-helm": [
+  "0c298039800ae834a0f5cf70348f4b28294086fad3179f1221a00c595d698cb6",
+  "4a6a9edf5e9917253cd74d2764f25aa788d56bb509b4fe0d043488bc27bd34a8",
+  "75f9228a90ecde0deef91a15ba59e7c7362788be2010ba49fbce1cc3e45b7d86"
+ ],
+ "kubernetes/services-ingress": [
+  "3815382284dcece5c05653ef7b985960334081f3343e13eb9cd05734b37d3eca",
+  "c5de207d1d2abf57e5a44a5433be2a19faafba74f0f7908ce594af866ed047b8",
+  "f30a34fafe93a0be61c4d95e88f47f0371f1d0366c17ee7f84436599d53876b4"
+ ],
+ "kubernetes/storage": [
+  "26e95ec7733e81f127298c350c6cffa88b2e748d7e989b0d7a89802b3ea2f20d",
+  "872ffc8a62d4ef5adb5a9f8024966dc3f82a639f91dac2ed94ffd1970fc0caf7",
+  "893fe35eb8a0a9021ff518e3ccd5ca3fb688f439a59faed72b543407ff347fcf"
+ ],
+ "kubernetes/troubleshooting": [
+  "8269e151f80ef812243fd1c8e288583df5f3b95ca65e4582a9984b13579c3560",
+  "da36b6f50fc29a05e608a2503aed8c35f2f44d2272cc853a1f1815246612ca2d"
+ ],
+ "llms/agents-mcp": [
+  "5cb61cdd0054af9fdb21ebd8c87924751c98c9c788063562428d79b0c012327f",
+  "b474a5dc05eec507d300c14f17606b58e50b71d938ce8c2cb6a827c2d336bb07"
+ ],
+ "llms/agents-production": [
+  "4a6dc13419d0ecd81a87c74924bde30305de062ede44f7dca9b3ada03d40e69f",
+  "6b1cdcca58c14b42688743d637c9ec7105bf22210255eac374970a44066b5d2a"
+ ],
+ "llms/build-rag-app": [
+  "4d9051e7b14f1f910bb4439d181aeded031374841713fc82df3868669026a0fa",
+  "56923bb6358ad39a38647cdfddf20b57c489437a904a76c1735e110b1034ca5f"
+ ],
+ "llms/embeddings-rag": [
+  "7b78fccac7c6c58fd65f912d9e2c6316526faba4e1f04c1485a61b2ff7b75313",
+  "b5fdf6b9c034f147ab07bdb636b8b9692dfa098b9db5be5272ffdab290dab763"
+ ],
+ "llms/how-llms-work": [
+  "4b59c62cfea12b3821e5b0087c6c76d54bc954e5888fcd13ccd3d0ff3ff4268e",
+  "c67ee58315bbe7fb0a4c608a5db63a38895624a386ea549ae2d160ad85b8edcb"
+ ],
+ "llms/llmops": [
+  "d2d7a3f73d241788a67cf716c35c20556af661752336aa7d2b4dcd4cef109bc5",
+  "ee809beece927cd5a8db98d05456569bdc50ec74039df14122eb77d7e8a6f195"
+ ],
+ "llms/prompting": [
+  "045b44b809bebb1b0ef54ea4381b3c022263a751d6b7e3a77387502b90cdff09",
+  "93d5f7e3d463f9ba0386f49f4e2b991be79b412ac27893d8d5f9fbf324a4d801"
+ ],
+ "machine-learning/evaluation": [
+  "1c138d693716e1c7e14fd9fc0741009b7559bd93dbdf022e9ba082b870093d47",
+  "a4878261ef88668206fc65f50b87cf4698650e1b8f28f10aa1209ac7a85cccc7"
+ ],
+ "machine-learning/features-pipelines": [
+  "8e7f736651cd18f45163a27d5e8f8d55a4463ab8ea8b181d6f72b9529c7ee0d3",
+  "b03e659f6810c2c45676c14727a16554bbacc2675b5c79de5724fda9435e5d20"
+ ],
+ "machine-learning/first-model": [
+  "6b31f8c10067c8ee35ca9d5f7b006d55a9275e89178c00d739ca27eff4cb68a7",
+  "96109f7ecdefdeba4d9280d6fe81008bd6dcf9aae44d0c54e31d3162fa5a15f7"
+ ],
+ "machine-learning/ml-fundamentals": [
+  "259916803d72cef04f6ac151edbd212a780ba6d80176569c99e57826e7e0328a",
+  "56754419a2e1b476af542f2298a70856a68d6c65007326794e2bf7d7525e0c92"
+ ],
+ "machine-learning/project-churn": [
+  "874fc7276647ad9ac8af1f085e12d87bc301752b4db48106c7877c7a562ac184",
+  "8d001dcf0eecfa3fb67e23561c7998c842d5fcd178f228c862553a2c664d07a8"
+ ],
+ "machine-learning/unsupervised": [
+  "2b66c054fe88f7b61b4186da7a196e8785fddd74aed0dd302bf9c2ee24d66369",
+  "4218c99664f219df49e8bbf5448adba04fe60e731e81a0586ca14a47fd6a3536"
+ ],
+ "microservices/communication": [
+  "0a82ae07d1adb7b988d2b35c95a03a8e1aa7f45277500382b5ffe714c15f9f92",
+  "2d5e41ee3593609b24d18646bdd706924d026caa1e7bbe36f74a9f4e4c52276e",
+  "beff7d00d221a51736154ce2325b60597977664a91b63292d8186b155f0cff5c"
+ ],
+ "microservices/data-patterns": [
+  "7d891be1fdb8abbe7eb066555608a7d01a2f37f96c24685bf7ffb3173661d093",
+  "95073a5a8043f7f23b7ea4b8a5e12bc36a756d2fe839b032efebb50cd01347f8"
+ ],
+ "microservices/resilience": [
+  "0e08357b77d382783983f703e054eed7716dfcef8bc0ca77cf3e5d83abe41ba9",
+  "5244a65bc5a08cb0cc3c749f0c08d7f02f60af118ab696ea68dc67ccfdbf63fa"
+ ],
+ "microservices/when-and-why": [
+  "35f040cb9dc131de3dd439a0fc14d884d47aa41c8873959cd47667b64a3a4828",
+  "da8a9a867231d682c02dc4502671111d02b3c460656d833e45b112ece8e0ea42"
+ ],
+ "mlops/lifecycle": [
+  "24f5825fb1ee5d6d0f304dc747dff7adc2ca69ec038e41b7e977f18c289fd7ff",
+  "4e1cb40444d859fc97b8078d93002541a6a748964ab8239d8b4cbbfcefb32d60"
+ ],
+ "mlops/mlflow": [
+  "30db8c1443e3d84b39f2db1a74d81c27a12d6d65be8e886731cceb7eae922249",
+  "d0bc36e3fa8974aa84342c1fcbc599dd053c78eca9e03f7ff75d7f7d960dcf08"
+ ],
+ "mlops/monitoring": [
+  "a1052fd7cecc4135657127d3cc02329b7f9e3a79d722ed261f6f4606ae1a902d",
+  "a687d49f3b389a3372f9b8f53057b0a9f668b627f680977b4629f62ee7e6b0a4"
+ ],
+ "mlops/serving": [
+  "2825a782529d7ddbb4535da07c66f6fc61627c7d9d802bb5d0fedd52be46b9b3",
+  "d85a99dd442ce0b442501d51c76631ae371af232f3996ccf1e84eb4d6b6ed478"
+ ],
+ "nodejs/async-await": [
+  "3481f334aded782d3e07f21e86b4ad2644d3e2714f362f1a9117bf27ed86f98b",
+  "49b96c3edaf3b43f79b78fa0db2a91ee3bb8f9d4fd0173c3da50a3482a0c5507",
+  "7e4b64f1f432a3fd8ebb7f785348601094e5f0b7e1f971e57a8e4d9cbcf8dea1"
+ ],
+ "nodejs/event-loop": [
+  "119763b9c8853afc22123c98b936470973dcdf471c019ab36ac71eb070ef4896",
+  "99221e17bd57ad81452ddc45d2d9e5cc97a346bae719758b3a759980c34a0b19"
+ ],
+ "nodejs/http-server": [
+  "4aa57f7b87c4b6afcde14b31c1b9cf24bc69975c7360c372fed7a4c7ab7fe953",
+  "8085261498d0aab14118f3cf7f3aa61737f7fa3bcf6a2d85153b91bf71bde98c"
+ ],
+ "nodejs/npm-production": [
+  "0deda976d247b8e0dce07598103981da65bfbf271201fc82467ead045b1213be",
+  "7b31c20b212a4e24ca3e7a0baa133bba207e4ab8181bd5d678d716984fa51ab1"
+ ],
+ "nodejs/streams-performance": [
+  "b6f81dc02ac459b549191eeb4c91f7dbbdc3b358141cd4320c9207d82f150559",
+  "f958f7eded6245a24584b51e5c92f2b589933fb087b8ed04327cc37e339a165e"
+ ],
+ "nodejs/testing-security": [
+  "2bae1004fbad4174b8cfe9c253b6b1f69e6475ea1f6ee1da1d17f8fe8f7e79c7",
+  "c014d3da54cd61675f014fdc0ba4d891737a2088aac0a7d831ef5348af2d0436"
+ ],
+ "observability/opentelemetry": [
+  "0d7bde5849e6dea41d16210768591ab06a9d20c0c186dcd17cf25724c3ddf857",
+  "bd444e91bfec4a8e9a20a143ec343356336325d68f13043991d354844c6ae77b"
+ ],
+ "observability/prometheus-grafana": [
+  "6f9877661a39b8443c32469ad11afc3cd65186ef8fda03669c27f95466789c10",
+  "932d25961ad1f3ccfcfbb5551e014eccbbea1aa1f7ac13dd3ac2d4276dc6e360"
+ ],
+ "observability/slos-alerting": [
+  "d369b355c0c88d5886ba522972ded00d926eb8b34c9943fc3eb8c742f48950bf",
+  "df7b76a8a26cff6a1f9e14d10726e530d882b02db3474e230c54acc439aaa264"
+ ],
+ "observability/three-pillars": [
+  "03632b02ddd9ca24ab258671bf9d6cdfceaa9118be842eb392e093af5f52a6cc",
+  "9eaf39bd301fef9dfd7ffce4f258a980c88fc506e294754ecb397b4d9acb1c19"
+ ],
+ "python/advanced-python": [
+  "0a7317894c345f00d707d0b87719c5d2b3ce4671c2b478f530f2618ccb82349c",
+  "75f9b2f6c7ae41bd477d056431d3346c77cbf2329d0aa19ee01423a29d4ba54f"
+ ],
+ "python/apis-async": [
+  "36db09424070a1a05b661f5a1e0dcae3ce29d45514046f14a7ef672cc9db4392",
+  "9ef2b87fa42a982a91c0a0a326a46a6000ec0f0956465f6e61ad2c1d2f3766b8"
+ ],
+ "python/basics": [
+  "a48045540fa05ac2e9b7597edddc8ec942fb7edcddac690837116e1c4cc1a1d8",
+  "b594466c815fe04ab3763ba547d84ef920bafd355b0a2b5219579d0b50f341c2"
+ ],
+ "python/data-stack": [
+  "b9b6fb0915f10ac9a0f9eb0f9c133e5c84c95a0544d3ee54ee5fe09f5e2d9781",
+  "e7dedc67cb29a9f5ca4bb7f6054152ca28bca3204ab03fd2ec2973e6c1a49593"
+ ],
+ "python/environments": [
+  "1c7243681f17509031952a7286cb1976f6fcfac92790d0a769b61969fdda825f",
+  "bd0fbf7866fbc9dd3d6b72a7ab885236bd931e06e1f0a1f09c6e1f5f10a8b3bf"
+ ],
+ "python/typing-testing": [
+  "6aed6bbeeae6d3d529e2faa3b7006cebfdcee66a0e44f72042d22c9d281b128e",
+  "ca7de9eaa88a0268023f2c925b62cd3fafb6eaa736c06d112561fed891655917"
+ ],
+ "redis/caching-patterns": [
+  "7627e04ea95da00718c505d3ef2eb09147dc320e5ce6a809efa4f0fc11fd5940",
+  "966c3ba70cb5b7c9f7eaffcbeb53bde6c590f9097aa280840e054b091c3bb20f"
+ ],
+ "redis/data-structures": [
+  "473d623d555700d683b65c61b173337e8b122dc378d07793cd067e4ccbce21ab",
+  "a65800108a860a5ffbc2fa287af431440626cc3b7a3c74d6b95261ea3fb9dee3"
+ ],
+ "redis/rate-limiting-sessions": [
+  "55b10b634705e194d0f23838e6cd41de7a0fe0266a26ee1351c3fada1a7e3df9",
+  "e4a7c4f3fb88aa55f373fc0c1c9d729df07783861384ed87054973810cc25450"
+ ],
+ "snowflake/architecture": [
+  "35fbae358383f6d010adaff2b77f9469ea12c090858766d995eb8ccb6a573dc3",
+  "5c5c837aecc1d0b029d2842b74b3e11a97a37d8486f0d959b373ea2d4a581754"
+ ],
+ "snowflake/loading-data": [
+  "afd39b9927b36b882c2953e8f250fbb2ce7b2d980d2e9bf3a4a917623b3ddbc8",
+  "fbc34b998bdb3256e9a6f3e451e95d138de51dcb6bbb01d762ac468447145b29"
+ ],
+ "snowflake/performance-cost": [
+  "1d66b2dcb36776d3a1a13486b93d34e0ee92f185b6ef3a5aa2a9079f26e5f164",
+  "f0bb14b0bc8127c3474d0f19beafd995d825ddc17dac0de63b0ebd681b5ccbfb"
+ ],
+ "snowflake/pipelines": [
+  "2ae5043fed9ddbcc3872a9b72acfe879f4e7df249e0043180ac447148d9253b1",
+  "5d36ca9d4735aae22d816e4b598b106a81369c6ef5ff8c69dde0a5bd667682a6"
+ ],
+ "snowflake/security-governance": [
+  "ac4533f7350e72cdeefbca92d094f6440bcfc1e7dbde98fee38bcbf5eb83e10a",
+  "d80766dcd4c77cbbac37daab89cc3e5af9eac811468977dd48f4099be412cda3"
+ ],
+ "snowflake/snowpark-cortex": [
+  "233e71377c52ab0e0208626d6b60fcf549fa4de98a86f5381ac26269dd798160",
+  "fa7fb24ce59914d78d2aa6d8a52984d48c65ce7a46c9658258b0935358e97f0f"
+ ],
+ "spring-boot/caching-messaging": [
+  "3f46a121c1c6f8e5c4a4021c940c36f53078c2894b46030ec54f5b2ca407f310",
+  "532a13af21b0dd51e9a8678bb6770c81620435c1e9b35f7f438383d89e41e02a"
+ ],
+ "spring-boot/data-jpa": [
+  "62f4d586b011898a1fe484664b0d735aa0f725a39be474e7674f65f9d5c5310d",
+  "663857423deead62d1c37d3f42a888f7c39a2852d8ff6f34f1ec7d4457679084"
+ ],
+ "spring-boot/exception-handling": [
+  "2ff54e378bac0d7d29b279b7e90c8f617d98b222cc40a47f20cba07e8e0c120c",
+  "d57093a58d25bb6e17c9a4ecc9e364b9bf568c871ec4ffa6bbe7f3008c21e499"
+ ],
+ "spring-boot/getting-started": [
+  "1fb02c7ffe3a59d8e4b44c583cd789f7624d9bbaab41b6b651d4a51f04aad4a1",
+  "374540adb9125b70742e7ca90bf24e4a7a3a1b2d973d2ebe3f1fe42cabdc614d"
+ ],
+ "spring-boot/native-and-deploy": [
+  "5de1dcc9c4cedadca4d8c5a7f0a1d0768445e2db22364733271840b1a7ba4008",
+  "a9a78508a62fb78d572816e738112a9f1dcd3188b8b99e1de14d2549e6f7d004",
+  "eed889c45557f22a7f09a3ce5ef41ef78bbe77a0773ec4833d81d2c460d750f8"
+ ],
+ "spring-boot/rest-controllers": [
+  "6d7280f4238c45e6c209bf6939ce9fc566a8f5a9050a30203c3cb78dafcabf6c",
+  "ecac1ad57f9df9d362759afec570f997bdc747ddf4bc630df215f8d771aa9c4e"
+ ],
+ "spring-boot/security-testing": [
+  "73f0fa183f5e0c96b4f9c3a4664abe62b88e8e66102b32f48951f56069e47a6c",
+  "e945fdcc6c55c9c2864248662913823aa24cb19be9289b31ac718cc5fb2478f9"
+ ],
+ "sql-interviews/joins-and-aggregates": [
+  "59f557febf93d240a414811d90130ee5fad3a4d52cdb6928a27d03e154b44d09",
+  "e4c26ec2ec1a141117643a162437c4bf05fb3ff8c2cacbf3fcba19bf496c38fc"
+ ],
+ "sql-interviews/nulls-and-query-review": [
+  "b7f4fc2a20ae01403b51ec4c1efc67755ef3a13e13f2c0fe90a3ab71ec708918",
+  "fd921372de7ef5b51e49846a9225e5d52fd00c1b1db058c59ea1cf8864c72adb"
+ ],
+ "sql-interviews/read-the-schema": [
+  "4941492b80789defc07c5d3c38a83804d5e2fe9eac5e01959a9c720ffb80c6f8",
+  "b539d9d08acc9aeaa8e295725ef46129be9b69f32a6b92a13c36b195471b711c"
+ ],
+ "sql-interviews/window-functions": [
+  "4c81d894d325b320c5200db028ecce6b6cb5b2d4d0e96ea3be6d91479e8da2c2",
+  "dc82b9954d9cbe5e1a36669d9f6f67e08c8a0c44c1e20a53618f18d234aa41b4"
+ ],
+ "system-design-interviews/communicate-tradeoffs": [
+  "02df4440ce9ac1a1fade441fca49956c60277d718b9b5bc1a189e0f46cb72c9f",
+  "a542b171134cc8107bd121e951a419b4cd0708cb4baa2db07e5a7b9d8f3f359a"
+ ],
+ "system-design-interviews/design-apis-and-data": [
+  "016f9344091d370dc0bde9556ccca7502572fc102ef59dce38de6c94e1fcc2ae",
+  "d20d2c992587a69458d949ea84ee8d6512fee676f99821b29f7db1953537bfab"
+ ],
+ "system-design-interviews/scale-and-reliability": [
+  "dff54d9482f73caf0bd4ba3ce8064e7718b0ff78bbbc1de071331595d81986eb",
+  "f684e3ee4a88e2e345eceb5e896317142330fdc3e6c6c3f25ee8f7fb3b25f443"
+ ],
+ "system-design-interviews/scope-the-design": [
+  "81dcbbb8a4c486435af8f5750e866454202956cea9bd70765aad51e79fd168bb",
+  "de108e38f4d9dead0edeea1d339d45836e0d6777e4fd6a9ff72f216d535ea623"
+ ],
+ "terraform/advanced-hcl": [
+  "1aba4520b5223ca71fafd4e06db94f259bcad4f84c2e1baed722d0855048de68",
+  "651f06bca802eb8ab83c31bf528da3ab1e7eda1a37a1f474f65c2b3e0748f299"
+ ],
+ "terraform/first-configuration": [
+  "dd032241764ef281ec9d9d2c0738188b3d31e0348a16c92669c7f68818202732",
+  "f6058ab3ea0b222bf0f836dbae7f84d34603c6f13dc4e574dfbffeced4156c44"
+ ],
+ "terraform/modules-and-workflows": [
+  "8aec29b850907e863519f7a0339453322aab69d15b27e95ffe90383218bd0340",
+  "8e8ea63e1775adbfbdd7ffc90381bc800f3dc9f8eff49d8be2a0f6fc453531b4",
+  "a5d3d872b32fc0c78d187405538546ca6cedc3bd3fe6e929a265a2d17c4ff2af"
+ ],
+ "terraform/project-multi-env": [
+  "0ca756f8c7c91dbe3412afbbd1521cff1c4e8e87938239f630894d8237e6ad87",
+  "527d10940c78f280c09c5a880bc5894deecc0da2c30d2faf9bb93a4898f6773e",
+  "de9076683cea06b2c827be7c32eb392212b680175b57118bf25cca73344633f3"
+ ],
+ "terraform/state-and-backends": [
+  "12320713c47d8b1ada5b468d108bcd7a7da357cc1ba53904dee8d5cbbbd05db8",
+  "df1a033dc20fc6598f4ec0eed4feaf6373ca7681afe9f81a55ab197347e771f5"
+ ],
+ "terraform/testing-and-policy": [
+  "35322877390c6f145aa453272b44f994d1ad252ad0109dff6a120d90ac3d64ff",
+  "789422b44b31f20c39b179ef54dd15e7920d11fbce9558e960b841fdcd9eb029"
+ ],
+ "terraform/variables-outputs": [
+  "34d34b5821e111f92aa5d9bd42e153bcc31b80f02839fd960ef3541ab49064d8",
+  "576e5b90489a2b7c3b68346e734eef53fb31c4f4de883791f78ec44368cb2923"
+ ],
+ "terraform/what-is-terraform": [
+  "9cef381283e75a4907d5bd8dc94b7339e44bb9c3293ff26bbbe1d98060c7fc36",
+  "e6dc09f66b491bd4fbfe162b7ed43a29feb1ad21a00ab6f9f22dfd30db9ad2df"
+ ],
+ "transformers/architecture": [
+  "cc998f9215dc9a345ac3637540d04c05187c7210132de5ba8a9f009436e9e5b1",
+  "d66eb169828307ca5f06079c67dbf7233e3b2a8305e6b00dd1b5b855b5ce2c27"
+ ],
+ "transformers/attention": [
+  "2491c44eb499cf51ea893c422435fbf103abd308fbc8847915b4637ebaacdc95",
+  "cd95bfd64445e8416a398a01cfa4ad9e302451d9d217a0895a8908e09f767d26"
+ ],
+ "transformers/build-from-scratch": [
+  "eff8a4c03790d767fde5790704373ea593607b0ec5c40324c46bcdd1d38ecdee",
+  "f6ca92e6640113052d8136330c104f4897f5bced293b619ada93ddc3f17f78d8"
+ ],
+ "transformers/efficiency": [
+  "770158c823fb364bc94e7eb22c4f4f9bbf150e34e63ab3ac5ebd59b4bc500bae",
+  "bd82953f8fd0d60fdde652eebeaa1e6ef2a9785df1c05426eb8feed04fe4d162"
+ ],
+ "transformers/fine-tuning": [
+  "1471083eeec8c4cbd84f4cced52d70b258e5e2331a60718eebdac0d0ebc18949",
+  "b151d55f4b26866967f5ea0fb4014748a898d533afedfb26226b9752c47f557f"
+ ],
+ "transformers/hugging-face": [
+  "afb94e8693296002d0abce6efa444a63f085fdbafb04113e04889b1b889e0409",
+  "c821255ffb4257c4c10f1bc8d565d6684e7ef9f4225ed3f1df065aad6255cdba"
+ ],
+ "typescript-nestjs/advanced-types": [
+  "8e64230e2d5b79da4f613df2fa97ec941c4049227dfe8521619098cc99c3ca94",
+  "ac2c3d0a90e98f8676cefa9c3c1c51cc1354f3e2b40ffd7dc04e2606c477fe7f"
+ ],
+ "typescript-nestjs/auth-testing": [
+  "2202de07bc6bd1f9128088b57ae906540681a6331ad680bd91320ca7886e96c1",
+  "8a78c88cdd4372ff5bf035f7831695181afb824683d2c25a0e58d2a0dfa82df9"
+ ],
+ "typescript-nestjs/microservices-nest": [
+  "555ff32bb34fe47db0ac16a753f14640d9ded97bdd1adbd6a2bea56dc48733f0",
+  "a4b3bad2fb3095c1e88419151b5914b8697148ea3d486fc09fa373fc81dffaa5"
+ ],
+ "typescript-nestjs/nest-architecture": [
+  "1d5ef1cfb4290cfc90e868eb9dbdc7692b0cdd051b6b570feb76a2ffc489b25f",
+  "f77effda208d6aa5f4853edc2085cd65928767289a6ee11aae8d31941710e174"
+ ],
+ "typescript-nestjs/typescript-essentials": [
+  "5bd170dec03ee810ee3938443a7f90ca0d8a627dfa19f34118ae695fc6b08071",
+  "89e1dea956963d2c39a3396a6bbfec93d87a98840b38822c2535f8f8b7f7be88"
+ ],
+ "typescript-nestjs/validation-persistence": [
+  "77620878818f8b3dc2d1778435c69d0831d99a70dd9f401b04eec0f92b089f23",
+  "d53e04add8c84cab6a2b25dbcb450e8469f0057a2902fb0031980d015330dc11"
+ ],
+ "vector-databases/ann-indexes": [
+  "bf5409ebb18be4abf92b45381e1a6262c15d78830dd8e5db8b2edb2a9a50e751",
+  "dee8838b1ac250d2da003bfc778abed0617181bfb00b48e637837e3444440b68"
+ ],
+ "vector-databases/choosing": [
+  "1532da550142a568e7ea22c9c9ae9140b822b694f541f41235b0a59c184ca2d7",
+  "e0a3273c14d672092fde34725cbd2f19a795bf6b9b9a22762e0e01ab833b6ef0"
+ ],
+ "vector-databases/embeddings": [
+  "96317def7f9d84048fd5742c32b5ca6d8d9868c104df023f3d35c6fc1ce498d0",
+  "a9e78c12af2fb761e7270a112d85c8d6d5892bab5e811be7454ff9332cac0045"
+ ],
+ "vector-databases/hybrid-search": [
+  "81741b866357040f77070ce0bab931820d98faa3730e70880411c01d8592f3da",
+  "c1e7d0860cebe4ac458e48a1531b93281add8970c2c6aacc2e84c64e99c7bb61"
+ ],
+ "virtual-machines/hypervisors": [
+  "e54037aa5e45468d037e12323afdbfed7c826bb4685bb73df334ff73624402c9",
+  "f36908fff39a773e3125b89aecaf73d060dd9a0bf99e53ed66dfe45c02eeab39"
+ ],
+ "virtual-machines/images-and-provisioning": [
+  "b79cbfdaee98e0f73b6f0cec3fccc556f24b41ea4a781b2fe06245f6d3c641c9",
+  "e9c91f18f7430b192302f9f0d42661bf7929f6941d514db0f2c9df24c4a8b34f"
+ ],
+ "virtual-machines/launch-a-vm": [
+  "18d14e60ed59286d11bfb726fe7697b299b41c0837d1be6e944393578db804db",
+  "e7a7999e16bd334fba91258129350a51518b7a24f7ca5e61148d9a2c65195b65"
+ ],
+ "virtual-machines/scaling-vms": [
+  "1b395ad5e9b96f3fe76a6f13a169364cfb3121e3941c4e99a17663ca225bf084",
+  "b7f03a3a6e851a26d9622e03534a484447124904a0fef5f5dca26fb42f02b0e0"
+ ]
+}

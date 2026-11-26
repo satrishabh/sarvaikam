@@ -29,8 +29,8 @@ warn() { echo "[$APP_ENV] warning: $*" >&2; }
 
 # ---------------------------------------------------------------- environment defaults
 if [ "$APP_ENV" = "dev" ]; then
-  # Dev works out of the box: embedded Postgres and demo credentials.
-  : "${EMBEDDED_DB:=true}"
+  # Dev works out of the box: embedded Postgres (demo image only) and demo credentials.
+  if command -v initdb >/dev/null 2>&1; then : "${EMBEDDED_DB:=true}"; else : "${EMBEDDED_DB:=false}"; fi
   : "${JWT_SECRET:=$DEMO_JWT_SECRET}"
   : "${POSTGRES_PASSWORD:=$DEMO_DB_PASSWORD}"
   : "${ADMIN_EMAIL:=admin@sarvaikam.dev}"
@@ -46,6 +46,9 @@ fi
 # ---------------------------------------------------------------- validation
 case "$EMBEDDED_DB" in true|false) ;; *) fail "EMBEDDED_DB must be true or false" ;; esac
 
+if [ "$EMBEDDED_DB" = "true" ] && ! command -v initdb >/dev/null 2>&1; then
+  fail "this image has no embedded PostgreSQL. Set EMBEDDED_DB=false and DB_HOST, or build the demo image: docker build --target demo ."
+fi
 if [ "$EMBEDDED_DB" = "true" ]; then
   DB_HOST=127.0.0.1
   : "${DB_SSLMODE:=disable}"
@@ -77,16 +80,48 @@ elif [ "$JWT_SECRET" = "$DEMO_JWT_SECRET" ]; then
   warn "using the demo JWT secret (fine for dev only)"
 fi
 
-# File storage: gcs (bucket, default) or drive (owner's Google Drive via OAuth refresh token).
+# File storage: gcs (bucket, default), drive (owner's Google Drive via OAuth refresh token),
+# s3 (AWS S3, default credential chain) or azure-blob (Azure Blob Storage, managed identity / Entra ID).
 case "${STORAGE_BACKEND:=gcs}" in
   gcs) ;;
   drive)
     for v in DRIVE_CLIENT_ID DRIVE_CLIENT_SECRET DRIVE_REFRESH_TOKEN; do
       eval "[ -n \"\${$v:-}\" ]" || fail "$v is required when STORAGE_BACKEND=drive (run deploy/drive/authorize-drive.ps1)"
-    done ;;
-  *) fail "STORAGE_BACKEND must be gcs or drive" ;;
+    done
+    # A personal Drive ties every learner's files to one person's account, quota and OAuth grant.
+    if [ "$APP_ENV" = "prod" ] && [ "${ALLOW_DRIVE_STORAGE:-false}" != "true" ]; then
+      fail "STORAGE_BACKEND=drive is not allowed in prod (personal account, quota and rate limits). Use gcs, or ALLOW_DRIVE_STORAGE=true to override"
+    elif [ "$APP_ENV" != "dev" ]; then
+      warn "STORAGE_BACKEND=drive keeps files in one person's Google Drive - use gcs before launch"
+    fi ;;
+  s3)
+    [ -n "${S3_BUCKET:-}" ] || fail "S3_BUCKET is required when STORAGE_BACKEND=s3" ;;
+  azure-blob)
+    [ -n "${AZURE_STORAGE_ACCOUNT:-}" ] || fail "AZURE_STORAGE_ACCOUNT is required when STORAGE_BACKEND=azure-blob (see deploy/azure-storage/README.md)" ;;
+  *) fail "STORAGE_BACKEND must be gcs, drive, s3 or azure-blob" ;;
 esac
 export STORAGE_BACKEND
+
+# Strangler routing for /api/progress: "core" (Sarvaikam Core) or "legacy" (the Go progress-service).
+# Both use the same tables, so switching back is a restart with PROGRESS_BACKEND=legacy and loses nothing.
+: "${PROGRESS_BACKEND:=$([ "$APP_ENV" = "dev" ] && echo core || echo legacy)}"
+case "$PROGRESS_BACKEND" in
+  core)   CORE_ENABLED=true;  LEGACY_PROGRESS_ENABLED=false; PROGRESS_PORT=8084 ;;
+  legacy) CORE_ENABLED=false; LEGACY_PROGRESS_ENABLED=true;  PROGRESS_PORT=8083 ;;
+  *) fail "PROGRESS_BACKEND must be core or legacy" ;;
+esac
+# Sign-in on the Keycloak login page is served by the Core, so it runs whenever that is configured.
+if [ -n "${PROFILE_WEB_CLIENT_SECRET:-}" ]; then CORE_ENABLED=true; fi
+export CORE_ENABLED LEGACY_PROGRESS_ENABLED
+
+# Logs: JSON (one object per line, Cloud Logging field names) outside dev, readable text in dev.
+: "${LOG_FORMAT:=$([ "$APP_ENV" = "dev" ] && echo text || echo json)}"
+case "$LOG_FORMAT" in
+  json) export LOGGING_STRUCTURED_FORMAT_CONSOLE=logstash; ACCESS_LOG_FORMAT=json ;;  # Spring Boot services
+  text) ACCESS_LOG_FORMAT=combined ;;
+  *) fail "LOG_FORMAT must be json or text" ;;
+esac
+export LOG_FORMAT
 
 if [ "$ERRORS" -gt 0 ]; then
   echo "[$APP_ENV] refusing to start: $ERRORS configuration error(s). See README 'Environments'." >&2
@@ -104,6 +139,9 @@ export DB_URL="${DB_URL:-jdbc:postgresql://$DB_HOST:$DB_PORT/$POSTGRES_DB?sslmod
 export SPRING_PROFILES_ACTIVE="${SPRING_PROFILES_ACTIVE:-$APP_ENV}"
 : "${JAVA_OPTS:=-XX:MaxRAMPercentage=30 -XX:+UseSerialGC -Xss512k -XX:+ExitOnOutOfMemoryError}"
 export JAVA_OPTS
+# Sarvaikam Core (JDBC, same DB_URL). A second JVM, so each takes a smaller share of the container's memory.
+: "${CORE_JAVA_OPTS:=-XX:MaxRAMPercentage=20 -XX:+UseSerialGC -Xss512k -XX:+ExitOnOutOfMemoryError}"
+export CORE_JAVA_OPTS
 # auth-service (node-postgres): "require" encrypts without verifying, verify-* also verifies the CA
 if [ "$DB_SSLMODE" = "disable" ]; then export DB_SSL=false; else export DB_SSL=true; fi
 case "$DB_SSLMODE" in verify-*) export DB_SSL_REJECT_UNAUTHORIZED=true ;; *) export DB_SSL_REJECT_UNAUTHORIZED=false ;; esac
@@ -113,7 +151,7 @@ export NODE_OPTIONS
 # progress-service (pgx) + its readiness aggregation. Keyword/value DSN so any password character is safe.
 pg_quote() { printf '%s' "$1" | sed -e 's/\\/\\\\/g' -e "s/'/\\\\'/g"; }
 export DATABASE_URL="${DATABASE_URL:-host=$DB_HOST port=$DB_PORT dbname=$POSTGRES_DB user=$POSTGRES_USER password='$(pg_quote "$POSTGRES_PASSWORD")' sslmode=$DB_SSLMODE}"
-export READY_URLS="http://127.0.0.1:8081/api/content/actuator/health/readiness,http://127.0.0.1:8082/api/auth/health"
+export READY_URLS="http://127.0.0.1:8081/api/content/actuator/health/readiness,http://127.0.0.1:8082/api/auth/ready"
 
 # ---------------------------------------------------------------- nginx + SPA runtime config
 if [ "$APP_ENV" = "dev" ]; then
@@ -122,8 +160,10 @@ else
   # TLS is terminated at the ingress in staging/prod.
   ENV_HEADERS='        add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;'
 fi
-sed -e "s/__PORT__/$PORT/" /etc/sarvaikam/nginx.conf.template \
+sed -e "s/__PORT__/$PORT/" -e "s/__PROGRESS_PORT__/$PROGRESS_PORT/g" -e "s/__ACCESS_LOG_FORMAT__/$ACCESS_LOG_FORMAT/" /etc/sarvaikam/nginx.conf.template \
   | awk -v h="$ENV_HEADERS" '{ if ($0 == "__ENV_HEADERS__") print h; else print }' > "$RUNTIME/nginx.conf"
+# Fail fast with nginx's own message instead of supervisord restarting a broken nginx forever.
+nginx -t -q -e stderr -c "$RUNTIME/nginx.conf" || { echo "[$APP_ENV] refusing to start: the rendered nginx config is invalid" >&2; exit 1; }
 printf '{"env":"%s"}\n' "$APP_ENV" > "$RUNTIME/config.json"
 
 # ---------------------------------------------------------------- embedded database
@@ -152,7 +192,7 @@ export REELS_DB_URL="${REELS_DB_URL:-jdbc:postgresql://$DB_HOST:$DB_PORT/${REELS
 export REELS_DB_USER="${REELS_DB_USER:-$POSTGRES_USER}"
 export REELS_DB_PASSWORD="${REELS_DB_PASSWORD:-$POSTGRES_PASSWORD}"
 
-echo "[$APP_ENV] starting: embedded_db=$EMBEDDED_DB db_host=$DB_HOST sslmode=$DB_SSLMODE port=$PORT"
+echo "[$APP_ENV] starting: embedded_db=$EMBEDDED_DB db_host=$DB_HOST sslmode=$DB_SSLMODE port=$PORT progress_backend=$PROGRESS_BACKEND"
 # PORT is for nginx only; auth-service and progress-service read PORT for their own listeners.
 unset PORT
 exec supervisord -c /etc/sarvaikam/supervisord.conf

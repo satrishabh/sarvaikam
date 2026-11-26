@@ -14,7 +14,44 @@ export default function ReelsPage() {
   const [error, setError] = useState("");
   const [attempt, setAttempt] = useState(0);
   const [index, setIndex] = useState(0);
-  const showFeed = !loading && !error && reels.length > 0;
+  const [course, setCourse] = useState("");
+  const [saved, setSaved] = useState<Set<number>>(new Set());
+  const [saveError, setSaveError] = useState("");
+  const courses = [...new Map(reels.map((r) => [r.courseSlug, r.courseName])).entries()];
+  const shown = course ? reels.filter((r) => r.courseSlug === course) : reels;
+  const showFeed = !loading && !error && shown.length > 0;
+
+  // Saved reels are saved lessons: they appear under "Saved for later" with the rest.
+  useEffect(() => {
+    let active = true;
+    setSaved(new Set());
+    if (!user) return;
+    api.bookmarks()
+      .then((items) => {
+        if (active) setSaved(new Set(items.map((item) => item.lessonId)));
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, [user?.id]);
+  const toggleSave = async (reel: Reel) => {
+    if (reel.lessonId == null) return;
+    const id = reel.lessonId;
+    setSaveError("");
+    try {
+      if (saved.has(id)) await api.unbookmark(id);
+      else await api.bookmark(id, reel.courseSlug);
+      setSaved((current) => {
+        const next = new Set(current);
+        if (next.has(id)) next.delete(id);
+        else next.add(id);
+        return next;
+      });
+    } catch (cause) {
+      setSaveError(cause instanceof Error ? cause.message : "Could not save this lesson");
+    }
+  };
 
   useEffect(() => {
     let active = true;
@@ -45,7 +82,7 @@ export default function ReelsPage() {
         </Link>
         {showFeed && (
           <p className="reels-count">
-            Lesson {Math.min(index + 1, reels.length)} of {reels.length}
+            Lesson {Math.min(index + 1, shown.length)} of {shown.length}
           </p>
         )}
       </div>
@@ -55,6 +92,29 @@ export default function ReelsPage() {
         <p className="mt-2 text-sm text-muted">
           Swipe up for the next one. Swipe right, or use Open lesson, to read the whole lesson.
         </p>
+        {courses.length > 1 && (
+          <div role="group" aria-label="Show reels from" className="mt-4 flex gap-2 overflow-x-auto pb-1">
+            {[["", "All topics"] as [string, string], ...courses].map(([slug, name]) => (
+              <button
+                key={slug || "all"}
+                type="button"
+                aria-pressed={course === slug}
+                className={`shrink-0 whitespace-nowrap ${course === slug ? "btn" : "outline-btn"} min-h-11 px-4 text-xs`}
+                onClick={() => {
+                  setCourse(slug);
+                  setIndex(0);
+                }}
+              >
+                {name}
+              </button>
+            ))}
+          </div>
+        )}
+        {saveError && (
+          <p role="alert" className="mt-3 text-sm text-danger">
+            {saveError}
+          </p>
+        )}
       </header>
 
       {loading ? (
@@ -67,7 +127,14 @@ export default function ReelsPage() {
           <p className="mt-2 text-muted">Recent lessons will appear here once they are published.</p>
         </div>
       ) : (
-        <ReelFeed reels={reels} index={index} setIndex={setIndex} />
+        <ReelFeed
+          key={course}
+          reels={shown}
+          index={index}
+          setIndex={setIndex}
+          saved={user ? saved : null}
+          onSave={(reel) => void toggleSave(reel)}
+        />
       )}
     </div>
   );
@@ -77,10 +144,15 @@ function ReelFeed({
   reels,
   index,
   setIndex,
+  saved,
+  onSave,
 }: {
   reels: Reel[];
   index: number;
   setIndex: (value: number) => void;
+  /** Saved lesson ids; null when signed out (no save button). */
+  saved: Set<number> | null;
+  onSave: (reel: Reel) => void;
 }) {
   const feed = useRef<HTMLDivElement>(null);
   // Keyboard users move one reel at a time with the arrow keys or Page Up and Page Down.
@@ -111,13 +183,18 @@ function ReelFeed({
       }}
     >
       {reels.map((reel) => (
-        <ReelCard key={reel.slug} reel={reel} />
+        <ReelCard
+          key={reel.slug}
+          reel={reel}
+          saved={saved && reel.lessonId != null ? saved.has(reel.lessonId) : null}
+          onSave={() => onSave(reel)}
+        />
       ))}
     </div>
   );
 }
 
-function ReelCard({ reel }: { reel: Reel }) {
+function ReelCard({ reel, saved, onSave }: { reel: Reel; saved: boolean | null; onSave: () => void }) {
   const navigate = useNavigate();
   const start = useRef<{ x: number; y: number } | null>(null);
   return (
@@ -154,9 +231,17 @@ function ReelCard({ reel }: { reel: Reel }) {
       </div>
       <div className="reel-footer">
         <a className="reel-source" href={reel.sourceUrl} target="_blank" rel="noopener noreferrer">Source: {reel.sourceName}</a>
-        <Link className="btn" to={`/topics/${reel.courseSlug}/${reel.lessonSlug}`}>
-          Open lesson
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          {saved !== null && (
+            <button type="button" className="outline-btn" aria-pressed={saved} onClick={onSave}>
+              {saved && <Icon name="check" className="h-4 w-4" />}
+              {saved ? "Saved" : "Save lesson"}
+            </button>
+          )}
+          <Link className="btn" to={`/topics/${reel.courseSlug}/${reel.lessonSlug}`}>
+            Open lesson
+          </Link>
+        </div>
       </div>
     </article>
   );
