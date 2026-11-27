@@ -388,7 +388,7 @@
     "category": "System design",
     "title": "Design one-to-one chat",
     "difficulty": "Advanced",
-    "minutes": 25,
+    "minutes": 30,
     "topic": "system-design-interviews",
     "prompt": "Design a chat service where users send one-to-one messages that arrive in real time when the recipient is online and are delivered later when they are offline. Cover connections, storage, ordering and delivery receipts.",
     "constraints": [
@@ -420,7 +420,7 @@
     "category": "System design",
     "title": "Design a news feed",
     "difficulty": "Advanced",
-    "minutes": 25,
+    "minutes": 30,
     "topic": "system-design-interviews",
     "prompt": "Design the home feed for a social app: each user sees recent posts from the accounts they follow, newest first. Explain how the feed is built, stored and paginated.",
     "constraints": [

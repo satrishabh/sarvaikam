@@ -100,6 +100,7 @@ test("practice question links, timer suggestions, hints, and review data are com
     "SQL",
     "Behavioral",
     "Cloud & DevOps",
+    "AI engineering",
   ]);
   for (const q of practiceQuestions) {
     assert.ok(
